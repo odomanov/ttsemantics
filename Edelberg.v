@@ -26,12 +26,13 @@ Module Case1.
    {Hm:man}.
   Definition fBA (gb:ГB):ГA :=
     mkГA (Bm gb) (BmS gb).
-  Definition fBH (gb:ГB):ГH :=
-    mkГH (Bm gb).
+  (* функции не существуют *)
+  Axiom C1_AxA: (ГA->ГH) -> False.
+  Axiom C1_AxB: (ГB->ГH) -> False.
 
   (** (1) Arsky thinks someone murdered Smith, 
          and Barsky thinks he is still in Chicago 
-         (but there is no such murderer). *)
+         (but there is no such murderer). -- True *)
   Lemma C1_AeqB: forall gb:ГB, Am (fBA gb) = Bm gb.
   Proof.
     intros.
@@ -74,9 +75,36 @@ Module Case1.
 
 
   (** (2) Someone is believed by Arsky to have murdered Smith, 
-         and Barsky thinks he is still in Chicago. **)
+         and Barsky thinks he is still in Chicago. -- False **)
+  Fact C1_AHSBCn: ~(exists m:ГH->man, exists f:ГA->ГH, 
+    exists Sm:(forall ga:ГA, S(m (f ga))), 
+    forall gb:ГB, C(m (f (fBA gb)))).
+  Proof.
+    unfold not.
+    intros H.
+    destruct H as [m H].
+    destruct H as [f H].
+    apply C1_AxA.
+    apply f.
+  Qed.
+
+  (* не существует f, такая, что ... *)
+  Fact C1_AHSBCn': ~exists f:ГA->ГH, 
+    exists m:ГH->man, exists Sm:(forall ga:ГA, S(m (f ga))), 
+    forall gb:ГB, C(m (f (fBA gb))).
+  Proof.
+    unfold not. intros H. destruct H as [f H]. 
+    apply C1_AxA. apply f.
+  Qed.
+
+
+  (* теперь определим функции в ГH *)
+  (* тогда (2) будет истинно *)
+  
   Definition fAH (ga:ГA):ГH :=
     mkГH (Am ga).
+  Definition fBH (gb:ГB):ГH :=
+    mkГH (Bm gb).
   Fact C1_AHSBC: exists m:ГH->man, exists Sm:(forall ga:ГA, S(m (fAH ga))), 
     forall gb:ГB, C(m (fAH (fBA gb))).
   Proof.
@@ -130,7 +158,7 @@ Module Case2.
   Definition fBH (gb:ГB):ГH :=
     mkГH (Bm gb) (BmS gb).
 
-  (** (3) Someone murdered Smith, and Barsky thinks he is still in Chicago. *)
+  (** (3) Someone murdered Smith, and Barsky thinks he is still in Chicago. -- True *)
   Fact C2_HSBC: exists m:ГH->man, forall gh:ГH, S(m gh) /\ 
     forall gb:ГB, C(m (fBH gb)).
   Proof.
@@ -214,7 +242,7 @@ Module Case3.
     | ex_rAB: (exists gab:ГAB, gab=fAAB(ga) /\ gab=fBAB(gb)) -> rAB ga gb.
 
   (** (4) Arsky thinks someone murdered Smith, 
-          and Barsky thinks he murdered Jones. *)
+          and Barsky thinks he murdered Jones. -- True  *)
   Fact C3_ASBJ: { m:ГAB->man | (forall ga:ГA, S(m (fAAB ga))) /\
     (forall gb:ГB, J(m (fBAB gb)))}.
   Proof.
@@ -271,13 +299,13 @@ Module Case3.
   Abort.
 
   (** (5) Barsky thinks someone murdered Jones, 
-          and Arsky thinks he murdered Smith. *)
+          and Arsky thinks he murdered Smith. -- False *)
   
   (* C3_ASBJ already proofs this *)
 
 
   (** (6) Barsky thinks that someone murdered Smith, 
-          and Arsky thinks that he did not murder Jones. *)
+          and Arsky thinks that he did not murder Jones. -- True *)
   Fact C3_BSAnJ: { m:ГAB->man | (forall gb:ГB, S(m (fBAB gb))) /\
     (forall ga:ГA, ~J(m (fAAB ga)))}.
   Proof.
@@ -288,7 +316,7 @@ Module Case3.
   Qed.
 
   (** (7) Barsky thinks that someone murdered Smith, 
-          and Arsky thinks that he is still in Chicago. *)
+          and Arsky thinks that he is still in Chicago. -- True *)
   Fact C3_BSAC: { m:ГAB->man | (forall gb:ГB, S(m (fBAB gb))) /\
     (forall ga:ГA, C(m (fAAB ga)))}.
   Proof.
@@ -340,7 +368,7 @@ Module Case4.
   Parameter гh:ГH.
 
   (** (8) Someone murdered Smith, 
-          and Arsky thinks he murdered Jones. *)
+          and Arsky thinks he murdered Jones. -- False *)
   Fact C4_SAJ: {m:ГAH->man | (forall gh:ГH, S(m (fHAH gh))) /\
     (forall ga:ГA, J(m (fAAH ga)))}.
   Proof.
@@ -360,7 +388,7 @@ Module Case4.
   Qed.
 
   (** (9) Someone murdered Jones, 
-          and Arsky thinks he is still in Chicago. *)
+          and Arsky thinks he is still in Chicago. -- False *)
   Fact C4_JAC: {m:ГAH->man | (forall gh:ГH, J(m (fHAH gh))) /\
     (forall ga:ГA, C(m (fAAH ga)))}.
   Proof.
@@ -380,7 +408,7 @@ Module Case4.
   Qed.
 
   (** (10) Someone murdered Smith, 
-           and Arsky thinks he is still in Chicago. *)
+           and Arsky thinks he is still in Chicago. -- True *)
   Fact C4_SAC: {m:ГAH->man | (forall gh:ГH, S(m (fHAH gh))) /\
     (forall ga:ГA, C(m (fAAH ga)))}.
   Proof.
@@ -400,7 +428,7 @@ Module Case4.
   Qed.
 
   (** (11) Someone murdered Jones, 
-           and Arsky thinks he is no longer in Chicago. *)
+           and Arsky thinks he is no longer in Chicago. -- True *)
   Fact C4_JAnC: {m:ГAH->man | (forall gh:ГH, J(m (fHAH gh))) /\
     (forall ga:ГA, ~C(m (fAAH ga)))}.
   Proof.
@@ -411,7 +439,7 @@ Module Case4.
   Qed.
 
   (** (12) Someone murdered Smith, 
-           and Arsky thinks he didn’t murder Jones. *)
+           and Arsky thinks he didn’t murder Jones. -- True *)
   Fact C4_SAnJ: {m:ГAH->man | (forall gh:ГH, S(m (fHAH gh))) /\
     (forall ga:ГA, ~J(m (fAAH ga)))}.
   Proof.
