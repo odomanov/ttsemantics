@@ -1,5 +1,6 @@
 (** W.Edelberg, A Perspectivalist Semantics for the Attitudes (1995) *)
 
+(* сигнатура *)
 Parameter man: Type.
 Parameter S: man -> Prop.  (* убил Смита *)
 Parameter J: man -> Prop.  (* убил Джонса *)
@@ -26,7 +27,7 @@ Module Case1.
    {Hm:man}.
   Definition fBA (gb:ГB):ГA :=
     mkГA (Bm gb) (BmS gb).
-  (* функции не существуют *)
+  (* функции в ГH не существуют *)
   Axiom C1_AxA: (ГA->ГH) -> False.
   Axiom C1_AxB: (ГB->ГH) -> False.
 
@@ -236,8 +237,12 @@ Module Case3.
     mkГAB (Am ga) (Am2 ga) (AmS ga) (AmJ ga).
   Definition fBAB (gb:ГB):ГAB :=
     mkГAB (Bm gb) (Bm2 gb) (BmS gb) (BmJ gb).
-    
-  (* отношение *)
+
+  (* функции в ГH не существуют *)
+  Axiom C3_AxA: (ГA->ГH)->False.
+  Axiom C3_AxB: (ГB->ГH)->False.
+
+  (* определим отношение *)
   Inductive rAB (ga:ГA) (gb:ГB):Prop :=
     | ex_rAB: (exists gab:ГAB, gab=fAAB(ga) /\ gab=fBAB(gb)) -> rAB ga gb.
 
@@ -258,6 +263,7 @@ Module Case3.
   Print C3_ASBJ.
 
   Parameter гa:ГA.
+  Parameter гb:ГB.
   Parameter гab:ГAB.
 
   Fact C3_ASBJ': { m:ГAB->man | 
@@ -300,8 +306,29 @@ Module Case3.
 
   (** (5) Barsky thinks someone murdered Jones, 
           and Arsky thinks he murdered Smith. -- False *)
-  
-  (* C3_ASBJ already proofs this *)
+
+  (* first, in a sense C3_ASBJ already proofs this *)
+
+  (* then let's try another interpretation *)
+  Fact C3_BJAS'': ~exists w:(forall gb:ГB, { m:ГAB->man | S(m (fBAB gb))}), 
+    (forall ga:ГA, J(proj1_sig(w гb) (fAAB ga))).
+  Proof.
+    unfold not. intros H.
+    destruct H as [H1 H2].
+    destruct H1 as [m s].
+    unfold proj1_sig in H2.
+    exists (fun gb:ГB => exist _ ABm (BmS gb)).
+    intros.
+    unfold proj1_sig.
+    assert (H:ABm (fAAB ga)=ABm2 (fAAB ga)).
+    { apply Beq. }
+    rewrite H.
+    apply ABmJ.
+  Qed.
+
+  Fact C3_ASBJ: { m:ГAB->man | (forall ga:ГA, S(m (fAAB ga))) /\
+    (forall gb:ГB, J(m (fBAB gb)))}.
+  Proof.
 
 
   (** (6) Barsky thinks that someone murdered Smith, 
