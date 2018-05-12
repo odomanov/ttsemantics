@@ -62,18 +62,16 @@ Module Case1.
   Qed.
   Print C1_ASBC'.
 
-  Parameter гa:ГA.
-
-  Fact C1_ASBC'': exists w:(forall ga:ГA, { m:ГA->man | S(m ga)}),
-    forall gb:ГB, C(proj1_sig(w гa) (fBA gb)).
+  Fact C1_ASBC'': forall ga:ГA, 
+    (exists w:(forall ga:ГA, { m:ГA->man | S(m ga)}),
+      forall gb:ГB, C(proj1_sig(w ga) (fBA gb))).
   Proof.
+    intros.
     exists (fun ga:ГA => exist _ Am (AmS ga)).
     intros.
     unfold proj1_sig.
     apply BmC.
   Qed.
-  Print C1_ASBC''.
-
 
   (** (2) Someone is believed by Arsky to have murdered Smith, 
          and Barsky thinks he is still in Chicago. -- False **)
@@ -127,9 +125,11 @@ Module Case1.
   Qed.
   Print C1_AHSBC'.
 
-  Fact C1_AHSBC'': exists w:(forall ga:ГA, { m:ГH->man | S(m (fAH ga))} ),
-    forall gb:ГB, C(proj1_sig(w гa) (fBH gb)).
+  Fact C1_AHSBC'': forall ga:ГA,
+    (exists w:(forall ga:ГA, { m:ГH->man | S(m (fAH ga))} ),
+      forall gb:ГB, C(proj1_sig(w ga) (fBH gb))).
   Proof.
+    intros.
     exists (fun ga:ГA => exist _ Hm (AmS ga)).
     intros.
     unfold proj1_sig.
@@ -159,7 +159,8 @@ Module Case2.
   Definition fBH (gb:ГB):ГH :=
     mkГH (Bm gb) (BmS gb).
 
-  (** (3) Someone murdered Smith, and Barsky thinks he is still in Chicago. -- True *)
+  (** (3) Someone murdered Smith, 
+          and Barsky thinks he is still in Chicago. -- True *)
   Fact C2_HSBC: exists m:ГH->man, forall gh:ГH, S(m gh) /\ 
     forall gb:ГB, C(m (fBH gb)).
   Proof.
@@ -169,10 +170,9 @@ Module Case2.
     apply BmC.
   Qed.
 
-  Parameter гh:ГH.
-
-  Fact C2_HSBC': exists w:(forall gh:ГH, { m:ГH->man | S(m gh)}),
-    forall gb:ГB, C(proj1_sig(w гh) (fBH gb)).
+  Fact C2_HSBC': forall gh:ГH,
+    (exists w:(forall gh:ГH, { m:ГH->man | S(m gh)}),
+      forall gb:ГB, C(proj1_sig(w gh) (fBH gb))).
   Proof.
     exists (fun gh:ГH => exist _ Hm (HmS gh)).
     intros.
@@ -182,13 +182,10 @@ Module Case2.
 
   (* то же для forall w *)
   (*   не доказано !! *)
-  Fact C2_HSBC'': forall w:(forall gh:ГH, { m:ГH->man | S(m gh)}),
-    forall gb:ГB, C(proj1_sig(w гh) (fBH gb)).
+  Fact C2_HSBC'': forall gh:ГH,
+    (forall w:(forall gh:ГH, { m:ГH->man | S(m gh)}),
+      forall gb:ГB, C(proj1_sig(w gh) (fBH gb))).
   Proof.
-    intros.
-    destruct w as [m s].
-    unfold proj1_sig.
-    assert (H:S(m гh)->(m гh = Hm гh)).
   Abort.
 
 End Case2.
@@ -213,16 +210,15 @@ Module Case3.
    {Am:man;
     Am2:man;
     AmS:S(Am);
-    AmJ:J(Am2);
-    AmnS:~S(Am2);
-    AmnJ:~J(Am);
-    AmC:C(Am);
-    Aneq:~(Am=Am2)}.
+    Am2J:J(Am2);
+    Am2S:~S(Am2);
+    AmJ:~J(Am);
+    AmC:C(Am)}.
   Record ГB := mkГB
    {Bm:man;
     Bm2:man;
     BmS:S(Bm);
-    BmJ:J(Bm2);
+    Bm2J:J(Bm2);
     Beq:Bm=Bm2}.
   Record ГH := mkГH
    {Hm:man;
@@ -232,11 +228,11 @@ Module Case3.
    {ABm:man;
     ABm2:man;
     ABmS:S(ABm);
-    ABmJ:J(ABm2)}.
+    ABm2J:J(ABm2)}.
   Definition fAAB (ga:ГA):ГAB :=
-    mkГAB (Am ga) (Am2 ga) (AmS ga) (AmJ ga).
+    mkГAB (Am ga) (Am2 ga) (AmS ga) (Am2J ga).
   Definition fBAB (gb:ГB):ГAB :=
-    mkГAB (Bm gb) (Bm2 gb) (BmS gb) (BmJ gb).
+    mkГAB (Bm gb) (Bm2 gb) (BmS gb) (Bm2J gb).
 
   (* функции в ГH не существуют *)
   Axiom C3_AxA: (ГA->ГH)->False.
@@ -251,14 +247,14 @@ Module Case3.
   Fact C3_ASBJ: { m:ГAB->man | (forall ga:ГA, S(m (fAAB ga))) /\
     (forall gb:ГB, J(m (fBAB gb)))}.
   Proof.
-    exists (fun gab:ГAB => ABm gab).
+    exists ABm.
     split.
     apply AmS.
     intros.
     assert (H:ABm (fBAB gb)=ABm2 (fBAB gb)).
     { apply Beq. }
     rewrite H.
-    apply ABmJ.
+    apply ABm2J.
   Qed.
   Print C3_ASBJ.
 
@@ -275,7 +271,7 @@ Module Case3.
     assert (H:ABm (fBAB gb)=ABm2 (fBAB gb)).
     { apply Beq. }
     rewrite H.
-    apply ABmJ.
+    apply ABm2J.
   Qed.
 
   Fact C3_ASBJ'': exists w:(forall ga:ГA, { m:ГAB->man | S(m (fAAB ga))}), 
@@ -287,7 +283,7 @@ Module Case3.
     assert (H:ABm (fBAB gb)=ABm2 (fBAB gb)).
     { apply Beq. }
     rewrite H.
-    apply ABmJ.
+    apply ABm2J.
   Qed.
 
   (* не доказано !! *)
@@ -310,25 +306,18 @@ Module Case3.
   (* first, in a sense C3_ASBJ already proofs this *)
 
   (* then let's try another interpretation *)
-  Fact C3_BJAS'': ~exists w:(forall gb:ГB, { m:ГAB->man | S(m (fBAB gb))}), 
-    (forall ga:ГA, J(proj1_sig(w гb) (fAAB ga))).
+  (* (5) is False for ABm *)
+  Fact C3_BJAS: ~exists w:(forall gb:ГB, S(ABm (fBAB gb))), 
+    (forall ga:ГA, J(ABm (fAAB ga))).
   Proof.
     unfold not. intros H.
-    destruct H as [H1 H2].
-    destruct H1 as [m s].
-    unfold proj1_sig in H2.
-    exists (fun gb:ГB => exist _ ABm (BmS gb)).
-    intros.
-    unfold proj1_sig.
-    assert (H:ABm (fAAB ga)=ABm2 (fAAB ga)).
-    { apply Beq. }
-    rewrite H.
-    apply ABmJ.
+    destruct H as (H1, H2).
+    assert (JA1:forall ga:ГA, J(Am ga)).
+    { intros. apply H2. }
+    set (J1:=JA1 гa).
+    set (J2:=AmJ гa).
+    contradiction.
   Qed.
-
-  Fact C3_ASBJ: { m:ГAB->man | (forall ga:ГA, S(m (fAAB ga))) /\
-    (forall gb:ГB, J(m (fBAB gb)))}.
-  Proof.
 
 
   (** (6) Barsky thinks that someone murdered Smith, 
@@ -339,7 +328,7 @@ Module Case3.
     exists (fun gab:ГAB => ABm gab).
     split.
     apply BmS.
-    apply AmnJ.
+    apply AmJ.
   Qed.
 
   (** (7) Barsky thinks that someone murdered Smith, 
@@ -372,12 +361,11 @@ Module Case4.
    {Am:man;
     Am2:man;
     AmS:S(Am);
-    AmJ:J(Am2);
-    AmnS:~S(Am2);
-    AmnJ:~J(Am);
+    Am2J:J(Am2);
+    AmJ:~J(Am);
+    Am2S:~S(Am2);
     AmC:C(Am);
-    Am2C:~C(Am2);
-    Aneq:~(Am=Am2)}.
+    Am2C:~C(Am2)}.
   Record ГH := mkГH
    {Hm:man;
     HmS:S(Hm);
@@ -386,23 +374,37 @@ Module Case4.
    {AHm:man;
     AHm2:man;
     AHmS:S(AHm);
-    AHmJ:J(AHm2)}.
+    AHm2J:J(AHm2)}.
   Definition fAAH (ga:ГA):ГAH :=
-    mkГAH (Am ga) (Am2 ga) (AmS ga) (AmJ ga).
+    mkГAH (Am ga) (Am2 ga) (AmS ga) (Am2J ga).
   Definition fHAH (gh:ГH):ГAH :=
     mkГAH (Hm gh) (Hm gh) (HmS gh) (HmJ gh).
 
-  Parameter гh:ГH.
+  Parameter гa:ГA.
 
   (** (8) Someone murdered Smith, 
           and Arsky thinks he murdered Jones. -- False *)
+  Fact C4_HSAJ: ~exists w:(forall gh:ГH, S(AHm (fHAH gh)) ),
+    (forall ga:ГA, J(AHm (fAAH ga))).
+  Proof.
+    unfold not. intros H.
+    destruct H as [H1 H2].
+    assert (JA:forall ga:ГA, J (Am ga)).
+    { intros. apply H2. }
+    set (J1:=AmJ гa).
+    set (J2:=JA гa).
+    contradiction.
+  Qed.
+
+  (* when does (8) become true? *)
+  (*   when m=AHm2  *)
   Fact C4_SAJ: {m:ГAH->man | (forall gh:ГH, S(m (fHAH gh))) /\
     (forall ga:ГA, J(m (fAAH ga)))}.
   Proof.
     exists (fun gah:ГAH => AHm2 gah).
     split.
     apply HmS.
-    apply AmJ.
+    apply Am2J.
   Qed.
 
   Fact C4_SAJ': exists w:(forall gh:ГH, { m:ГAH->man | S(m (fHAH gh)) } ),
@@ -411,11 +413,25 @@ Module Case4.
     exists (fun gh:ГH => exist _ AHm2 (AHmS (fHAH gh))).
     intros.
     unfold proj1_sig.
-    apply AmJ.
+    apply Am2J.
   Qed.
 
   (** (9) Someone murdered Jones, 
           and Arsky thinks he is still in Chicago. -- False *)
+  Fact C4_HJAC: ~exists w:(forall gh:ГH, J(AHm2 (fHAH gh)) ),
+    (forall ga:ГA, C(AHm2 (fAAH ga))).
+  Proof.
+    unfold not. intros H.
+    destruct H as [H1 H2].
+    assert (JA:forall ga:ГA, C (Am2 ga)).
+    { intros. apply H2. }
+    set (J1:=Am2C гa).
+    set (J2:=JA гa).
+    contradiction.
+  Qed.
+
+  (* When does (9) become true? *)
+  (*   when m=AHm  *)
   Fact C4_JAC: {m:ГAH->man | (forall gh:ГH, J(m (fHAH gh))) /\
     (forall ga:ГA, C(m (fAAH ga)))}.
   Proof.
@@ -425,10 +441,11 @@ Module Case4.
     apply AmC.
   Qed.
 
-  Fact C4_JAC': exists w:(forall gh:ГH, { m:ГAH->man | J(m (fHAH gh)) } ),
-    (forall ga:ГA, C(proj1_sig(w гh) (fAAH ga))).
+  Fact C4_JAC': forall gh:ГH,
+    (exists w:(forall gh:ГH, { m:ГAH->man | J(m (fHAH gh)) } ),
+      (forall ga:ГA, C(proj1_sig(w gh) (fAAH ga)))).
   Proof.
-    exists (fun gh:ГH => exist _ AHm (AHmJ (fHAH gh))).
+    exists (fun gh:ГH => exist _ AHm (AHm2J (fHAH gh))).
     intros.
     unfold proj1_sig.
     apply AmC.
@@ -445,8 +462,9 @@ Module Case4.
     apply AmC.
   Qed.
 
-  Fact C4_SAC': exists w:(forall gh:ГH, { m:ГAH->man | S(m (fHAH gh)) } ),
-    (forall ga:ГA, C(proj1_sig(w гh) (fAAH ga))).
+  Fact C4_SAC': forall gh:ГH,
+    (exists w:(forall gh:ГH, { m:ГAH->man | S(m (fHAH gh)) } ),
+      (forall ga:ГA, C(proj1_sig(w gh) (fAAH ga)))).
   Proof.
     exists (fun gh:ГH => exist _ AHm (AHmS (fHAH gh))).
     intros.
@@ -473,7 +491,7 @@ Module Case4.
     exists (fun gah:ГAH => AHm gah).
     split.
     apply HmS.
-    apply AmnJ.
+    apply AmJ.
   Qed.
 
 End Case4.
