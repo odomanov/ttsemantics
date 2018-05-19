@@ -14,8 +14,8 @@ Module Ralph_hb.
   Record ГR:Type := mkГR
     {xh:man;           (* человек в шляпе *)
      xb:man;           (* человек на пляже *)
-     spy_h: spy(xh);   (* человек в шляпе шпион *)
-     spy_b: ~spy(xb)}. (* человек на пляже не шпион *)
+     spy_h: spy(xh);   (* человек в шляпе --- шпион *)
+     spy_b: ~spy(xb)}. (* человек на пляже --- не шпион *)
 
   (** Актуальный контекст *)
   Record ГA:Type := mkГA
@@ -26,7 +26,6 @@ Module Ralph_hb.
 
   Fact gr_h_spy: forall gr:ГR, spy (xh gr).
   Proof.
-    intros.
     apply spy_h.
   Qed.
 
@@ -44,8 +43,7 @@ Module Ralph_hb.
   (** (ГR -> (spy yh)) истинно для функции fhb *)
   Fact spyyh_fhb: forall gr:ГR, spy (yh (fhb gr)).
   Proof.
-    intros.
-    apply (spy_h gr).
+    apply spy_h.
   Qed.
 
   (** (ГR -> ~(spy yh)) ложно для функции fhb *)
@@ -85,7 +83,6 @@ Module Ralph_hb.
   (* существует f, такая, что Ральф верит, что (spy yh) *)
   Fact ex_f : exists (f:ГR->ГA), forall gr:ГR, spy (yh (f gr)).
   Proof.
-    unfold not.
     exists fhb.
     apply spyyh_fhb.
   Qed.
@@ -114,8 +111,8 @@ Module Ralph_hb.
     (forall gr:ГR, ~P(m gr)) -> ~(forall gr:ГR, P(m gr)).
   Proof.
     unfold not.
-    intros.
-    apply (H гr (H0 гr)).
+    intros H1 H2.
+    apply (H1 гr (H2 гr)).
   Qed.
 
   (* то же в контексте ГA *)
@@ -144,8 +141,8 @@ Module Ralph_hb.
     (forall gr:ГR, ~P(gr)) -> ~(forall gr:ГR, P(gr)).
   Proof.
     unfold not.
-    intros.
-    apply (H гr (H0 гr)).
+    intros H1 H2.
+    apply (H1 гr (H2 гr)).
   Qed.
 
   (** ***********************************************)
@@ -165,23 +162,20 @@ Module Ralph_hb.
   (** (ГR -> (spy yh)) истинно для функции fhb *)
   Fact spyy_fhb_inR: forall (gr:ГR), (PAtoR spyyh fhb) gr.
   Proof.
-    intros.
     unfold PAtoR.
-    apply gr.
+    apply spy_h.
   Qed.
 
   (** (ГR -> (spy yb)) ложно для функции fhb) *)
   Lemma spyy_fb_inR : ~ forall (gr:ГR), (PAtoR spyyb fhb) gr.
   Proof.
     unfold not.
-    intros.
-    unfold PAtoR in H.
-    unfold spyyb in H.
-    unfold fhb in H.
-    unfold yb in H.
+    unfold PAtoR.
+    unfold spyyb.
+    unfold fhb.
+    unfold yb.
     apply (Rn_nR_ga spy yb fhb).
     apply spyyb_fhb.
-    assumption.
   Qed.
 
   (** существует ГA->man, f ... *)
@@ -191,7 +185,6 @@ Module Ralph_hb.
   Fact ex_man: exists f:ГR->ГA, 
     forall ga:ГA, exists m:ГA->man, forall gr:ГR, spy (m (f gr)).
   Proof.
-    intros.
     exists fhb.
     exists yh.
     apply spy_h.
@@ -202,7 +195,6 @@ Module Ralph_hb.
     forall ga:ГA, exists m:ГA->man, forall gr:ГR, (PAtoR spyyh f) gr.
   Proof.
     exists fhb.
-    intros.
     exists yh.
     apply spy_h.
   Qed.
@@ -212,7 +204,6 @@ Module Ralph_hb.
   Fact ex_mann: exists f:ГR->ГA, 
     forall ga:ГA, exists m:ГA->man, forall gr:ГR, ~spy (m (f gr)).
   Proof.
-    intros.
     exists fhb.
     exists yb.
     apply spy_b.
@@ -283,15 +274,14 @@ Module Ralph_eq.
   (** (ГR -> (spy zh)) истинно для функции f *)
   Fact spyzh_f: forall gr:ГR, spy (zh (f gr)).
   Proof.
-    intros.
-    apply (spy_h gr).
+    apply spy_h.
   Qed.
 
   (** (ГR -> ~(spy zh)) ложно для функции f *)
   Fact spyzh_fn : ~forall gr:ГR, ~spy (zh (f gr)).
   Proof.
     unfold not.
-    intros.
+    intros H.
     apply (H гr). apply spyzh_f.
   Qed.
 
@@ -299,16 +289,14 @@ Module Ralph_eq.
   Fact spyzb_f : forall gr:ГR, ~spy (zb (f gr)).
   Proof.
     unfold not.
-    intros.
-    apply (spy_b gr).
-    assumption.
+    apply spy_b.
   Qed.
 
   (** (ГR -> (spy zb)) ложно для функции f *)
   Fact spyzb_fn: ~forall gr:ГR, spy (zb (f gr)).
   Proof.
     unfold not.
-    intros.
+    intros H.
     apply (spy_b гr).
     apply H.
   Qed.
@@ -318,7 +306,6 @@ Module Ralph_eq.
   (* существует f, BR(spy zh) *)
   Fact ex_f : exists (f:ГR->ГRA), forall gr:ГR, spy (zh (f gr)).
   Proof.
-    unfold not.
     exists f.
     apply spyzh_f.
   Qed.
@@ -332,8 +319,8 @@ Module Ralph_eq.
     (forall gr:ГR, ~P(gr)) -> ~(forall gr:ГR, P(gr)).
   Proof.
     unfold not.
-    intros.
-    apply (H гr (H0 гr)).
+    intros H1 H2.
+    apply (H1 гr (H2 гr)).
   Qed.
 
   (** *******************************************)
@@ -345,8 +332,8 @@ Module Ralph_eq.
     (forall gr:ГR, ~P(m gr)) -> ~(forall gr:ГR, P(m gr)).
   Proof.
     unfold not.
-    intros.
-    apply (H гr (H0 гr)).
+    intros H1 H2.
+    apply (H1 гr (H2 гr)).
   Qed.
 
   (* то же в контексте ГA *)
@@ -400,7 +387,6 @@ Module Ralph_o.
 
   Fact gr_h_spy: forall gr:ГR, spy (xh gr).
   Proof.
-    intros.
     apply spy_h.
   Qed.
 
@@ -411,15 +397,14 @@ Module Ralph_o.
   (** (ГR -> (spy o)) истинно для функции fh *)
   Fact spyo_fh: forall gr:ГR, spy (o (fh gr)).
   Proof.
-    intros.
-    apply (spy_h gr).
+    apply spy_h.
   Qed.
 
   (** (ГR -> ~(spy o)) ложно для функции fh *)
   Fact spyo_fhn : ~forall gr:ГR, ~spy (o (fh gr)).
   Proof.
     unfold not.
-    intros.
+    intros H.
     apply (H гr). apply spyo_fh.
   Qed.
 
@@ -427,16 +412,14 @@ Module Ralph_o.
   Fact spyo_fb : forall gr:ГR, ~spy (o (fb gr)).
   Proof.
     unfold not.
-    intros.
-    apply (spy_b gr).
-    assumption.
+    apply spy_b.
   Qed.
 
   (** (ГR -> (spy o)) ложно для функции fb *)
   Fact spyo_fbn: ~forall gr:ГR, spy (o (fb gr)).
   Proof.
     unfold not.
-    intros.
+    intros H.
     apply (spy_b гr).
     apply H.
   Qed.
@@ -446,7 +429,6 @@ Module Ralph_o.
   (* существует f, BR(spy o) *)
   Fact ex_f : exists (f:ГR->ГA), forall gr:ГR, spy (o (f gr)).
   Proof.
-    unfold not.
     exists fh.
     apply spyo_fh.
   Qed.
@@ -454,7 +436,6 @@ Module Ralph_o.
   (* существует f, (BR)~(spy o) *)
   Fact ex_fn : exists (f:ГR->ГA), forall gr:ГR, ~spy (o (f gr)).
   Proof.
-    unfold not.
     exists fb.
     apply spyo_fb.
   Qed.
@@ -475,8 +456,8 @@ Module Ralph_o.
     (forall gr:ГR, ~P(m gr)) -> ~(forall gr:ГR, P(m gr)).
   Proof.
     unfold not.
-    intros.
-    apply (H гr (H0 гr)).
+    intros H1 H2.
+    apply (H1 гr (H2 гr)).
   Qed.
 
   (* то же в контексте ГA *)
@@ -513,23 +494,20 @@ Module Ralph_o.
   (** (ГR -> (spy o)) истинно для функции fh *)
   Fact spyo_fh_inR: forall (gr:ГR), (PAtoR spyo fh) gr.
   Proof.
-    intros.
     unfold PAtoR.
-    apply gr.
+    apply spy_h.
   Qed.
 
   (** (ГR -> (spy o)) ложно для функции fb) *)
   Fact spyo_fb_inR : ~ forall (gr:ГR), (PAtoR spyo fb) gr.
   Proof.
     unfold not.
-    intros.
-    unfold PAtoR in H.
-    unfold spyo in H.
-    unfold fb in H.
-    unfold o in H.
+    unfold PAtoR.
+    unfold spyo.
+    unfold fb.
+    unfold o.
     apply (Rn_nR_ga spy o fb).
     apply spyo_fb.
-    assumption.
   Qed.
 
   (** существует ГA->man, f ... *)
@@ -539,7 +517,6 @@ Module Ralph_o.
   Fact ex_man: exists f:ГR->ГA, 
     forall ga:ГA, exists m:ГA->man, forall gr:ГR, spy (m (f gr)).
   Proof.
-    intros.
     exists fh.
     exists o.
     apply spy_h.
@@ -550,7 +527,6 @@ Module Ralph_o.
     forall ga:ГA, exists m:ГA->man, forall gr:ГR, (PAtoR spyo f) gr.
   Proof.
     exists fh.
-    intros.
     exists o.
     apply spy_h.
   Qed.
@@ -560,7 +536,6 @@ Module Ralph_o.
   Fact ex_mann: exists f:ГR->ГA, 
     forall ga:ГA, exists m:ГA->man, forall gr:ГR, ~spy (m (f gr)).
   Proof.
-    intros.
     exists fb.
     exists o.
     apply spy_b.
@@ -573,7 +548,7 @@ Module Ralph_o.
     forall ga:ГA, exists m:ГA->man, forall gr:ГR, ~(PAtoR (spyA m) f) gr.
   Proof.
     exists fb.
-    exists o. 
+    exists o.
     apply spy_b.
   Qed.
 
@@ -581,7 +556,6 @@ Module Ralph_o.
   Fact ex_mann'': exists f:ГR->ГA, 
     forall ga:ГA, exists m:ГA->man, ~forall gr:ГR, (PAtoR (spyA m) f) gr.
   Proof.
-    unfold not.
     exists fb.
     exists o.
     apply (Rn_nR_ga spy o fb).
@@ -591,7 +565,6 @@ Module Ralph_o.
   Fact ex_mann''': exists f:ГR->ГA, 
     exists m:ГA->man, ~forall gr:ГR, (PAtoR (spyA m) f) gr.
   Proof.
-    unfold not.
     exists fb.
     exists o.
     apply (Rn_nR_ga spy o fb).
