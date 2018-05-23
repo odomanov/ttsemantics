@@ -418,41 +418,41 @@ Module Ralph_o.
 
   (** контексты оценки *)
   (*   Parameter ГC:Type. *)
-  Class ГRH :=
-   {RHa:>ГA;
-    RHr:>ГR;
-    RHeqh:o=Rh}.
-  Class ГRB :=
-   {RBa:>ГA;
-    RBr:>ГR;
-    RBeqb:o=Rb}.
-  Class ГRC := (* противоречивый, как потом докажем *)
-   {RCa:>ГA;
+  Class ГEH :=
+   {EHa:>ГA;
+    EHr:>ГR;
+    EHeqh:o=Rh}.
+  Class ГEB :=
+   {EBa:>ГA;
+    EBr:>ГR;
+    EBeqb:o=Rb}.
+  Class ГEC := (* противоречивый, как потом докажем *)
+   {ECa:>ГA;
     RСr:>ГR;
-    RCeqb:o=Rb;
-    RCeqh:o=Rh}.
+    ECeqb:o=Rb;
+    ECeqh:o=Rh}.
 
-  Definition RHh (grh:ГRH): man := Rh.
-  Definition RHb (grh:ГRH): man := Rb.
-  Definition RBh (grb:ГRB): man := Rh.
-  Definition RBb (grb:ГRB): man := Rb.
+  Definition EHh (geh:ГEH): man := Rh.
+  Definition EHb (geh:ГEH): man := Rb.
+  Definition EBh (geb:ГEB): man := Rh.
+  Definition EBb (geb:ГEB): man := Rb.
 
 (*   Parameter гr:ГR. *)
 
-  (** контекст ГRC противоречив *)
+  (** контекст ГEC противоречив *)
 
-  Fact cont:forall grc:ГRC, False.
+  Fact cont:forall gec:ГEC, False.
   Proof.
     intros.
     assert (H1:spy o).
-    { rewrite RCeqh. apply spy_h. }
+    { rewrite ECeqh. apply spy_h. }
     assert (H2:~spy o).
-    { rewrite RCeqb. apply spy_b. }
+    { rewrite ECeqb. apply spy_b. }
     contradiction.
   Qed.
 
-  (* в ГRC актуальное мнение противоречиво *)
-  Fact cont':forall grc:ГRC, forall ga:ГA, False.
+  (* в ГEC актуальное мнение противоречиво *)
+  Fact cont':forall gec:ГEC, forall ga:ГA, False.
   Proof.
     intros.
     apply cont.
@@ -494,62 +494,62 @@ Module Ralph_o.
   Qed.
 
   (** ********************************************************************)
-  (** de re *)
+  (** de re                   *)
   (** ********************************************************************)
 
-  (** spy o истинно в контексте ГRH *)
-  Fact spyo_rh: forall grh:ГRH, spy (o).
+  (** spy o истинно в контексте ГEH *)
+  Fact spyo_eh: forall geh:ГEH, spy (o).
   Proof.
     intros.
-    rewrite RHeqh.
+    rewrite EHeqh.
     apply spy_h.
   Qed.
 
-  Parameter гrh:ГRH.
-  Parameter гrb:ГRB.
+  Parameter гeh:ГEH.
+  Parameter гeb:ГEB.
   
-  (** неверно, что ~(spy o), в контексте ГRH *)
-  Fact spyo_rhn: ~forall grh:ГRH, ~spy (o).
+  (** неверно, что ~(spy o), в контексте ГEH *)
+  Fact spyo_ehn: ~forall geh:ГEH, ~spy (o).
   Proof.
     unfold not.
     intros H.
-    apply (H гrh).
-    apply spyo_rh.
+    apply (H гeh).
+    apply spyo_eh.
   Qed.
 
-  (** spy o ложно в контексте ГRB *)
-  Fact spyo_rb: forall grb:ГRB, ~spy (o).
+  (** spy o ложно в контексте ГEB *)
+  Fact spyo_eb: forall geb:ГEB, ~spy (o).
   Proof.
     intros.
-    rewrite RBeqb.
+    rewrite EBeqb.
     apply spy_b.
   Qed.
 
-  (** неверно, что (spy o), в контексте ГRB *)
-  Fact spyo_rbn: ~forall grb:ГRB, spy (o).
+  (** неверно, что (spy o), в контексте ГEB *)
+  Fact spyo_ebn: ~forall geb:ГEB, spy (o).
   Proof.
     unfold not.
     intros.
-    set (H1:=H гrb).
-    rewrite RBeqb in H1.
+    set (H1:=H гeb).
+    rewrite EBeqb in H1.
     apply spy_b in H1.
     assumption.
   Qed.
 
   (** существует человек в общем контексте... *)
 
-  Fact spyrh_ex: forall grh:ГRH, exists m:ГRH->man, 
-    forall gr:ГR, spy (m grh).
+  Fact spyeh_ex: forall geh:ГEH, exists m:ГEH->man, 
+    forall gr:ГR, spy (m geh).
   Proof.
-    exists RHh.
+    exists EHh.
     intros.
     apply spy_h.
   Qed.
 
-  Fact spyrb_ex: forall grb:ГRB, exists m:ГRB->man, 
-    forall gr:ГR, ~spy (m grb).
+  Fact spyeb_ex: forall geb:ГEB, exists m:ГEB->man, 
+    forall gr:ГR, ~spy (m geb).
   Proof.
-    exists RBb.
+    exists EBb.
     intros.
     apply spy_b.
   Qed.
@@ -587,7 +587,7 @@ Module Ralph_o.
   Proof.
     unfold not.
     intros H1 H2.
-    apply (H1 (@RHr гrh) (H2 RHr)).
+    apply (H1 (@EHr гeh) (H2 EHr)).
   Qed.
 
   (* то же в контексте ГA *)
@@ -615,33 +615,33 @@ Module Ralph_o.
 
   (* Transforms Prop in ГA into Prop in ГR *)
 
-  Definition PAtoRH (P:ГA->Prop) : ГRH->Prop :=
-    fun (grh:ГRH) => P RHa.
-  Definition PAtoRB (P:ГA->Prop) : ГRB->Prop :=
-    fun (grb:ГRB) => P RBa.
+  Definition PAtoEH (P:ГA->Prop) : ГEH->Prop :=
+    fun (geh:ГEH) => P EHa.
+  Definition PAtoEB (P:ГA->Prop) : ГEB->Prop :=
+    fun (geb:ГEB) => P EBa.
 
   (* пропозиция (spy o) в ГA *)
   Definition spyo:ГA->Prop := fun (ga:ГA) => spy (@o ga).
 
   (** (ГR -> (spy o)) истинно *)
-  Fact spyo_h_inR: forall (grh:ГRH), (PAtoRH spyo) grh.
+  Fact spyo_h_inR: forall (geh:ГEH), (PAtoEH spyo) geh.
   Proof.
-    unfold PAtoRH.
+    unfold PAtoEH.
     intros.
     unfold spyo.
-    rewrite RHeqh.
+    rewrite EHeqh.
     apply spy_h.
   Qed.
 
   (** (ГR -> (spy o)) ложно *)
-  Fact spyo_b_inR : ~ forall (grb:ГRB), (PAtoRB spyo) grb.
+  Fact spyo_b_inR : ~ forall (geb:ГEB), (PAtoEB spyo) geb.
   Proof.
     unfold not.
-    unfold PAtoRB.
+    unfold PAtoEB.
     intros H.
-    set (H1:=H гrb).
+    set (H1:=H гeb).
     unfold spyo in H1.
-    rewrite RBeqb in H1.
+    rewrite EBeqb in H1.
     apply spy_b in H1.
     assumption.
   Qed.
@@ -650,45 +650,45 @@ Module Ralph_o.
 
   (* при некотором ГR мы верим, что существует человек, о котором Ральф верит, 
      что он шпион *)
-  Fact ex_man: forall ga:ГA, exists m:ГA->man, forall grh:ГRH, spy (m (RHa)).
+  Fact ex_man: forall ga:ГA, exists m:ГA->man, forall geh:ГEH, spy (m (EHa)).
   Proof.
     intros.
     exists @o.
-    apply spyo_rh.
+    apply spyo_eh.
   Qed.
 
   (* то же с PAtoR *)
-  Fact ex_man': forall ga:ГA, exists m:ГA->man, forall grh:ГRH, (PAtoRH spyo) grh.
+  Fact ex_man': forall ga:ГA, exists m:ГA->man, forall geh:ГEH, (PAtoEH spyo) geh.
   Proof.
     intros.
     exists @o.
-    apply spyo_rh.
+    apply spyo_eh.
   Qed.
 
   (* при некотором ГR мы верим, что существует человек, о котором Ральф верит, 
      что он НЕ шпион *)
-  Fact ex_mann: forall ga:ГA, exists m:ГA->man, forall grb:ГRB, ~spy (m (RBa)).
+  Fact ex_mann: forall ga:ГA, exists m:ГA->man, forall geb:ГEB, ~spy (m (EBa)).
   Proof.
     intros.
     exists @o.
-    apply spyo_rb.
+    apply spyo_eb.
   Qed.
 
   (* то же с PAtoR *)
   Definition spyA (m:ГA->man):ГA->Prop := fun (ga:ГA) => spy (m ga).
 
   Fact ex_mann': forall ga:ГA, 
-    exists m:ГA->man, forall grb:ГRB, ~(PAtoRB (spyA m)) grb.
+    exists m:ГA->man, forall geb:ГEB, ~(PAtoEB (spyA m)) geb.
   Proof.
     apply ex_mann.
   Qed.
 
   Fact ex_mann'': forall ga:ГA, 
-    exists m:ГA->man, ~forall grb:ГRB, (PAtoRB (spyA m)) grb.
+    exists m:ГA->man, ~forall geb:ГEB, (PAtoEB (spyA m)) geb.
   Proof.
     intros.
     exists @o.
-    apply spyo_rbn.
+    apply spyo_ebn.
   Qed.
 
 End Ralph_o.
