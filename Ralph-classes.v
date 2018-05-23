@@ -50,6 +50,19 @@ Module Ralph_hb.
     apply spyh.
   Qed.
 
+  (* Ральф верит, что существует человек...  *)
+  Fact spy_ex: forall gr:ГR, exists m:ГA->man, spy (m Ra).
+  Proof.
+    exists @Ah.
+    apply spy_h.
+  Qed.
+
+  Fact spy_exn: forall gr:ГR, exists m:ГA->man, ~spy (m Ra).
+  Proof.
+    exists @Ab.
+    apply spy_b.
+  Qed.
+
   Parameter гr:ГR.
 
   (** ********************************************************************)
@@ -84,13 +97,13 @@ Module Ralph_hb.
   Qed.
 
   (** (ГR -> (spy Ab)) ложно *)
-  Fact spyb_An: ~forall gr:ГR, (PAtoR spybA) gr.
+  Fact spyb_An: forall gr:ГR, ~forall gr:ГR, (PAtoR spybA) gr.
   Proof.
     unfold not.
     unfold PAtoR.
     unfold spybA.
-    intros H.
-    set (H1:=H гr).
+    intros gr H.
+    set (H1:=H gr).
     apply spy_b in H1.
     assumption.
   Qed.
@@ -414,6 +427,11 @@ Module Ralph_o.
     RBr:>ГR;
     RBeqb:o=Rb}.
 
+  Definition RHh (grh:ГRH): man := Rh.
+  Definition RHb (grh:ГRH): man := Rb.
+  Definition RBh (grb:ГRB): man := Rh.
+  Definition RBb (grb:ГRB): man := Rb.
+
 (*   Parameter гr:ГR. *)
 
   (** докажем spy(h) для всех ГR  --- de dicto *)
@@ -424,11 +442,25 @@ Module Ralph_o.
     apply spy_h.
   Qed.
 
+  Fact spyh_ex: forall gr:ГR, exists m:ГR->man, spy (m gr).
+  Proof.
+    intros.
+    exists @Rh.
+    apply spy_h.
+  Qed.
+
   (** докажем ~spy(b) для всех ГR  --- de dicto *)
 
   Fact spyb: forall gr:ГR, ~spy (Rb).
   Proof.
     intros.
+    apply spy_b.
+  Qed.
+
+  Fact spyb_ex: forall gr:ГR, exists m:ГR->man, ~spy (m gr).
+  Proof.
+    intros.
+    exists @Rb.
     apply spy_b.
   Qed.
 
@@ -474,6 +506,17 @@ Module Ralph_o.
     apply spy_b in H1.
     assumption.
   Qed.
+
+  (** существует человек в общем контексте... *)
+
+  Fact spyrh_ex: forall grh:ГRH, exists m:ГRH->man, 
+    forall gr:ГR, spy (m grh).
+  Proof.
+    exists RHh.
+    intros.
+    apply spy_h.
+  Qed.
+
 
   (** существует ф-я f ... *)
 
