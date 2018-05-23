@@ -416,7 +416,7 @@ Module Ralph_o.
      spy_h : spy(Rh);
      spy_b : ~spy(Rb)}.
 
-  (** контексты связи *)
+  (** контексты оценки *)
   (*   Parameter ГC:Type. *)
   Class ГRH :=
    {RHa:>ГA;
@@ -426,6 +426,11 @@ Module Ralph_o.
    {RBa:>ГA;
     RBr:>ГR;
     RBeqb:o=Rb}.
+  Class ГRC := (* противоречивый, как потом докажем *)
+   {RCa:>ГA;
+    RСr:>ГR;
+    RCeqb:o=Rb;
+    RCeqh:o=Rh}.
 
   Definition RHh (grh:ГRH): man := Rh.
   Definition RHb (grh:ГRH): man := Rb.
@@ -434,6 +439,30 @@ Module Ralph_o.
 
 (*   Parameter гr:ГR. *)
 
+  (** контекст ГRC противоречив *)
+
+  Fact cont:forall grc:ГRC, False.
+  Proof.
+    intros.
+    assert (H1:spy o).
+    { rewrite RCeqh. apply spy_h. }
+    assert (H2:~spy o).
+    { rewrite RCeqb. apply spy_b. }
+    contradiction.
+  Qed.
+
+  (* в ГRC актуальное мнение противоречиво *)
+  Fact cont':forall grc:ГRC, forall ga:ГA, False.
+  Proof.
+    intros.
+    apply cont.
+    trivial.
+  Qed.
+
+  (** *************************************************************)
+  (**   de dicto                    *)
+  (** *************************************************************)
+  
   (** докажем spy(h) для всех ГR  --- de dicto *)
 
   Fact spyh: forall gr:ГR, spy (Rh).
@@ -465,7 +494,7 @@ Module Ralph_o.
   Qed.
 
   (** ********************************************************************)
-  (** Мнения для (spy o)  *)
+  (** de re *)
   (** ********************************************************************)
 
   (** spy o истинно в контексте ГRH *)
@@ -517,6 +546,13 @@ Module Ralph_o.
     apply spy_h.
   Qed.
 
+  Fact spyrb_ex: forall grb:ГRB, exists m:ГRB->man, 
+    forall gr:ГR, ~spy (m grb).
+  Proof.
+    exists RBb.
+    intros.
+    apply spy_b.
+  Qed.
 
   (** существует ф-я f ... *)
 
