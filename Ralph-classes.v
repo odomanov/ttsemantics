@@ -123,7 +123,7 @@ Module Ralph_hb.
     apply (Rn_nR_ga spy (@Ab)).
   Qed.
 
-  (** Итог: Ральф верит ~(spy yb) -> неверно, что Ральф верит (spy yb)    *)
+  (** Итог: Ральф верит ~(spy Ab) -> неверно, что Ральф верит (spy Ab)    *)
 
   (** *******************************************)
   (** Для пропозиции ГR->Prop в общем случае   *)
@@ -181,13 +181,13 @@ Module Ralph_eq.
      RAb:man}.          (* человек на пляже *)
 
   (** Контекст Ральфа **)
-  Record ГR:Type := mkГR
+  Class ГR:Type := mkГR
     {Rg:>ГRA;           (* общий контекст *)
      spy_h: spy(RAh);   (* человек в шляпе шпион *)
      spy_b: ~spy(RAb)}. (* человек на пляже не шпион *)
 
   (** Актуальный контекст *)
-  Record ГA:Type := mkГA
+  Class ГA:Type := mkГA
     {Ag:>ГRA;           (* общий контекст *)
      Aeq:RAh=RAb}.      (* человек в шляпе = человек на пляже *)
 
@@ -203,55 +203,141 @@ Module Ralph_eq.
   Definition spybR (gr:ГR):Prop := spy (Rb gr).
   Definition spybA (ga:ГA):Prop := spy (Ab ga).
 
-  (* Преобразование из Prop в контексте ГRA в Prop в контексте ГR, ГA *)
+  (* Преобразование из Prop в контексте ГRA в Prop в контекстах ГR, ГA *)
 
   Definition PRAtoR (P:ГRA->Prop):ГR->Prop :=
-    fun gr:ГR => P (Rg gr).
+    fun gr:ГR => P Rg.
   Definition PRAtoA (P:ГRA->Prop):ГA->Prop :=
-    fun ga:ГA => P (Ag ga).
+    fun ga:ГA => P Ag.
 
+  (* требуется для некоторых доказательств *)
   Parameter гr:ГR.
 
   (** ********************************************************************)
-  (** Мнения для (spy h)  *)
+  (** Мнения de dicto     *)
   (** ********************************************************************)
 
+  (** Мнения для (spy h)  *)
+
   (** (ГR -> (spy h)) истинно *)
-  Fact spyh: forall gr:ГR, spy (Rh gr).
+  Fact spyh: forall gr:ГR, spyhR gr.
   Proof.
+    intros.
     apply spy_h.
   Qed.
 
   (** (ГR -> ~(spy h)) ложно *)
-  Fact spyhn : ~forall gr:ГR, ~spy (Rh gr).
+  Fact spyhn : ~forall gr:ГR, ~(spyhR gr).
   Proof.
     unfold not.
     intros H.
     apply (H гr). apply spyh.
   Qed.
 
-  (** (ГR -> ~(spy b)) истинно *)
-  Fact spyb : forall gr:ГR, ~spy (Rb gr).
+  (** ГR -> существует m, (spy m) *)
+  (** Ральф верит, что существуют шпионы  *)
+  Fact spyhm: forall gr:ГR, exists m:ГR->man, spy (m gr).
   Proof.
+    intros.
+    exists Rh.
+    apply spy_h.
+  Qed.
+
+  (** Мнения для (spy b)  *)
+
+  (** (ГR -> ~(spy b)) истинно *)
+  Fact spyb : forall gr:ГR, ~(spybR gr).
+  Proof.
+    intros.
     apply spy_b.
   Qed.
 
   (** (ГR -> (spy b)) ложно *)
-  Fact spybn: ~forall gr:ГR, spy (Rb gr).
+  Fact spybn: ~forall gr:ГR, spybR gr.
   Proof.
     unfold not.
     intros H.
-    apply (spy_b гr).
-    apply H.
+    set (H1:=H гr).
+    apply spy_b in H1.
+    assumption.
+  Qed.
+
+  (** ГR -> существует m, ~(spy m) *)
+  (** Ральф верит, что существуют НЕ шпионы  *)
+  Fact spybm: forall gr:ГR, exists m:ГR->man, ~spy (m gr).
+  Proof.
+    intros.
+    exists Rb.
+    apply spy_b.
+  Qed.
+
+  (** ********************************************************************)
+  (** Мнения de re        *)
+  (** ********************************************************************)
+
+  (** существует m в общем контексте, т.ч. ГR -> (spy m) *)
+  Fact spyh_A: exists m:ГRA->man, forall gr:ГR, spy (m Rg).
+  Proof.
+    exists @RAh.
+    intros.
+    apply spy_h.
+  Qed.
+
+  (** существует m в общем контексте, т.ч. ГR -> ~(spy m) *)
+  Fact spyb_A: exists m:ГRA->man, forall gr:ГR, ~spy (m Rg).
+  Proof.
+    exists @RAb.
+    intros.
+    apply spy_b.
+  Qed.
+
+  (** существует человек, о котором Ральф уверен, что он шпион, а мы знаем,
+      что это человек на пляже  *)
+  Fact spyhb: exists m:ГRA->man, (forall gr:ГR, spy (m Rg) /\
+    (forall ga:ГA, Ab ga = m Ag)).
+  Proof.
+    exists @RAh.
+    split.
+    - apply spy_h.
+    - unfold Ab. symmetry. apply Aeq.
+  Qed.
+
+  Fact spyh': exists w:{ m:ГRA->man | forall gr:ГR, spy (m Rg) },
+    forall ga:ГA, Ab ga = proj1_sig w Ag.
+  Proof.
+    assert (H:forall gr:ГR,spy RAh).
+    { intros. apply spy_h. }
+    exists (exist _ (@RAh) H).
+    unfold proj1_sig.
+    intros.
+    symmetry. apply Aeq.
+  Qed.
+
+  Fact spyh'': { w:{ m:ГRA->man | forall gr:ГR, spy (m Rg) } |
+    forall ga:ГA, Ab ga = proj1_sig w Ag }.
+  Proof.
+    assert (H:forall gr:ГR,spy RAh).
+    { intros. apply spy_h. }
+    exists (exist _ (@RAh) H).
+    unfold proj1_sig.
+    intros.
+    symmetry. apply Aeq.
   Qed.
 
   (** существует ф-я f ... *)
 
-  (* существует f, BR(spy h) *)
-  Fact ex_f : exists (f:ГR->ГRA), forall gr:ГR, spy (@RAh (f gr)).
+  (* существует f, (BR)(spy h) *)
+  Fact ex_fh : exists (f:ГR->ГRA), forall gr:ГR, spy (@RAh (f gr)).
   Proof.
-    exists Rg.
+    exists @Rg.
     apply spyh.
+  Qed.
+
+  (* существует f, (BR)~(spy b) *)
+  Fact ex_fb : exists (f:ГR->ГRA), forall gr:ГR, ~spy (@RAb (f gr)).
+  Proof.
+    exists @Rg.
+    apply spyb.
   Qed.
 
   (** *******************************************)
@@ -295,7 +381,7 @@ Module Ralph_eq.
     apply (Rn_nR_ga spy Ah _).
   Qed.
 
-  (** Итог: Ральф верит ~(spy x) -> неверно, что Ральф верит (spy x)    *)
+  (** Итог: Ральф верит ~(spy Ah) -> неверно, что Ральф верит (spy Ah)    *)
 
 End Ralph_eq.
 
