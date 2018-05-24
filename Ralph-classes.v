@@ -36,6 +36,9 @@ Module Ralph_hb.
   Definition PAtoR (P:ГA->Prop):ГR->Prop :=
     fun gr:ГR => P Ra.
 
+  (** ************************************************************)
+  (**   de dicto              *)
+  (** ************************************************************)
 
   (** Докажем spy(h) для всех ГR --- de dicto *)
 
@@ -52,24 +55,25 @@ Module Ralph_hb.
   Qed.
 
   (* Ральф верит, что существует человек...  *)
-  Fact spy_ex: forall gr:ГR, exists m:ГA->man, spy (m Ra).
+  Fact spy_ex: forall gr:ГR, exists m:ГR->man, spy (m gr).
   Proof.
-    exists @Ah.
+    exists @Rh.
     apply spy_h.
   Qed.
 
-  Fact spy_exn: forall gr:ГR, exists m:ГA->man, ~spy (m Ra).
+  Fact spy_exn: forall gr:ГR, exists m:ГR->man, ~spy (m gr).
   Proof.
-    exists @Ab.
+    exists @Rb.
     apply spy_b.
   Qed.
 
   Parameter гr:ГR.
 
   (** ********************************************************************)
-  (** Мнения для (spy Ah)  *)
+  (**     de re                     *)
   (** ********************************************************************)
 
+  (** Мнения для (spy Ah) *)
 
   (** (ГR -> (spy Ah)) истинно *)
   Fact spyh_A: forall gr:ГR, (PAtoR spyhA) gr.
@@ -85,9 +89,7 @@ Module Ralph_hb.
     apply (H гr). apply spyh_A.
   Qed.
 
-  (** ********************************************************************)
   (** Мнения для (spy Ab)  *)
-  (** ********************************************************************)
 
   (** (ГR -> ~(spy Ab)) истинно *)
   Fact spyb_A : forall gr:ГR, ~((PAtoR spybA) gr).
@@ -106,10 +108,36 @@ Module Ralph_hb.
     unfold spybA.
     intros gr H.
     set (H1:=H gr).
+    apply spy_b in H1.
+    assumption.
+  Qed.
 
+  (** существует ГA->man ... *)
 
+  (* существует человек, о котором Ральф верит, что он шпион *)
+  Fact ex_man: exists m:ГA->man, forall gr:ГR, spy (m Ra).
+  Proof.
+    exists @Ah.
+    intros.
+    apply spy_h.
+  Qed.
 
+  (* существует человек, о котором Ральф верит, что он НЕ шпион *)
+  Fact ex_mann: exists m:ГA->man, forall gr:ГR, ~spy (m Ra).
+  Proof.
+    exists @Ab.
+    intros.
+    apply spy_b.
+  Qed.
 
+  (* существует человек, о котором неверно, что Ральф верит, 
+     что он шпион *)
+  Fact ex_mann''': exists m:ГA->man, ~forall gr:ГR, spy (m Ra).
+  Proof.
+    unfold not.
+    exists @Ab.
+    intros H.
+    set (H1:=H гr).
     apply spy_b in H1.
     assumption.
   Qed.
@@ -157,32 +185,6 @@ Module Ralph_hb.
     apply (H1 гr (H2 гr)).
   Qed.
 
-  (** существует ГA->man ... *)
-  (* существует человек, о котором Ральф верит, что он шпион *)
-  Fact ex_man: exists m:ГA->man, forall gr:ГR, spy (m Ra).
-  Proof.
-    exists @Ah.
-    intros.
-    apply spy_h.
-  Qed.
-  (* существует человек, о котором Ральф верит, что он НЕ шпион *)
-  Fact ex_mann: exists m:ГA->man, forall gr:ГR, ~spy (m Ra).
-  Proof.
-    exists @Ab.
-    intros.
-    apply spy_b.
-  Qed.
-  (* существует человек, о котором неверно, что Ральф верит, 
-     что он шпион *)
-  Fact ex_mann''': exists m:ГA->man, ~forall gr:ГR, spy (m Ra).
-  Proof.
-    unfold not.
-    exists @Ab.
-    intros H.
-    set (H1:=H гr).
-    apply spy_b in H1.
-    assumption.
-  Qed.
 End Ralph_hb.
 
 (** ***********************************************)
@@ -583,7 +585,7 @@ Module Ralph_eq_eval.
   Qed.
 
   (** Определения Eh, Eb противоречивы   *)
-  
+
   Fact spyeh: forall ge:ГE, spy (Eh ge).
   Proof.
     intros.
