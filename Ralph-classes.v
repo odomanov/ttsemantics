@@ -6,6 +6,10 @@
 Parameter man:Set.
 Parameter spy: man->Prop.
 
+
+
+
+(** ***********************************************************)
 (** Модуль: в актуальном контексте человек в шляпе и на пляже *)
 
 Module Ralph_hb.
@@ -24,6 +28,9 @@ Module Ralph_hb.
   (* вспомогательные определения *)
   Definition Rh (gr:ГR):man := Ah.
   Definition Rb (gr:ГR):man := Ab.
+  (** Определения для Rh, Rb неверны!!
+      Как показано ниже, аналогичные определения в других модулях приводят к
+      противоречиям.  *)
   (* пропозиция (spy h) в ГA и ГR *)
   Definition spyhR (gr:ГR):Prop := spy (Rh gr).
   Definition spyhA (ga:ГA):Prop := spy (Ah).
