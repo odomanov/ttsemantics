@@ -187,6 +187,12 @@ Module Ralph_hb.
 
 End Ralph_hb.
 
+
+
+
+
+
+
 (** ***********************************************)
 (** Модуль: человек в шляпе = человек на пляже  *)
 
@@ -200,25 +206,140 @@ Module Ralph_eq.
   (** Контекст Ральфа **)
   Class ГR:Type := mkГR
     {Rg:>ГRA;           (* общий контекст *)
-     spy_h: spy(RAh);   (* человек в шляпе шпион *)
-     spy_b: ~spy(RAb)}. (* человек на пляже не шпион *)
+     spy_h: spy(RAh);   (* человек в шляпе --- шпион *)
+     spy_b: ~spy(RAb)}. (* человек на пляже --- не шпион *)
 
   (** Актуальный контекст *)
   Class ГA:Type := mkГA
     {Ag:>ГRA;           (* общий контекст *)
      Aeq:RAh=RAb}.      (* человек в шляпе = человек на пляже *)
 
-  (* вспомогательные определения *)
+  (** связывающий контекст *)
+  Class ГS:Type := mkГS
+    {Sga:>ГA;
+     Sgr:>ГR;
+     Seq:Ag=Rg}.        (* обший контекст в ГA и ГR совпадает *)
+
+  (** Определения ниже противоречивы *)
   Definition Rh (gr:ГR):man := @RAh (@Rg gr).
   Definition Rb (gr:ГR):man := @RAb (@Rg gr).
   Definition Ah (ga:ГA):man := @RAh (@Ag ga).
   Definition Ab (ga:ГA):man := @RAb (@Ag ga).
+  Definition Sh (gs:ГS):man := RAh.
+  Definition Sb (gs:ГS):man := RAb.
   (* пропозиция (spy h) в ГA и ГR *)
   Definition spyhR (gr:ГR):Prop := spy (Rh gr).
   Definition spyhA (ga:ГA):Prop := spy (Ah ga).
   (* пропозиция (spy b) в ГA и ГR *)
   Definition spybR (gr:ГR):Prop := spy (Rb gr).
   Definition spybA (ga:ГA):Prop := spy (Ab ga).
+
+  (** Доказываем противоречивость   *)
+
+  Lemma eqShSb: forall gs:ГS, @Sh gs = @Sb gs.
+  Proof.
+    intros.
+    unfold Sh. unfold Sb.
+    apply Aeq.
+  Qed.
+
+  Lemma eqAhSh: forall gs, @Ah (@Sga gs) = @Sh gs.
+  Proof.
+    intros.
+    unfold Ah. unfold Sh.
+    reflexivity.
+  Qed.
+
+  Lemma eqRhSh: forall gs, @Rh (@Sgr gs) = @Sh gs.
+  Proof.
+    intros.
+    unfold Rh. unfold Sh.
+    rewrite Seq.
+    reflexivity.
+  Qed.
+
+  Lemma eqAbSb: forall gs, @Ab (@Sga gs) = @Sb gs.
+  Proof.
+    intros.
+    unfold Ab. unfold Sb.
+    reflexivity.
+  Qed.
+
+  Lemma eqAhAb: forall gs, @Ah (@Sga gs) = @Ab (@Sga gs).
+  Proof.
+    intros.
+    rewrite (eqAhSh gs).
+    rewrite (eqAbSb gs).
+    apply eqShSb.
+  Qed.
+
+  Lemma eqAhRh: forall gs:ГS, @Ah (@Sga gs) = @Rh (@Sgr gs).
+  Proof.
+    intros.
+    rewrite (eqAhSh gs).
+    rewrite (eqRhSh gs).
+    reflexivity.
+  Qed.
+
+  Lemma spyhs: forall gs:ГS, spy (@Ah (@Sga gs)).
+  Proof.
+    intros.
+    rewrite (eqAhRh gs).
+    unfold Rh.
+    apply spy_h.
+  Qed.
+
+  Lemma spybs: forall gs:ГS, ~spy (@Ab (@Sga gs)).
+  Proof.
+    intros.
+    rewrite (eqAbSb gs).
+    unfold Sb.
+    rewrite Seq.
+    apply spy_b.
+  Qed.
+
+  Parameter гs:ГS.
+
+  Lemma spybsn: ~forall gs:ГS, spy (@Ab (@Sga gs)).
+  Proof.
+    unfold not.
+    intros.
+    apply (spybs гs).
+    apply (H гs).
+  Qed.
+
+  Lemma spyhsn: ~forall gs:ГS, spy (@Ah (@Sga gs)).
+  Proof.
+    unfold not.
+    intros.
+    apply spybsn.
+    intros.
+    rewrite <-(eqAhAb gs).
+    auto.
+  Qed.
+
+  (** ПРОТИВОРЕЧИЕ !!  *)
+
+  Theorem contr:False.
+  Proof.
+    apply spyhsn.
+    apply spyhs.
+  Qed.
+
+  Theorem contr':False.
+  Proof.
+    set (H1:=spyhsn).
+    set (H2:=spyhs).
+    contradiction.
+  Qed.
+
+  (* отменяем противоречивые определения  *)
+  Reset Rh. 
+  Reset Rb.
+  Reset Ah.
+  Reset Ab.
+  Reset Sh.
+  Reset Sb.
 
   (* Преобразование из Prop в контексте ГRA в Prop в контекстах ГR, ГA *)
 
@@ -400,11 +521,6 @@ Module Ralph_eq.
 
   (** Итог: Ральф верит ~(spy Ah) -> неверно, что Ральф верит (spy Ah)    *)
 
-
-
-
-
-
 End Ralph_eq.
 
 
@@ -431,7 +547,8 @@ Module Ralph_eq_eval.
     {Er:>ГR;
      Eeq:Rb=Rh}.
 
-  (* вспомогательные определения *)
+  (** определения  ниже притиворечивы *)
+
   Definition Eh (ge:ГE):man := Rh.
   Definition Eb (ge:ГE):man := Rb.
 (*   (* пропозиция (spy h) в ГA и ГR *)
@@ -440,6 +557,63 @@ Module Ralph_eq_eval.
   (* пропозиция (spy b) в ГA и ГR *)
   Definition spybR (gr:ГR):Prop := spy (Rb).
   Definition spybA (ga:ГA):Prop := spy (Ab). *)
+
+  (** Докажем противоречивость   *)
+
+  Lemma spyeh: forall ge:ГE, spy (Eh ge).
+  Proof.
+    intros.
+    apply spy_h.
+  Qed.
+
+  Lemma spyeb: forall ge:ГE, ~spy (Eb ge).
+  Proof.
+    intros.
+    apply spy_b.
+  Qed.
+
+  Parameter гe:ГE.
+
+  Lemma spyebn: ~forall ge:ГE, spy (Eb ge).
+  Proof.
+    unfold not.
+    intro H.
+    apply (spyeb гe).
+    apply (H гe).
+  Qed.
+
+  Lemma EeqE: forall ge:ГE, Eb ge = Eh ge.
+  Proof.
+    intros.
+    unfold Eh. unfold Eb. apply Eeq.
+  Qed.
+
+  Lemma spyehn: ~forall ge:ГE, spy (Eh ge).
+  Proof.
+    unfold not. intros.
+    apply (spyeb гe).
+    rewrite (EeqE гe).
+    trivial.
+  Qed.
+
+  (** ПРОТИВОРЕЧИЕ !! *)
+
+  Theorem contr: False.
+  Proof.
+    apply spyehn.
+    apply spyeh.
+  Qed.
+
+  Theorem contr': False.
+  Proof.
+    set (H1:=spyehn).
+    set (H2:=spyeh).
+    contradiction.
+  Qed.
+
+  (* отменяем определения *)
+  Reset Eh.
+  Reset Eb.
 
   (* Преобразование из Prop в контексте ГRA в Prop в контекстах ГR, ГA *)
 
@@ -584,52 +758,6 @@ Module Ralph_eq_eval.
     apply spy_b.
   Qed.
 
-  (** Определения Eh, Eb противоречивы   *)
-
-  Fact spyeh: forall ge:ГE, spy (Eh ge).
-  Proof.
-    intros.
-    apply spy_h.
-  Qed.
-
-  Fact spyeb: forall ge:ГE, ~spy (Eb ge).
-  Proof.
-    intros.
-    apply spy_b.
-  Qed.
-
-  Parameter гe:ГE.
-  
-  Fact spyebn: ~forall ge:ГE, spy (Eb ge).
-  Proof.
-    unfold not.
-    intro H.
-    apply (spyeb гe).
-    apply (H гe).
-  Qed.
-
-  Fact EeqE: forall ge:ГE, Eb ge = Eh ge.
-  Proof.
-    intros.
-    unfold Eh. unfold Eb. apply Eeq.
-  Qed.
-  
-  Fact spyehn: ~forall ge:ГE, spy (Eh ge).
-  Proof.
-    unfold not. intros.
-    apply (spyeb гe).
-    rewrite (EeqE гe).
-    trivial.
-  Qed.
-
-  (** ПРОТИВОРЕЧИЕ !! *)
-  
-  Fact contr: False.
-  Proof.
-    apply spyehn.
-    apply spyeh.
-  Qed.
-  
 End Ralph_eq_eval.
 
 
@@ -638,7 +766,7 @@ End Ralph_eq_eval.
 
 (** **************************************************************)
 (** Модуль: в актуальном контексте только Орткутт                *)
-(**      две функции преобразования контекстов                   *)
+(**      контексты оценки                                        *)
 
 Module Ralph_o.
 
@@ -688,13 +816,6 @@ Module Ralph_o.
     contradiction.
   Qed.
 
-  (* в ГEC актуальное мнение противоречиво *)
-  Fact cont':forall gec:ГEC, forall ga:ГA, False.
-  Proof.
-    intros.
-    apply cont.
-    trivial.
-  Qed.
 
   (** *************************************************************)
   (**   de dicto                    *)
