@@ -341,12 +341,7 @@ Module Ralph_eq.
   Qed.
 
   (* отменяем противоречивые определения  *)
-  Reset Rh. 
-  Reset Rb.
-  Reset Ah.
-  Reset Ab.
-  Reset Sh.
-  Reset Sb.
+  Reset Rh.
 
   (* Преобразование из Prop в контексте ГRA в Prop в контекстах ГR, ГA *)
 
@@ -620,7 +615,6 @@ Module Ralph_eq_eval.
 
   (* отменяем определения *)
   Reset Eh.
-  Reset Eb.
 
   (* Преобразование из Prop в контексте ГRA в Prop в контекстах ГR, ГA *)
 
