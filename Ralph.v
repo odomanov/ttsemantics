@@ -310,7 +310,7 @@ Module Ralph_eq.
   Definition PRAtoA (P:ГRA->Prop) : ГA->Prop := tRAtoA P.
 
   (* существует чел. в общем контексте, о ктр. Ральф верит, что он шпион *)
-  Fact ex_spy: forall gra:ГRA, 
+  Fact ex_spy: 
     {m:ГRA->man| forall gr:ГR, (PRAtoR (fun gra:ГRA => spy (m gra))) gr}.
   Proof.
     intros.
@@ -322,14 +322,14 @@ Module Ralph_eq.
 
   (* существует чел. в общем контексте, о ктр. Ральф верит, что он шпион,
      а мы знаем, что он --- чел. на пляже *)
-  Fact ex_spy_eq: forall gra:ГRA, 
+  Fact ex_spy_eq: 
     exists w:{m:ГRA->man| forall gr:ГR, (PRAtoR (fun gra:ГRA => spy (m gra))) gr},
     forall ga:ГA, yb ga = (fun ga:ГA => (proj1_sig w) (g ga)) ga.
   Proof.
     intros.
-    exists (ex_spy gra).
+    exists ex_spy.
     intros.
-    assert (H:proj1_sig (ex_spy gra) =zh).
+    assert (H:proj1_sig (ex_spy) =zh).
     { reflexivity. }
     rewrite H.
     rewrite <- yeq.
@@ -337,18 +337,16 @@ Module Ralph_eq.
   Qed.
 
   (* то же, что выше, но с использованием вспомогательных определений *)
-  Fact ex_spy': forall gra:ГRA, 
-    {m:ГRA->man| forall gr:ГR, spy ((mR m) gr)}.
+  Fact ex_spy': {m:ГRA->man| forall gr:ГR, spy ((mR m) gr)}.
   Proof.
     intros.
     exists zh.
     intros.
     unfold mR.
     apply spy_h.
-  Defined.    (* should be Defined to use reflexivity below!! *)
+  Qed.
 
-  Fact ex_spy_eq': forall gra:ГRA, 
-    exists w:{m:ГRA->man| forall gr:ГR, spy ((mR m) gr)},
+  Fact ex_spy_eq': exists w:{m:ГRA->man| forall gr:ГR, spy ((mR m) gr)},
     forall ga:ГA, yb ga = (mA (proj1_sig w)) ga.
   Proof.
     apply ex_spy_eq.
