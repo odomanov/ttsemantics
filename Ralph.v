@@ -237,6 +237,65 @@ End Ralph_hb.
 
 
 (** ***********************************************)
+(** Модуль: человек в шляпе = человек на пляже    *)
+(**     противоречивая попытка                    *)
+
+Module Ralph_eq_contr.
+
+  (** Контекст Ральфа **)
+  Record ГR:Type := mkГR
+    {xh:man;           (* человек в шляпе *)
+     xb:man;           (* человек на пляже *)
+     spy_h: spy(xh);   (* человек в шляпе --- шпион *)
+     spy_b: ~spy(xb)}. (* человек на пляже --- не шпион *)
+
+  (** Актуальный контекст *)
+  Record ГA:Type := mkГA
+    {yh:man;
+     yb:man;
+     yeq:yh=yb}.       (* человек в шляпе = человек на пляже *)
+
+  (** просто приравняем переменные  *)
+
+  Axiom Aeqh: forall ga:ГA, forall gr:ГR, xh gr = yh ga.
+  Axiom Aeqb: forall ga:ГA, forall gr:ГR, xb gr = yb ga.
+
+  (** Докажем противоречивость   *)
+
+  Lemma spy_yh: forall ga:ГA, forall gr:ГR, spy (yh ga).
+  Proof.
+    intros.
+    rewrite <- (Aeqh ga gr).
+    apply spy_h.
+  Qed.
+
+  Lemma spy_yhn: forall gr0:ГR, 
+    forall ga:ГA, ~forall gr:ГR, spy (yh ga).
+  Proof.
+    unfold not.
+    intros.
+    rewrite yeq in H.
+    rewrite <- (Aeqb ga gr0) in H.
+    apply (spy_b gr0).
+    auto.
+  Qed.
+
+  (** ПРОТИВОРЕЧИЕ В ГA !! *)
+
+  (* если существует любой контекст ГR, то контекст ГA противоречив *)
+  Theorem contr: forall gr0:ГR, forall ga:ГA, False.
+  Proof.
+    intros.
+    apply (spy_yhn gr0 ga).
+    apply spy_yh.
+  Qed.
+
+End Ralph_eq_contr.
+
+
+
+
+(** ***********************************************)
 (** Модуль: человек в шляпе = человек на пляже  *)
 
 Module Ralph_eq.
