@@ -259,8 +259,6 @@ Module Ralph_eq.
     {zh:man;
      zb:man}.
 
-  Parameter гr:ГR.
-
   (** функции связи контекстов *)
 
   Definition f (gr:ГR) : ГRA := mkГRA (xh(gr)) (xb(gr)).
@@ -405,12 +403,12 @@ Module Ralph_eq.
   (** *******************************************)
 
   (* (B)~P -> ~(B)P *)
-  Lemma Rn_nR_general (P:ГR->Prop): 
+  Lemma Rn_nR_general (gr0:ГR) (P:ГR->Prop): 
     (forall gr:ГR, ~P(gr)) -> ~(forall gr:ГR, P(gr)).
   Proof.
     unfold not.
     intros H1 H2.
-    apply (H1 гr (H2 гr)).
+    apply (H1 gr0 (H2 gr0)).
   Qed.
 
   (** *******************************************)
@@ -418,27 +416,27 @@ Module Ralph_eq.
   (** *******************************************)
 
   (* (B)~P -> ~(B)P *)
-  Lemma Rn_nR (P:man->Prop) (m:ГR->man): 
+  Lemma Rn_nR (gr0:ГR) (P:man->Prop) (m:ГR->man): 
     (forall gr:ГR, ~P(m gr)) -> ~(forall gr:ГR, P(m gr)).
   Proof.
     unfold not.
     intros H1 H2.
-    apply (H1 гr (H2 гr)).
+    apply (H1 gr0 (H2 gr0)).
   Qed.
 
   (* то же в контексте ГA *)
-  Lemma Rn_nR_ga (P:man->Prop) (m:ГA->man) (fra:ГR->ГA): 
+  Lemma Rn_nR_ga (gr0:ГR) (P:man->Prop) (m:ГA->man) (fra:ГR->ГA): 
     (forall gr:ГR, ~P(m (fra gr))) -> ~(forall gr:ГR, P(m (fra gr))).
   Proof.
     set (mR:=fun gr:ГR => m(fra(gr))).
-    apply (Rn_nR P mR).
+    apply (Rn_nR gr0 P mR).
   Qed.
 
   (* применим общий случай к (spy yh) *)
-  Lemma spyyh_f (fra:ГR->ГA): 
+  Lemma spyyh_f (gr0:ГR) (fra:ГR->ГA): 
     (forall gr:ГR, ~spy(yh (fra gr))) -> ~(forall gr:ГR, spy(yh (fra gr))).
   Proof.
-    apply (Rn_nR_ga spy yh _).
+    apply (Rn_nR_ga gr0 spy yh _).
   Qed.
 
   (** Итог: Ральф верит ~(spy yh) -> неверно, что Ральф верит (spy yh)    *)
