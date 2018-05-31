@@ -319,6 +319,19 @@ Module Ralph_eq.
   Defined.    (* should be Defined to use reflexivity below!! *)
 
   (* существует чел. в общем контексте, о ктр. Ральф верит, что он шпион,
+     и он существует в нашем контексте *)
+  Fact ex_spy_ex: 
+    exists w:{m:ГRA->man| forall gr:ГR, (PRAtoR (fun gra:ГRA => spy (m gra))) gr},
+    forall ga:ГA, exists ma:ГA->man, 
+      ma ga = (fun ga:ГA => (proj1_sig w) (g ga)) ga.
+  Proof.
+    exists ex_spy.
+    intros.
+    exists yh.
+    reflexivity.
+  Qed.
+
+  (* существует чел. в общем контексте, о ктр. Ральф верит, что он шпион,
      а мы знаем, что он --- чел. на пляже *)
   Fact ex_spy_eq: 
     exists w:{m:ГRA->man| forall gr:ГR, (PRAtoR (fun gra:ГRA => spy (m gra))) gr},
@@ -334,7 +347,9 @@ Module Ralph_eq.
     auto.
   Qed.
 
-  (* то же, что выше, но с использованием вспомогательных определений *)
+  (** то же, что выше, но с использованием вспомогательных определений *)
+
+  (* существует чел. в общем контексте, о ктр. Ральф верит, что он шпион *)
   Fact ex_spy': {m:ГRA->man| forall gr:ГR, spy ((mR m) gr)}.
   Proof.
     intros.
@@ -344,6 +359,19 @@ Module Ralph_eq.
     apply spy_h.
   Qed.
 
+  (* существует чел. в общем контексте, о ктр. Ральф верит, что он шпион,
+     и он существует в нашем контексте *)
+  Fact ex_spy_ex': exists w:{m:ГRA->man| forall gr:ГR, spy ((mR m) gr)},
+    forall ga:ГA, exists ma:ГA->man, ma ga = (mA (proj1_sig w)) ga.
+  Proof.
+    exists ex_spy.
+    intros.
+    exists yh.
+    reflexivity.
+  Qed.
+
+  (* существует чел. в общем контексте, о ктр. Ральф верит, что он шпион,
+     а мы знаем, что он --- чел. на пляже *)
   Fact ex_spy_eq': exists w:{m:ГRA->man| forall gr:ГR, spy ((mR m) gr)},
     forall ga:ГA, yb ga = (mA (proj1_sig w)) ga.
   Proof.
