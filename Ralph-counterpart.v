@@ -135,6 +135,28 @@ Module Ralph_counterpart.
     apply spy_b.
   Qed.
 
+  (** Общие объекты *)
+  Record mAR: Type := mkmAR
+    {mARa: ГA->man;
+     mARr: ГR->man;
+     cAR: C mARa mARr}.
+
+  Fact ospy: exists mar:mAR, o = mARa mar /\ forall gr:ГR, spy(mARr mar gr).
+  Proof.
+    exists (mkmAR o xh coh).
+    split.
+    auto.
+    apply spyh.
+  Qed.
+
+  Fact ospyn: exists mar:mAR, o = mARa mar /\ forall gr:ГR, ~spy(mARr mar gr).
+  Proof.
+    exists (mkmAR o xb cob).
+    split.
+    auto.
+    apply spyb.
+  Qed.
+
 End Ralph_counterpart.
 
 
@@ -279,6 +301,28 @@ Module Ralph_counterpart2.
   Proof.
     exists mmb.
     apply spy_b.
+  Qed.
+
+  (** Общие объекты *)
+  Record mC: Type := mkmC
+    {mCm: man;
+     mCr: ГR->man;
+     cCR: C mCm mCr}.
+
+  Fact ospy: exists mc:mC, o = mCm mc /\ forall gr:ГR, spy(mCr mc gr).
+  Proof.
+    exists (mkmC o xh coh).
+    split.
+    auto.
+    apply spyh.
+  Qed.
+
+  Fact ospyn: exists mc:mC, o = mCm mc /\ forall gr:ГR, ~spy(mCr mc gr).
+  Proof.
+    exists (mkmC o xb cob).
+    split.
+    auto.
+    apply spyb.
   Qed.
 
 End Ralph_counterpart2.
