@@ -231,6 +231,9 @@ Module Case2.
      by drowning. 
    Barsky believes that the murderer is still in Chicago. *)
 
+  (* тип man в Г, таких, что P (в Г) --- "killers" *)
+  Definition k (Г:Type) (P:man->Prop) := { m:Г->man | forall g:Г, P (m g) }.
+
   Record ГB := mkГB
    {Bm:man;
     BS:S(Bm);
@@ -241,44 +244,54 @@ Module Case2.
 
   (** Отношения двойников -- между объектами в контексте *)
 
-  Definition CpartBH:= (ГB->man) -> (ГH->man) -> Prop.
-  Inductive CBH : CpartBH :=
-    | cbh : CBH Bm Hm.
+  Inductive Counterpart (Гin:Type) (Гout:Type)
+            (ki:Гin->man) (ko:Гout->man) : Prop := 
+    | cp: Counterpart Гin Гout ki ko.   (* конструктор отношений *)
+  (* конструируем отношения *)
+  Definition cbh:= cp ГB ГH Bm Hm.
+  Definition chb:= cp ГH ГB Hm Bm.
 
   (* типы двойников *)
-  Definition cBinH (mb:ГB->man) := { mh:ГH->man | CBH mb mh }.
-  Definition cHinB (mh:ГH->man) := { mb:ГB->man | CBH mb mh }.
+  Definition Ck (Гin:Type) (Гout:Type) (ki:Гin->man) := 
+    { ko:Гout->man | Counterpart Гin Гout ki ko }.
+
+  (** универсальная формулировка теоремы: "Гin верит, что Pin, и Гout верит, что Pout"
+      Или: "существует некто в Гin, такой, что Pin и существует его двойник в Гout,
+      такой, что Pout" *)
+  Definition G (Гin:Type) (Гout:Type) (Pin:man->Prop) (Pout:man->Prop) := 
+      exists mk: k Гin Pin,
+      exists c:(Ck Гin Гout (proj1_sig mk)), 
+      forall gout:Гout, Pout (proj1_sig c gout).
 
   (** Объекты, общие для разных контекстов  *)
   Record mBH := mkmBH
-    { mBHb:ГB->man;
-      mBHh:ГH->man;
-      cBHb: CBH mBHb mBHh}.
+    { mBHb: ГB->man;
+      mBHh: ГH->man;
+      cBHb: Counterpart ГB ГH mBHb mBHh}.
 
   (** (3) Someone murdered Smith, 
           and Barsky thinks he is still in Chicago. *)
   (* True *)
 
-  Fact C2_HSBC: exists w:{ mh:ГH->man | forall gh:ГH, S(mh gh) },
-    exists c:cHinB(proj1_sig w), forall gb:ГB, C(proj1_sig c gb).
+  Fact C2_HSBC: G ГH ГB S C.
   Proof.
     exists (exist _ Hm HS).
     unfold proj1_sig.
-    unfold cHinB.
-    exists (exist _ Bm cbh).
+    unfold Ck.
+    exists (exist _ Bm chb).
     apply BC.
   Qed.
 
   Fact C2_HSBC': forall gh:ГH, exists mh:ГH->man, S(mh gh) /\
-    exists c:cHinB(mh), forall gb:ГB, C(proj1_sig c gb).
+    exists c:Ck ГH ГB mh, forall gb:ГB, C(proj1_sig c gb).
   Proof.
     intro.
     exists Hm.
     split.
     apply HS.
     unfold proj1_sig.
-    unfold cHinB.
-    exists (exist _ Bm cbh).
+    unfold Ck.
+    exists (exist _ Bm chb).
     apply BC.
   Qed.
 
