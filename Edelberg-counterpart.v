@@ -53,44 +53,45 @@ Module Case1.
 
   (** Отношения двойников -- между объектами в контексте *)
 
-  Definition CpartAB:= (ГA->man) -> (ГB->man) -> Prop.
-  Inductive CAB : CpartAB :=
-    | cab : CAB Am Bm.
-  (* следующие отношения пусты *)
-  Definition CpartAH:= (ГA->man) -> (ГH->man) -> Prop.
-  Inductive CAH : CpartAH := .
-  Definition CpartBH:= (ГB->man) -> (ГH->man) -> Prop.
-  Inductive CBH : CpartBH := .
+  Inductive Counterpart (Гin:Type) (Гout:Type)
+            (ki:Гin->man) (ko:Гout->man) : Prop := 
+    | cp: Counterpart Гin Гout ki ko.   (* конструктор отношений *)
+  Axiom Crefl: forall Гin, forall Гout, forall ki, forall ko, 
+    Counterpart Гin Гout ki ko = Counterpart Гout Гin ko ki.
+  (* конструируем отношения *)
+  Definition cab:= cp ГA ГB Am Bm.
+  (* Definition cba:= cp ГB ГA Bm Am. *)
 
   (* типы двойников *)
-  Definition cBinA (mb:ГB->man) := { ma:ГA->man | CAB ma mb }.
-  Definition cAinB (ma:ГA->man) := { mb:ГB->man | CAB ma mb }.
-  Definition cHinA (mh:ГH->man) := { ma:ГA->man | CAH ma mh }.
-  Definition cAinH (ma:ГA->man) := { mh:ГH->man | CAH ma mh }.
+  Definition Ck (Гin:Type) (Гout:Type) (ki:Гin->man) := 
+    { ko:Гout->man | Counterpart Гin Гout ki ko }.
+
+  (* близнецов с ГH нет *)
+  Axiom noAH: forall ma, forall mh, Counterpart ГA ГH ma mh -> False.
+  Axiom noBH: forall mb, forall mh, Counterpart ГB ГH mb mh -> False.
 
   (** Объекты, общие для разных контекстов  *)
   Record mABH := mkmABH
     { mABHa:ГA->man;
       mABHb:ГB->man;
       mABHh:ГH->man;
-      cABHb: CAB mABHa mABHb;
-      cABHh: CAH mABHa mABHh}.
+      cABHb: Counterpart ГA ГB mABHa mABHb;
+      cABHh: Counterpart ГA ГH mABHa mABHh}.
 
   (* докажем, что двойников ГA и ГH нет *)
-  Lemma noHinA:forall mh:ГH->man, cHinA mh -> False.
+  Lemma noAinH:forall ma:ГA->man, Ck ГA ГH ma -> False.
   Proof.
-    unfold cHinA.
-    intros mh H.
-    destruct H as [ma c].
-    induction c.
+    intros.
+    destruct X.
+    contradiction (noAH ma x).
   Qed.
 
-  Lemma noAinH:forall ma:ГA->man, cAinH ma -> False.
+  Lemma noHinA:forall mh:ГH->man, Ck ГH ГA mh -> False.
   Proof.
-    unfold cAinH.
-    intros m H.
-    destruct H as [mh c].
-    induction c.
+    intros.
+    destruct X.
+    rewrite Crefl in c.
+    contradiction (noAH x mh).
   Qed.
 
   (* нет общих объектов *)
@@ -98,7 +99,7 @@ Module Case1.
   Proof.
     intro.
     destruct H as [ma _ mh _ H].
-    induction H.
+    contradiction (noAH ma mh).
   Qed.
 
 
@@ -108,22 +109,22 @@ Module Case1.
   (* True *)
 
   Fact C1_ASBC: exists w:{ m:ГA->man | forall ga:ГA, S (m ga) }, 
-    exists c:cAinB(proj1_sig w), forall gb:ГB, C (proj1_sig c gb).
+    exists c:Ck ГA ГB (proj1_sig w), forall gb:ГB, C (proj1_sig c gb).
   Proof.
     exists (exist _ Am AS).
-    unfold cAinB, proj1_sig.
+    unfold Ck, proj1_sig.
     exists (exist _ Bm cab).
     apply BC.
   Qed.
 
   Fact C1_ASBC': forall ga:ГA, exists ma:ГA->man, S (ma ga) /\ 
-    exists c:cAinB(ma), forall gb:ГB, C (proj1_sig c gb).
+    exists c:Ck ГA ГB ma, forall gb:ГB, C (proj1_sig c gb).
   Proof.
     intros.
     exists Am.
     split.
-    apply AS.
-    unfold cAinB, proj1_sig.
+    * apply AS.
+    * unfold Ck, proj1_sig.
       exists (exist _ Bm cab).
       apply BC.
   Qed.
@@ -133,11 +134,12 @@ Module Case1.
           and Barsky thinks he is still in Chicago. *)
   (* False *)
 
-  (* сначала докажем ложность "Someone is believed by Arsky to have murdered Smith" *)
-  Fact C1_AHSn: ~(exists mh:ГH->man, exists c:cHinA(mh), 
+  (* сначала докажем ложность 
+    "Someone is believed by Arsky to have murdered Smith" *)
+  Fact C1_AHSn: ~(exists mh:ГH->man, exists c:Ck ГH ГA mh, 
     forall ga:ГA, S (proj1_sig c ga)).
   Proof.
-    unfold not. 
+    unfold not.
     intro H.
     destruct H as [mh H].
     destruct H.
@@ -145,11 +147,11 @@ Module Case1.
   Qed.
 
   (* теперь полностью (2) *)
-  Fact C1_AHSBCn: ~(exists mh:ГH->man, exists c:cHinA(mh), 
+  Fact C1_AHSBCn: ~(exists mh:ГH->man, exists c:Ck ГH ГA mh, 
     (forall ga:ГA, S (proj1_sig c ga)) /\
-    (exists cb:cAinB(proj1_sig c), forall gb:ГB, C (proj1_sig cb gb))).
+    (exists cb:Ck ГA ГB (proj1_sig c), forall gb:ГB, C (proj1_sig cb gb))).
   Proof.
-    unfold not. 
+    unfold not.
     intro H.
     destruct H as [mh H].
     destruct H as [c _].
@@ -171,43 +173,39 @@ Module Case1.
   (* теперь определим отношение двойников *)
   (* тогда (2) будет истинно *)
 
-  Inductive CAH' : CpartAH := 
-    | cah: CAH' Am Hm.
-  Inductive CBH' : CpartBH := 
-    | cbh: CBH' Bm Hm.
+  Reset noAH.
 
-  (* типы двойников *)
-  Definition cHinB' (mh:ГH->man): Type := { mb:ГB->man | CBH' mb mh }.
-  Definition cHinA' (mh:ГH->man): Type := { ma:ГA->man | CAH' ma mh }.
+  (* конструируем отношения *)
+  Definition cha:= cp ГH ГA Hm Am.
+  Definition cbh:= cp ГB ГH Bm Hm.
 
   (** Объекты, общие для разных контекстов  *)
-  Record mABH' := mkmABH'
+  Record mABH := mkmABH'
     { mABHa':ГA->man;
       mABHb':ГB->man;
       mABHh':ГH->man;
-      cABHb': CAB mABHa' mABHb';
-      cABHh': CAH' mABHa' mABHh'}.
+      cABHb': Counterpart ГA ГB mABHa' mABHb';
+      cABHh': Counterpart ГH ГA mABHh' mABHa'}.
 
-  Fact C1_AHSBC: exists mh:ГH->man, exists c:cHinA'(mh), 
+  Fact C1_AHSBC: exists mh:ГH->man, exists c:Ck ГH ГA mh, 
     (forall ga:ГA, S (proj1_sig c ga)) /\
-    (exists cb:cAinB(proj1_sig c), forall gb:ГB, C (proj1_sig cb gb)).
+    (exists cb:Ck ГA ГB (proj1_sig c), forall gb:ГB, C (proj1_sig cb gb)).
   Proof.
     exists Hm.
-    unfold cHinA'.
-    exists (exist _ Am cah).
+    unfold Ck.
+    exists (exist _ Am cha).
     unfold proj1_sig.
     split.
     apply AS.
-    unfold cAinB.
     exists (exist _ Bm cab).
     apply BC.
   Qed.
 
   (* докажем, используя общие объекты *)
-  Fact C1_AHSBCs: exists mabh:mABH', 
+  Fact C1_AHSBCs: exists mabh:mABH, 
     (forall ga:ГA, S(mABHa' mabh ga)) /\ (forall gb:ГB, C (mABHb' mabh gb)).
   Proof.
-    exists (mkmABH' Am Bm Hm cab cah).
+    exists (mkmABH' Am Bm Hm cab cha).
     unfold mABHa', mABHb'.
     split.
     apply AS.
