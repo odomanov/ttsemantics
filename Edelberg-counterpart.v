@@ -13,9 +13,6 @@ Definition J (m:man): Prop := Murdered m Johes. (* убил Джонса *)
 Definition nS(m:man): Prop := ~S(m).
 Definition nJ(m:man): Prop := ~J(m).
 Definition nC(m:man): Prop := ~C(m).
-(* Definition K (M:man): Type := { m:man| Murdered m M }. (* убийцы M *) *)
-Definition Sk:Type := { m:man | S m }. (* убийцы Смита *)
-Definition Jk:Type := { m:man | J m }. (* убийцы Джонса *)
 
 
 
@@ -56,6 +53,7 @@ Module Case1.
   Inductive Counterpart (Гin:Type) (Гout:Type)
             (ki:Гin->man) (ko:Гout->man) : Prop := 
     | cp: Counterpart Гin Гout ki ko.   (* конструктор отношений *)
+  (* симметричность отношения двойников *)
   Axiom Crefl: forall Гin, forall Гout, forall ki, forall ko, 
     Counterpart Гin Гout ki ko = Counterpart Гout Гin ko ki.
   (* конструируем отношения *)
@@ -81,17 +79,17 @@ Module Case1.
   (* докажем, что двойников ГA и ГH нет *)
   Lemma noAinH:forall ma:ГA->man, Ck ГA ГH ma -> False.
   Proof.
-    intros.
-    destruct X.
-    contradiction (noAH ma x).
+    intros ma c.
+    destruct c as [mh c].
+    contradiction (noAH ma mh).
   Qed.
 
   Lemma noHinA:forall mh:ГH->man, Ck ГH ГA mh -> False.
   Proof.
-    intros.
-    destruct X.
+    intros mh c.
+    destruct c as [ma c].
     rewrite Crefl in c.
-    contradiction (noAH x mh).
+    contradiction (noAH ma mh).
   Qed.
 
   (* нет общих объектов *)
@@ -513,24 +511,24 @@ Module Case4.
   Lemma ucHSk: forall kk:{ko : k ГA S | Counterpart ГH ГA S HmSk ko}, 
     kk = exist _ AmSk chas.
   Proof.
-    intros.
-    induction kk.
-    assert (uu:x=AmSk).
+    intro kk.
+    induction kk as [kas c].
+    assert (e:kas=AmSk).
     { apply uASk. }
-    destruct p.
-    rewrite uu.
+    subst kas.
+    destruct c.
     reflexivity.
   Qed.
 
   Lemma ucHJk: forall kk:{ko : k ГA J | Counterpart ГH ГA J HmJk ko}, 
     kk = exist _ AmJk chaj.
   Proof.
-    intros.
-    induction kk.
-    assert (uu:x=AmJk).
+    intro kk.
+    induction kk as [kas c].
+    assert (e:kas=AmJk).
     { apply uAJk. }
-    destruct p.
-    rewrite uu.
+    subst kas.
+    destruct c.
     reflexivity.
   Qed.
 
