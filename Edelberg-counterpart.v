@@ -29,15 +29,26 @@ Module Case1.
    But Smith was not murdered, he drowned by accident. *)
   (** Дело 1. Смит утонул.  Детективы Арский и Барский%\textellipsis%  *)
 
+  (* тип man в Г, таких, что P (в Г) --- "killers" *)
+  Definition k (Г:Type) (P:man->Prop) := { m:Г->man | forall g:Г, P (m g) }.
+
   (** Определим контексты: *)
 
   Record ГA := mkГA
    {Am:man;
     AS:S(Am)}.
+  (* убийцы в ГA *)
+  Definition AmSk:k ГA S := exist _ Am AS.
+  (* есть только один убийца... *)
+  Axiom uASk: forall mk:k ГA S, mk = AmSk.
   Record ГB := mkГB
    {Bm:man;
     BS:S(Bm);
     BC:C(Bm)}.
+  (* убийцы в ГB *)
+  Definition BmSk:k ГB S := exist _ Bm BS.
+  (* есть только один убийца... *)
+  Axiom uBSk: forall mk:k ГB S, mk = BmSk.
   Record ГH := mkГH
    {Hm:man;
     HS:~S(Hm)}.
@@ -63,6 +74,15 @@ Module Case1.
   (* типы двойников *)
   Definition Ck (Гin:Type) (Гout:Type) (ki:Гin->man) := 
     { ko:Гout->man | Counterpart Гin Гout ki ko }.
+
+  (** универсальная формулировка теоремы: "Гin верит, что Pin, и Гout верит, что Pout"
+      Или: "существует некто в Гin, такой, что Pin и существует его двойник в Гout,
+      такой, что Pout" *)
+  Definition G (Гin:Type) (Гout:Type) (Pin:man->Prop) (Pout:man->Prop) := 
+      exists mk: k Гin Pin,
+      exists c:(Ck Гin Гout (proj1_sig mk)), 
+      forall gout:Гout, Pout (proj1_sig c gout).
+
 
   (* близнецов с ГH нет *)
   Axiom noAH: forall ma, forall mh, Counterpart ГA ГH ma mh -> False.
@@ -106,11 +126,9 @@ Module Case1.
           (but there is no such murderer). *)
   (* True *)
 
-  Fact C1_ASBC: exists w:{ m:ГA->man | forall ga:ГA, S (m ga) }, 
-    exists c:Ck ГA ГB (proj1_sig w), forall gb:ГB, C (proj1_sig c gb).
+  Fact C1_ASBC: G ГA ГB S C.
   Proof.
     exists (exist _ Am AS).
-    unfold Ck, proj1_sig.
     exists (exist _ Bm cab).
     apply BC.
   Qed.
@@ -134,14 +152,19 @@ Module Case1.
 
   (* сначала докажем ложность 
     "Someone is believed by Arsky to have murdered Smith" *)
-  Fact C1_AHSn: ~(exists mh:ГH->man, exists c:Ck ГH ГA mh, 
-    forall ga:ГA, S (proj1_sig c ga)).
+  Fact C1_AHSn: ~(G ГH ГA (fun m:man =>True) S).
   Proof.
-    unfold not.
+    unfold not, G, proj1_sig, Ck.
     intro H.
     destruct H as [mh H].
     destruct H.
-    contradiction (noHinA mh).
+    destruct x.
+    unfold k in mh.
+    destruct mh.
+    apply (noHinA x0).
+    unfold Ck.
+    exists x.
+    exact c.
   Qed.
 
   (* теперь полностью (2) *)
