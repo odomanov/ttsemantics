@@ -10,6 +10,9 @@ Parameter Murdered: man -> man -> Prop. (* x murdered y *)
 Parameter Smith Johes:man.
 Definition S (m:man): Prop := Murdered m Smith. (* убил Смита *)
 Definition J (m:man): Prop := Murdered m Johes. (* убил Джонса *)
+Definition nS(m:man): Prop := ~S(m).
+Definition nJ(m:man): Prop := ~J(m).
+Definition nC(m:man): Prop := ~C(m).
 (* Definition K (M:man): Type := { m:man| Murdered m M }. (* убийцы M *) *)
 Definition Sk:Type := { m:man | S m }. (* убийцы Смита *)
 Definition Jk:Type := { m:man | J m }. (* убийцы Джонса *)
@@ -121,8 +124,8 @@ Module Case1.
     split.
     apply AS.
     unfold cAinB, proj1_sig.
-    exists (exist _ Bm cab).
-    apply BC.
+      exists (exist _ Bm cab).
+      apply BC.
   Qed.
 
 
@@ -311,6 +314,9 @@ Module Case3.
    Barsky, however, thinks that one and the same person murdered both Smith and Jones. 
    However, neither Smith nor Jones was really murdered. *)
 
+  (* тип man в Г, таких, что P (в Г) --- "killers" *)
+  Definition k (Г:Type) (P:man->Prop) := { m:Г->man | forall g:Г, P (m g) }.
+
   Record ГA := mkГA
    {Am1:man;
     Am2:man;
@@ -320,85 +326,91 @@ Module Case3.
     A2J:J(Am2);
     A2S:~S(Am2)}.
   (* убийцы в ГA *)
-  Definition ASk := { m:ГA->man | forall ga:ГA, S (m ga) }.
-  Definition AJk := { m:ГA->man | forall ga:ГA, J (m ga) }.
-  Definition AmSk:ASk := exist _ Am1 A1S.
-  Definition AmJk:AJk := exist _ Am2 A2J.
+  Definition AmSk:k ГA S := exist _ Am1 A1S.
+  Definition AmJk:k ГA J := exist _ Am2 A2J.
+  (* есть только один убийца... *)
+  Axiom uASk: forall mk:k ГA S, mk = AmSk.
+  Axiom uAJk: forall mk:k ГA J, mk = AmJk.
 
   Record ГB := mkГB
    {Bm:man;
     BS:S(Bm);
     BJ:J(Bm)}.
   (* убийцы в ГB *)
-  Definition BSk := { m:ГB->man | forall gb:ГB, S (m gb) }.
-  Definition BJk := { m:ГB->man | forall gb:ГB, J (m gb) }.
-  Definition BmSk:BSk := exist _ Bm BS.
-  Definition BmJk:BJk := exist _ Bm BJ.
+  Definition BmSk:k ГB S := exist _ Bm BS.
+  Definition BmJk:k ГB J := exist _ Bm BJ.
+  (* есть только один убийца... *)
+  Axiom uBSk: forall mk:k ГB S, mk = BmSk.
+  Axiom uBJk: forall mk:k ГB J, mk = BmJk.
 
   Record ГH := mkГH
    {Hm:man;
     HnS:~S(Hm);
     HnJ:~J(Hm)}.
 
-  (** Двойники -- между не объектами, а интенсионалами "убийца Смита" и
+
+  (** Двойники -- между не объектами, а понятиями "убийца Смита" и
                   "убийца Джонса" *)
 
-  Definition cSAinB (c:ASk):BSk := match c with AmSk => BmSk end.
-  Definition cJAinB (c:AJk):BJk := match c with AmJk => BmJk end.
-  Definition cSBinA (c:BSk):ASk := match c with BmSk => AmSk end.
-  Definition cJBinA (c:BJk):AJk := match c with BmJk => AmJk end.
+  Inductive Counterpart (Гin:Type) (Гout:Type) (P:man->Prop) 
+            (ki:k Гin P) (ko:k Гout P) : Prop := 
+    | cp: Counterpart Гin Гout P ki ko.   (* конструктор отношений *)
+  (* конструируем отношения *)
+  Definition cabs:= cp ГA ГB S AmSk BmSk.
+  Definition cabj:= cp ГA ГB J AmJk BmJk.
+  Definition cbas:= cp ГB ГA S BmSk AmSk.
+  Definition cbaj:= cp ГB ГA J BmJk AmJk.
 
+  (* типы двойников *)
+  Definition Ck (Гin:Type) (Гout:Type) (P:man->Prop) (ki:k Гin P) := 
+    { ko:k Гout P | Counterpart Гin Гout P ki ko }.
+
+
+  (** универсальная формулировка теоремы: "Гin верит, что Pin, и Гout верит, что Pout"
+      Или: "существует некто в Гin, такой, что Pin и существует его двойник в Гout,
+      такой, что Pout" *)
+  Definition G (Гin:Type) (Гout:Type) (Pin:man->Prop) (Pout:man->Prop) := 
+      exists mk: k Гin Pin,
+      exists c:(Ck Гin Гout Pin mk), 
+      forall gout:Гout, Pout (proj1_sig (proj1_sig c) gout).
 
 
   (** (4) Arsky thinks someone murdered Smith, 
           and Barsky thinks he murdered Jones. *)
   (* True  *)
 
-  (* существует убийца Смита в ГA, ... *)
-  Fact C3_ASBJ: exists sk:{ m:ГA->man | forall ga:ГA, S (m ga) },
-    forall gb:ГB, J (proj1_sig (cSAinB sk) gb).
+  Fact C3_ASBJ: G ГA ГB S J.
   Proof.
-    unfold cSAinB, BmSk, proj1_sig.
     exists AmSk.
+    exists (exist _ BmSk cabs).
     apply BJ.
-  Qed.
-
-  (* то же с сокращением для ASk *)
-  Fact C3_ASBJ': exists sk:ASk,
-    forall gb:ГB, J (proj1_sig (cSAinB sk) gb).
-  Proof.
-    apply C3_ASBJ.
   Qed.
 
   (** (5) Barsky thinks someone murdered Jones, 
           and Arsky thinks he murdered Smith. *)
   (* False *)
 
-  Fact C3_BJAS: forall ga:ГA, ~(exists jk:{ m:ГB->man | forall gb:ГB, J (m gb) },
-    forall ga:ГA, S (proj1_sig (cJBinA jk) ga)).
+  Fact C3_BJAS: forall ga:ГA, ~(G ГB ГA J S).
   Proof.
-    unfold cJBinA, BmJk, AmJk, proj1_sig, not.
+    unfold G.
+    unfold Ck, BmJk, AmJk, proj1_sig, not.
     intros ga H.
-    destruct H as [_ H].
     apply (A2S ga).
+    destruct H as [jk H].
+    destruct H as [ja H].
+    destruct ja as [ja _].
+    rewrite (uAJk ja) in H.
     apply H.
-  Qed.
-
-  (* с сокращением *)
-  Fact C3_BJAS': forall ga:ГA, ~(exists jk:BJk,
-    forall ga:ГA, S (proj1_sig (cJBinA jk) ga)).
-  Proof.
-    apply C3_BJAS.
   Qed.
 
   (** (6) Barsky thinks that someone murdered Smith, 
           and Arsky thinks that he did not murder Jones. *)
   (* True *)
 
-  Fact C3_BSAnJ: exists sk:{ m:ГB->man | forall gb:ГB, S (m gb) },
-    forall ga:ГA, ~J (proj1_sig (cSBinA sk) ga).
+  Fact C3_BSAnJ: G ГB ГA S nJ.
   Proof.
     exists BmSk.
+    exists (exist _ AmSk cbas).
     apply A1J.
   Qed.
 
@@ -406,10 +418,10 @@ Module Case3.
           and Arsky thinks that he is still in Chicago. *)
   (* True *)
 
-  Fact C3_BSAC: exists sk:{ m:ГB->man | forall gb:ГB, S (m gb) },
-    forall ga:ГA, C (proj1_sig (cSBinA sk) ga).
+  Fact C3_BSAC: G ГB ГA S C. 
   Proof.
     exists BmSk.
+    exists (exist _ AmSk cbas).
     apply A1C.
   Qed.
 
@@ -431,6 +443,9 @@ Module Case4.
    He believes, for instance, that Smith’s murderer, but not Jones’s, 
      is still in Chicago. *)
 
+  (* тип man в Г, таких, что P (в Г) --- "killers" *)
+  Definition k (Г:Type) (P:man->Prop) := { m:Г->man | forall g:Г, P (m g) }.
+
   Record ГA := mkГA
    {Am1:man;
     Am2:man;
@@ -441,40 +456,88 @@ Module Case4.
     A1C:C(Am1);
     A2C:~C(Am2)}.
   (* убийцы в ГA *)
-  Definition ASk := { m:ГA->man | forall ga:ГA, S (m ga) }.
-  Definition AJk := { m:ГA->man | forall ga:ГA, J (m ga) }.
-  Definition AmSk:ASk := exist _ Am1 A1S.
-  Definition AmJk:AJk := exist _ Am2 A2J.
+  Definition AmSk:k ГA S := exist _ Am1 A1S.
+  Definition AmJk:k ГA J := exist _ Am2 A2J.
+  (* есть только один убийца... *)
+  Axiom uASk: forall mk:k ГA S, mk = AmSk.
+  Axiom uAJk: forall mk:k ГA J, mk = AmJk.
 
   Record ГH := mkГH
    {Hm:man;
     HS:S(Hm);
     HJ:J(Hm)}.
   (* убийцы в HOME *)
-  Definition HSk := { m:ГH->man | forall gh:ГH, S (m gh) }.
-  Definition HJk := { m:ГH->man | forall gh:ГH, J (m gh) }.
-  Definition HmSk:HSk := exist _ Hm HS.
-  Definition HmJk:HJk := exist _ Hm HJ.
+  Definition HmSk:k ГH S := exist _ Hm HS.
+  Definition HmJk:k ГH J := exist _ Hm HJ.
+  (* есть только один убийца... *)
+  Axiom uHSk: forall mk:k ГH S, mk = HmSk.
+  Axiom uHJk: forall mk:k ГH J, mk = HmJk.
 
-  (** Двойники -- между интенсионалами *)
+  (** Двойники -- между не объектами, а понятиями "убийца Смита" и
+                  "убийца Джонса" *)
 
-  Definition cSAinH (c:ASk):HSk := match c with AmSk => HmSk end.
-  Definition cJAinH (c:AJk):HJk := match c with AmJk => HmJk end.
-  Definition cSHinA (c:HSk):ASk := match c with HmSk => AmSk end.
-  Definition cJHinA (c:HJk):AJk := match c with HmJk => AmJk end.
+  Inductive Counterpart (Гin:Type) (Гout:Type) (P:man->Prop) 
+            (ki:k Гin P) (ko:k Гout P) : Prop := 
+    | cp: Counterpart Гin Гout P ki ko.   (* конструктор отношений *)
+  (* конструируем отношения *)
+  Definition cahs:= cp ГA ГH S AmSk HmSk.
+  Definition cahj:= cp ГA ГH J AmJk HmJk.
+  Definition chas:= cp ГH ГA S HmSk AmSk.
+  Definition chaj:= cp ГH ГA J HmJk AmJk.
 
+  (* типы двойников *)
+  Definition Ck (Гin:Type) (Гout:Type) (P:man->Prop) (ki:k Гin P) := 
+    { ko:k Гout P | Counterpart Гin Гout P ki ko }.
+
+
+  (** универсальная формулировка теоремы: "Гin верит, что Pin, и Гout верит, что Pout"
+      Или: "существует некто в Гin, такой, что Pin и существует его двойник в Гout,
+      такой, что Pout" *)
+  Definition G (Гin:Type) (Гout:Type) (Pin:man->Prop) (Pout:man->Prop) := 
+      exists mk: k Гin Pin,
+      exists c:(Ck Гin Гout Pin mk), 
+      forall gout:Гout, Pout (proj1_sig (proj1_sig c) gout).
+
+  (* уникальность двойников (леммы не используются) *)
+  Lemma ucHSk: forall kk:{ko : k ГA S | Counterpart ГH ГA S HmSk ko}, 
+    kk = exist _ AmSk chas.
+  Proof.
+    intros.
+    induction kk.
+    assert (uu:x=AmSk).
+    { apply uASk. }
+    destruct p.
+    rewrite uu.
+    reflexivity.
+  Qed.
+
+  Lemma ucHJk: forall kk:{ko : k ГA J | Counterpart ГH ГA J HmJk ko}, 
+    kk = exist _ AmJk chaj.
+  Proof.
+    intros.
+    induction kk.
+    assert (uu:x=AmJk).
+    { apply uAJk. }
+    destruct p.
+    rewrite uu.
+    reflexivity.
+  Qed.
 
   (** (8) Someone murdered Smith, 
           and Arsky thinks he murdered Jones. *)
   (* False *)
 
-  Fact C4_HSAJ: forall ga:ГA, ~(exists sk:{ m:ГH->man | forall gh:ГH, S (m gh) },
-    forall ga:ГA, J(proj1_sig (cSHinA sk) ga)).
+  Fact C4_HSAJ: forall ga:ГA, ~(G ГH ГA S J).
   Proof.
-    unfold not, cSHinA, AmSk, proj1_sig.
+    unfold G.
+    unfold not, Ck, AmSk, proj1_sig.
     intros ga H.
-    destruct H as [_ H].
     apply (A1J ga).
+    destruct H as [ksh H].
+    destruct H as [ksa H].
+    destruct ksa as [ksa _].
+    rewrite (uASk ksa) in H.
+    unfold AmSk in H.
     apply H.
   Qed.
 
@@ -482,13 +545,17 @@ Module Case4.
           and Arsky thinks he is still in Chicago. *)
   (* False *)
 
-  Fact C4_HJAC: forall ga:ГA, ~(exists jk:{ m:ГH->man | forall gh:ГH, J (m gh) },
-      forall ga:ГA, C (proj1_sig (cJHinA jk) ga)).
+  Fact C4_HJAC: forall ga:ГA, ~(G ГH ГA J C).
   Proof.
-    unfold not, cJHinA, HmJk, AmJk, proj1_sig.
+    unfold G.
+    unfold not, Ck, AmJk, proj1_sig.
     intros ga H.
-    destruct H as [_ H].
     apply (A2C ga).
+    destruct H as [khj H].
+    destruct H as [kaj H].
+    destruct kaj as [kaj _].
+    rewrite (uAJk kaj) in H.
+    unfold AmJk in H.
     apply H.
   Qed.
 
@@ -496,13 +563,10 @@ Module Case4.
            and Arsky thinks he is still in Chicago. *)
   (* True *)
 
-  Fact C4_SAC: exists sk:{ m:ГH->man | forall gh:ГH, S (m gh) },
-    forall ga:ГA, C (proj1_sig (cSHinA sk) ga).
+  Fact C4_SAC: G ГH ГA S C.
   Proof.
     exists HmSk.
-    unfold cSHinA.
-    unfold AmSk.
-    unfold proj1_sig.
+    exists (exist _ AmSk chas).
     apply A1C.
   Qed.
 
@@ -510,13 +574,10 @@ Module Case4.
            and Arsky thinks he is no longer in Chicago. *)
   (* True *)
 
-  Fact C4_JAnC: exists jk:{ m:ГH->man | forall gh:ГH, J (m gh) },
-    forall ga:ГA, ~C (proj1_sig (cJHinA jk) ga).
+  Fact C4_JAnC: G ГH ГA J nC.
   Proof.
-    unfold cJHinA.
-    unfold AmJk.
-    unfold proj1_sig.
     exists HmJk.
+    exists (exist _ AmJk chaj).
     apply A2C.
   Qed.
 
@@ -524,13 +585,10 @@ Module Case4.
            and Arsky thinks he didn’t murder Jones. *)
   (* True *)
 
-  Fact C4_SAnJ: exists sk:{ m:ГH->man | forall gh:ГH, S (m gh) },
-      forall ga:ГA, ~J (proj1_sig (cSHinA sk) ga).
+  Fact C4_SAnJ: G ГH ГA S nJ.
   Proof.
-    unfold cSHinA.
-    unfold AmSk.
-    unfold proj1_sig.
     exists HmSk.
+    exists (exist _ AmSk chas).
     apply A1J.
   Qed.
 
