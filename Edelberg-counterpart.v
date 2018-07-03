@@ -14,6 +14,35 @@ Definition nS(m:man): Prop := ~S(m).
 Definition nJ(m:man): Prop := ~J(m).
 Definition nC(m:man): Prop := ~C(m).
 
+(** Отношение двойников в общем виде *)
+
+(* тип man в Г, таких, что P (в Г) --- "killers" *)
+Definition k (Г:Type) (P:man->Prop) := { m:Г->man | forall g:Г, P (m g) }.
+
+(* Двойники -- между не объектами, а понятиями "убийца Смита" и "убийца Джонса" *)
+(* Поскольку в Case1, Case2 есть только убийца Смита, отношение двойников 
+   можно устанавливать и между объектами. Но я делаю между понятиями для 
+   единообразия с Case3, Case4.  *)
+Inductive Counterpart (Гin:Type) (Гout:Type) (P:man->Prop) 
+          (ki:k Гin P) (ko:k Гout P) : Prop := 
+  | cp: Counterpart Гin Гout P ki ko.   (* конструктор отношений *)
+
+(* рефлексивность отношения *)
+Axiom Crefl: forall Гin, forall Гout, forall P, forall ki, forall ko,
+  Counterpart Гin Гout P ki ko = Counterpart Гout Гin P ko ki.
+
+(* типы двойников: двойники k Гin P в Гout *)
+Definition Ck (Гin:Type) (Гout:Type) (P:man->Prop) (ki:k Гin P) := 
+  { ko:k Гout P | Counterpart Гin Гout P ki ko }.
+
+(** универсальная формулировка теоремы для всех Cases: 
+    "Гin верит, что Pin, и Гout верит, что Pout"
+    Или: "существует некто в Гin, такой, что Pin и существует его двойник в Гout,
+    такой, что Pout" *)
+Definition G (Гin:Type) (Гout:Type) (Pin:man->Prop) (Pout:man->Prop) := 
+    exists mk: k Гin Pin,
+    exists c:(Ck Гin Гout Pin mk), 
+    forall gout:Гout, Pout (proj1_sig (proj1_sig c) gout).
 
 
 
@@ -28,9 +57,6 @@ Module Case1.
       body was found. 
    But Smith was not murdered, he drowned by accident. *)
   (** Дело 1. Смит утонул.  Детективы Арский и Барский%\textellipsis%  *)
-
-  (* тип man в Г, таких, что P (в Г) --- "killers" *)
-  Definition k (Г:Type) (P:man->Prop) := { m:Г->man | forall g:Г, P (m g) }.
 
   (** Определим контексты: *)
 
@@ -59,52 +85,30 @@ Module Case1.
       Контекст $\Gamma H$ обозначает актуальный, действительный или <<наш>> (Home)
       контекст, в котором мы просто предполагаем одного человека. *)
 
-  (** Отношения двойников -- между объектами в контексте *)
-
-  Inductive Counterpart (Гin:Type) (Гout:Type)
-            (ki:Гin->man) (ko:Гout->man) : Prop := 
-    | cp: Counterpart Гin Гout ki ko.   (* конструктор отношений *)
-  (* симметричность отношения двойников *)
-  Axiom Crefl: forall Гin, forall Гout, forall ki, forall ko, 
-    Counterpart Гin Гout ki ko = Counterpart Гout Гin ko ki.
   (* конструируем отношения *)
-  Definition cab:= cp ГA ГB Am Bm.
-  (* Definition cba:= cp ГB ГA Bm Am. *)
-
-  (* типы двойников *)
-  Definition Ck (Гin:Type) (Гout:Type) (ki:Гin->man) := 
-    { ko:Гout->man | Counterpart Гin Гout ki ko }.
-
-  (** универсальная формулировка теоремы: "Гin верит, что Pin, и Гout верит, что Pout"
-      Или: "существует некто в Гin, такой, что Pin и существует его двойник в Гout,
-      такой, что Pout" *)
-  Definition G (Гin:Type) (Гout:Type) (Pin:man->Prop) (Pout:man->Prop) := 
-      exists mk: k Гin Pin,
-      exists c:(Ck Гin Гout (proj1_sig mk)), 
-      forall gout:Гout, Pout (proj1_sig c gout).
-
-
-  (* близнецов с ГH нет *)
-  Axiom noAH: forall ma, forall mh, Counterpart ГA ГH ma mh -> False.
-  Axiom noBH: forall mb, forall mh, Counterpart ГB ГH mb mh -> False.
+  Definition cab:= cp ГA ГB S AmSk BmSk.
 
   (** Объекты, общие для разных контекстов  *)
   Record mABH := mkmABH
-    { mABHa:ГA->man;
-      mABHb:ГB->man;
-      mABHh:ГH->man;
-      cABHb: Counterpart ГA ГB mABHa mABHb;
-      cABHh: Counterpart ГA ГH mABHa mABHh}.
+    { mABHa:k ГA S;
+      mABHb:k ГB S;
+      mABHh:k ГH S;
+      cABHb: Counterpart ГA ГB S mABHa mABHb;
+      cABHh: Counterpart ГA ГH S mABHa mABHh}.
 
-  (* докажем, что двойников ГA и ГH нет *)
-  Lemma noAinH:forall ma:ГA->man, Ck ГA ГH ma -> False.
+  (* близнецов с ГH нет *)
+  Axiom noAH: forall ma, forall mh, Counterpart ГA ГH S ma mh -> False.
+  Axiom noBH: forall mb, forall mh, Counterpart ГB ГH S mb mh -> False.
+
+  (* докажем для примера, что двойников ГA и ГH нет *)
+  Lemma noAinH:forall ma:k ГA S, Ck ГA ГH S ma -> False.
   Proof.
     intros ma c.
     destruct c as [mh c].
     contradiction (noAH ma mh).
   Qed.
 
-  Lemma noHinA:forall mh:ГH->man, Ck ГH ГA mh -> False.
+  Lemma noHinA:forall mh:k ГH S, Ck ГH ГA S mh -> False.
   Proof.
     intros mh c.
     destruct c as [ma c].
@@ -112,10 +116,10 @@ Module Case1.
     contradiction (noAH ma mh).
   Qed.
 
-  (* нет общих объектов *)
+  (* а также нет общих объектов *)
   Lemma noABH: mABH -> False.
   Proof.
-    intro.
+    intro H.
     destruct H as [ma _ mh _ H].
     contradiction (noAH ma mh).
   Qed.
@@ -129,20 +133,8 @@ Module Case1.
   Fact C1_ASBC: G ГA ГB S C.
   Proof.
     exists (exist _ Am AS).
-    exists (exist _ Bm cab).
+    exists (exist _ BmSk cab).
     apply BC.
-  Qed.
-
-  Fact C1_ASBC': forall ga:ГA, exists ma:ГA->man, S (ma ga) /\ 
-    exists c:Ck ГA ГB ma, forall gb:ГB, C (proj1_sig c gb).
-  Proof.
-    intros.
-    exists Am.
-    split.
-    * apply AS.
-    * unfold Ck, proj1_sig.
-      exists (exist _ Bm cab).
-      apply BC.
   Qed.
 
 
@@ -152,25 +144,23 @@ Module Case1.
 
   (* сначала докажем ложность 
     "Someone is believed by Arsky to have murdered Smith" *)
-  Fact C1_AHSn: ~(G ГH ГA (fun m:man =>True) S).
+  Fact C1_AHSn: ~(G ГH ГA S S).
   Proof.
     unfold not, G, proj1_sig, Ck.
     intro H.
     destruct H as [mh H].
     destruct H.
     destruct x.
-    unfold k in mh.
-    destruct mh.
-    apply (noHinA x0).
+    apply (noHinA mh).
     unfold Ck.
     exists x.
     exact c.
   Qed.
 
   (* теперь полностью (2) *)
-  Fact C1_AHSBCn: ~(exists mh:ГH->man, exists c:Ck ГH ГA mh, 
-    (forall ga:ГA, S (proj1_sig c ga)) /\
-    (exists cb:Ck ГA ГB (proj1_sig c), forall gb:ГB, C (proj1_sig cb gb))).
+  Fact C1_AHSBCn: ~(exists mh:k ГH S, exists c:Ck ГH ГA S mh, 
+    (forall ga:ГA, S (proj1_sig (proj1_sig c) ga)) /\
+    (exists cb:Ck ГA ГB S (proj1_sig c), forall gb:ГB, C (proj1_sig (proj1_sig cb) gb))).
   Proof.
     unfold not.
     intro H.
@@ -182,55 +172,13 @@ Module Case1.
 
   (* докажем, используя общие объекты *)
   Fact C1_ASBCns: ~(exists mabh:mABH, 
-    (forall ga:ГA, S(mABHa mabh ga)) /\ (forall gb:ГB, C (mABHb mabh gb))).
+    (forall ga:ГA, S (proj1_sig(mABHa mabh) ga)) /\ 
+    (forall gb:ГB, C (proj1_sig(mABHb mabh) gb))).
   Proof.
     unfold not.
     intros H.
     destruct H as [mabh _].
     contradiction noABH.
-  Qed.
-
-
-  (* теперь определим отношение двойников *)
-  (* тогда (2) будет истинно *)
-
-  Reset noAH.
-
-  (* конструируем отношения *)
-  Definition cha:= cp ГH ГA Hm Am.
-  Definition cbh:= cp ГB ГH Bm Hm.
-
-  (** Объекты, общие для разных контекстов  *)
-  Record mABH := mkmABH'
-    { mABHa':ГA->man;
-      mABHb':ГB->man;
-      mABHh':ГH->man;
-      cABHb': Counterpart ГA ГB mABHa' mABHb';
-      cABHh': Counterpart ГH ГA mABHh' mABHa'}.
-
-  Fact C1_AHSBC: exists mh:ГH->man, exists c:Ck ГH ГA mh, 
-    (forall ga:ГA, S (proj1_sig c ga)) /\
-    (exists cb:Ck ГA ГB (proj1_sig c), forall gb:ГB, C (proj1_sig cb gb)).
-  Proof.
-    exists Hm.
-    unfold Ck.
-    exists (exist _ Am cha).
-    unfold proj1_sig.
-    split.
-    apply AS.
-    exists (exist _ Bm cab).
-    apply BC.
-  Qed.
-
-  (* докажем, используя общие объекты *)
-  Fact C1_AHSBCs: exists mabh:mABH, 
-    (forall ga:ГA, S(mABHa' mabh ga)) /\ (forall gb:ГB, C (mABHb' mabh gb)).
-  Proof.
-    exists (mkmABH' Am Bm Hm cab cha).
-    unfold mABHa', mABHb'.
-    split.
-    apply AS.
-    apply BC.
   Qed.
 
 End Case1.
@@ -250,43 +198,32 @@ Module Case2.
      by drowning. 
    Barsky believes that the murderer is still in Chicago. *)
 
-  (* тип man в Г, таких, что P (в Г) --- "killers" *)
-  Definition k (Г:Type) (P:man->Prop) := { m:Г->man | forall g:Г, P (m g) }.
-
   Record ГB := mkГB
    {Bm:man;
     BS:S(Bm);
     BC:C(Bm)}.
+  (* убийцы в ГB *)
+  Definition BmSk:k ГB S := exist _ Bm BS.
+  (* есть только один убийца... *)
+  Axiom uBSk: forall mk:k ГB S, mk = BmSk.
+
   Record ГH := mkГH
    {Hm:man;
     HS:S(Hm)}.
+  (* убийцы в ГH *)
+  Definition HmSk:k ГH S := exist _ Hm HS.
+  (* есть только один убийца... *)
+  Axiom uHSk: forall mk:k ГH S, mk = HmSk.
 
-  (** Отношения двойников -- между объектами в контексте *)
-
-  Inductive Counterpart (Гin:Type) (Гout:Type)
-            (ki:Гin->man) (ko:Гout->man) : Prop := 
-    | cp: Counterpart Гin Гout ki ko.   (* конструктор отношений *)
   (* конструируем отношения *)
-  Definition cbh:= cp ГB ГH Bm Hm.
-  Definition chb:= cp ГH ГB Hm Bm.
+  Definition cbh:= cp ГB ГH S BmSk HmSk.
 
-  (* типы двойников *)
-  Definition Ck (Гin:Type) (Гout:Type) (ki:Гin->man) := 
-    { ko:Гout->man | Counterpart Гin Гout ki ko }.
-
-  (** универсальная формулировка теоремы: "Гin верит, что Pin, и Гout верит, что Pout"
-      Или: "существует некто в Гin, такой, что Pin и существует его двойник в Гout,
-      такой, что Pout" *)
-  Definition G (Гin:Type) (Гout:Type) (Pin:man->Prop) (Pout:man->Prop) := 
-      exists mk: k Гin Pin,
-      exists c:(Ck Гin Гout (proj1_sig mk)), 
-      forall gout:Гout, Pout (proj1_sig c gout).
 
   (** Объекты, общие для разных контекстов  *)
   Record mBH := mkmBH
-    { mBHb: ГB->man;
-      mBHh: ГH->man;
-      cBHb: Counterpart ГB ГH mBHb mBHh}.
+    { mBHb: k ГB S;
+      mBHh: k ГH S;
+      cBHb: Counterpart ГB ГH S mBHb mBHh}.
 
   (** (3) Someone murdered Smith, 
           and Barsky thinks he is still in Chicago. *)
@@ -297,29 +234,18 @@ Module Case2.
     exists (exist _ Hm HS).
     unfold proj1_sig.
     unfold Ck.
-    exists (exist _ Bm chb).
-    apply BC.
-  Qed.
-
-  Fact C2_HSBC': forall gh:ГH, exists mh:ГH->man, S(mh gh) /\
-    exists c:Ck ГH ГB mh, forall gb:ГB, C(proj1_sig c gb).
-  Proof.
-    intro.
-    exists Hm.
-    split.
-    apply HS.
-    unfold proj1_sig.
-    unfold Ck.
-    exists (exist _ Bm chb).
+    pose (chb:=cbh).
+    rewrite Crefl in chb.
+    exists (exist _ BmSk chb).
     apply BC.
   Qed.
 
   (* докажем, используя общие объекты *)
   Fact C2_HSBCs: exists mbh:mBH, 
-    forall gh:ГH, S(mBHh mbh gh) /\ 
-    forall gb:ГB, C(mBHb mbh gb).
+    forall gh:ГH, S (proj1_sig (mBHh mbh) gh) /\ 
+    forall gb:ГB, C (proj1_sig (mBHb mbh) gb).
   Proof.
-    exists (mkmBH Bm Hm cbh).
+    exists (mkmBH BmSk HmSk cbh).
     split.
     apply HS.
     apply BC.
@@ -345,9 +271,6 @@ Module Case3.
      Chicago. 
    Barsky, however, thinks that one and the same person murdered both Smith and Jones. 
    However, neither Smith nor Jones was really murdered. *)
-
-  (* тип man в Г, таких, что P (в Г) --- "killers" *)
-  Definition k (Г:Type) (P:man->Prop) := { m:Г->man | forall g:Г, P (m g) }.
 
   Record ГA := mkГA
    {Am1:man;
@@ -381,30 +304,12 @@ Module Case3.
     HnJ:~J(Hm)}.
 
 
-  (** Двойники -- между не объектами, а понятиями "убийца Смита" и
-                  "убийца Джонса" *)
-
-  Inductive Counterpart (Гin:Type) (Гout:Type) (P:man->Prop) 
-            (ki:k Гin P) (ko:k Гout P) : Prop := 
-    | cp: Counterpart Гin Гout P ki ko.   (* конструктор отношений *)
   (* конструируем отношения *)
   Definition cabs:= cp ГA ГB S AmSk BmSk.
   Definition cabj:= cp ГA ГB J AmJk BmJk.
   Definition cbas:= cp ГB ГA S BmSk AmSk.
   Definition cbaj:= cp ГB ГA J BmJk AmJk.
 
-  (* типы двойников *)
-  Definition Ck (Гin:Type) (Гout:Type) (P:man->Prop) (ki:k Гin P) := 
-    { ko:k Гout P | Counterpart Гin Гout P ki ko }.
-
-
-  (** универсальная формулировка теоремы: "Гin верит, что Pin, и Гout верит, что Pout"
-      Или: "существует некто в Гin, такой, что Pin и существует его двойник в Гout,
-      такой, что Pout" *)
-  Definition G (Гin:Type) (Гout:Type) (Pin:man->Prop) (Pout:man->Prop) := 
-      exists mk: k Гin Pin,
-      exists c:(Ck Гin Гout Pin mk), 
-      forall gout:Гout, Pout (proj1_sig (proj1_sig c) gout).
 
 
   (** (4) Arsky thinks someone murdered Smith, 
@@ -475,9 +380,6 @@ Module Case4.
    He believes, for instance, that Smith’s murderer, but not Jones’s, 
      is still in Chicago. *)
 
-  (* тип man в Г, таких, что P (в Г) --- "killers" *)
-  Definition k (Г:Type) (P:man->Prop) := { m:Г->man | forall g:Г, P (m g) }.
-
   Record ГA := mkГA
    {Am1:man;
     Am2:man;
@@ -505,30 +407,11 @@ Module Case4.
   Axiom uHSk: forall mk:k ГH S, mk = HmSk.
   Axiom uHJk: forall mk:k ГH J, mk = HmJk.
 
-  (** Двойники -- между не объектами, а понятиями "убийца Смита" и
-                  "убийца Джонса" *)
-
-  Inductive Counterpart (Гin:Type) (Гout:Type) (P:man->Prop) 
-            (ki:k Гin P) (ko:k Гout P) : Prop := 
-    | cp: Counterpart Гin Гout P ki ko.   (* конструктор отношений *)
   (* конструируем отношения *)
   Definition cahs:= cp ГA ГH S AmSk HmSk.
   Definition cahj:= cp ГA ГH J AmJk HmJk.
   Definition chas:= cp ГH ГA S HmSk AmSk.
   Definition chaj:= cp ГH ГA J HmJk AmJk.
-
-  (* типы двойников *)
-  Definition Ck (Гin:Type) (Гout:Type) (P:man->Prop) (ki:k Гin P) := 
-    { ko:k Гout P | Counterpart Гin Гout P ki ko }.
-
-
-  (** универсальная формулировка теоремы: "Гin верит, что Pin, и Гout верит, что Pout"
-      Или: "существует некто в Гin, такой, что Pin и существует его двойник в Гout,
-      такой, что Pout" *)
-  Definition G (Гin:Type) (Гout:Type) (Pin:man->Prop) (Pout:man->Prop) := 
-      exists mk: k Гin Pin,
-      exists c:(Ck Гin Гout Pin mk), 
-      forall gout:Гout, Pout (proj1_sig (proj1_sig c) gout).
 
   (* уникальность двойников (леммы не используются) *)
   Lemma ucHSk: forall kk:{ko : k ГA S | Counterpart ГH ГA S HmSk ko}, 
@@ -554,6 +437,8 @@ Module Case4.
     destruct c.
     reflexivity.
   Qed.
+
+
 
   (** (8) Someone murdered Smith, 
           and Arsky thinks he murdered Jones. *)
