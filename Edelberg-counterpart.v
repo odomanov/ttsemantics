@@ -86,17 +86,17 @@ Module Case1.
       контекст, в котором мы просто предполагаем одного человека. *)
 
   (* конструируем отношения *)
-  Definition cab:= cp ГA ГB S AmSk BmSk.
+  Definition cab:= cp _ _ _ AmSk BmSk.
 
   (** Объекты, общие для разных контекстов  *)
   Record mABH := mkmABH
     { mABHa:k ГA S;
       mABHb:k ГB S;
       mABHh:k ГH S;
-      cABHb: Counterpart ГA ГB S mABHa mABHb;
-      cABHh: Counterpart ГA ГH S mABHa mABHh}.
+      cABHb: Counterpart _ _ _ mABHa mABHb;
+      cABHh: Counterpart _ _ _ mABHa mABHh}.
 
-  (* близнецов с ГH нет *)
+  (* близнецов с ГH нет (можно ли это доказать?) *)
   Axiom noAH: forall ma, forall mh, Counterpart ГA ГH S ma mh -> False.
   Axiom noBH: forall mb, forall mh, Counterpart ГB ГH S mb mh -> False.
 
@@ -149,18 +149,15 @@ Module Case1.
     unfold not, G, proj1_sig, Ck.
     intro H.
     destruct H as [mh H].
-    destruct H.
-    destruct x.
+    destruct H as [c _].
     apply (noHinA mh).
-    unfold Ck.
-    exists x.
     exact c.
   Qed.
 
   (* теперь полностью (2) *)
-  Fact C1_AHSBCn: ~(exists mh:k ГH S, exists c:Ck ГH ГA S mh, 
+  Fact C1_AHSBCn: ~(exists mh:k ГH S, exists c:Ck _ ГA _ mh, 
     (forall ga:ГA, S (proj1_sig (proj1_sig c) ga)) /\
-    (exists cb:Ck ГA ГB S (proj1_sig c), forall gb:ГB, C (proj1_sig (proj1_sig cb) gb))).
+    (exists cb:Ck _ ГB _ (proj1_sig c), forall gb:ГB, C (proj1_sig (proj1_sig cb) gb))).
   Proof.
     unfold not.
     intro H.
@@ -223,7 +220,7 @@ Module Case2.
   Record mBH := mkmBH
     { mBHb: k ГB S;
       mBHh: k ГH S;
-      cBHb: Counterpart ГB ГH S mBHb mBHh}.
+      cBHb: Counterpart _ _ _ mBHb mBHh}.
 
   (** (3) Someone murdered Smith, 
           and Barsky thinks he is still in Chicago. *)
@@ -232,8 +229,6 @@ Module Case2.
   Fact C2_HSBC: G ГH ГB S C.
   Proof.
     exists (exist _ Hm HS).
-    unfold proj1_sig.
-    unfold Ck.
     pose (chb:=cbh).
     rewrite Crefl in chb.
     exists (exist _ BmSk chb).
@@ -305,10 +300,8 @@ Module Case3.
 
 
   (* конструируем отношения *)
-  Definition cabs:= cp ГA ГB S AmSk BmSk.
-  Definition cabj:= cp ГA ГB J AmJk BmJk.
-  Definition cbas:= cp ГB ГA S BmSk AmSk.
-  Definition cbaj:= cp ГB ГA J BmJk AmJk.
+  Definition cabs:= cp _ _ _ AmSk BmSk.
+  Definition cabj:= cp _ _ _ AmJk BmJk.
 
 
 
@@ -347,6 +340,8 @@ Module Case3.
   Fact C3_BSAnJ: G ГB ГA S nJ.
   Proof.
     exists BmSk.
+    pose (cbas:=cabs).
+    rewrite Crefl in cbas.
     exists (exist _ AmSk cbas).
     apply A1J.
   Qed.
@@ -358,6 +353,8 @@ Module Case3.
   Fact C3_BSAC: G ГB ГA S C. 
   Proof.
     exists BmSk.
+    pose (cbas:=cabs).
+    rewrite Crefl in cbas.
     exists (exist _ AmSk cbas).
     apply A1C.
   Qed.
@@ -408,13 +405,13 @@ Module Case4.
   Axiom uHJk: forall mk:k ГH J, mk = HmJk.
 
   (* конструируем отношения *)
-  Definition cahs:= cp ГA ГH S AmSk HmSk.
-  Definition cahj:= cp ГA ГH J AmJk HmJk.
-  Definition chas:= cp ГH ГA S HmSk AmSk.
-  Definition chaj:= cp ГH ГA J HmJk AmJk.
+  Definition cahs:= cp _ _ _ AmSk HmSk.
+  Definition cahj:= cp _ _ _ AmJk HmJk.
+  Definition chas:= cp _ _ _ HmSk AmSk.
+  Definition chaj:= cp _ _ _ HmJk AmJk.
 
   (* уникальность двойников (леммы не используются) *)
-  Lemma ucHSk: forall kk:{ko : k ГA S | Counterpart ГH ГA S HmSk ko}, 
+  Lemma ucHSk: forall kk:{ko : k ГA S | Counterpart _ _ _ HmSk ko}, 
     kk = exist _ AmSk chas.
   Proof.
     intro kk.
@@ -426,7 +423,7 @@ Module Case4.
     reflexivity.
   Qed.
 
-  Lemma ucHJk: forall kk:{ko : k ГA J | Counterpart ГH ГA J HmJk ko}, 
+  Lemma ucHJk: forall kk:{ko : k ГA J | Counterpart _ _ _ HmJk ko}, 
     kk = exist _ AmJk chaj.
   Proof.
     intro kk.
