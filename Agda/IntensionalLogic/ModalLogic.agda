@@ -11,7 +11,7 @@ open import Monad.Identity
 open import Monad.Reader   
 
 data World : Set where
-  w₁ w₂ : World
+  w₁ w₂ w₃ : World
   
 IntMonad = MonadReader World
 
@@ -36,8 +36,12 @@ rigid = return
 infix 5 _≈>_
 
 _≈>_ : World → World → Set
-W₁ ≈> W₂ = ⊤
--- _  ≈> _  = ⊥
+w₁ ≈> w₁ = ⊤
+w₂ ≈> w₂ = ⊤
+w₃ ≈> w₃ = ⊤
+w₁ ≈> w₂ = ⊤
+w₁ ≈> w₃ = ⊤
+_  ≈> _  = ⊥
 
 -- accessible from w₀
 acc : World → Set
@@ -73,12 +77,14 @@ itH = mkIntensional f
   f : World → Human  
   f w₁ = John
   f w₂ = Mary
+  f w₃ = Mary
 
 
 postulate
   Run'_/_ : Human → World → Set
   Jr1 : Run' John / w₁             -- John runs in w₁
   Mr2 : Run' Mary / w₂             -- Mary runs in w₂
+  Mr3 : Run' Mary / w₃             -- Mary runs in w₃
   Jr2⊥ : Run' John / w₂ → ⊥
 
 iRun' : Human → (∧ Set)
@@ -98,12 +104,21 @@ _ = prf where
   prf : (w : World) → (∨ (itH >>= iRun') w) 
   prf w₁ = Jr1
   prf w₂ = Mr2
+  prf w₃ = Mr3
 
 _ : □ w₁ (itH >>= iRun')
 _ = λ x → prf (proj₁ x) where 
   prf : (w : World) → (∨ (itH >>= iRun') w) 
   prf w₁ = Jr1
   prf w₂ = Mr2
+  prf w₃ = Mr3
+
+_ : □ w₂ (itH >>= iRun')
+_ = λ x → prf (proj₁ x) where 
+  prf : (w : World) → (∨ (itH >>= iRun') w) 
+  prf w₁ = Jr1
+  prf w₂ = Mr2
+  prf w₃ = Mr3
 
 
 -- the tallest human possibly runs
