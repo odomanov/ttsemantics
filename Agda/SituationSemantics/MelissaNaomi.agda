@@ -3,7 +3,7 @@
 module MelissaNaomi where
 
 open import Data.Empty using (⊥)
-open import Data.Product
+open import Data.Product using (Σ-syntax; _,_)
 open import Data.String using (String)
 open import Data.Unit using (⊤)
 open import Function using (_∘_)

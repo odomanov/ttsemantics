@@ -1,8 +1,8 @@
 -- Ralph -- Situation semantics through modules
 
 open import Data.Empty using (⊥)
-open import Data.Product
-open import Relation.Binary.PropositionalEquality 
+open import Data.Product using (Σ-syntax; _×_; _,_; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl; trans; sym; subst) 
 open import Relation.Nullary using (¬_)
 open import Relation.Nullary.Negation using (contradiction)
 
