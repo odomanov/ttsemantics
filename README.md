@@ -1,5 +1,14 @@
 # TT Semantics
 
+## Agda
+
+* `Contexts` — Contexts in natural language semantics. Records
+  and modules.
+* `IntensionalLogic` — Monads in intensional logic.
+* `Experiments` — Various experiments/
+
+## Coq
+
 * `Edelberg.v` — `Coq` formalization of illustrative cases from
   'W.Edelberg, A Perspectivalist Semantics for the Attitudes (1995)'.
 * `Edelberg-counterpart.v` — `Coq` formalization of illustrative cases from
