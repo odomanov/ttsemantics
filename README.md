@@ -5,7 +5,7 @@
 * `Contexts` — Contexts in natural language semantics. Records
   and modules.
 * `IntensionalLogic` — Monads in intensional logic.
-* `Experiments` — Various experiments/
+* `Experiments` — Various experiments.
 
 ## Coq
 
