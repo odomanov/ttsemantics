@@ -55,7 +55,7 @@ record SitUttering : Set where
   constructor mkSitUttering
   field
     {l} : LOC
-    {t} : TIM 
+    {t} : TIM
     {speaker}  : Human
     {listener} : Human
     {phr} : String
@@ -109,13 +109,13 @@ module theSit where    -- Our situation
 
   Melissa-man     = SitManDoor.man     sitManDoor
   Melissa-mandoor = SitManDoor.mandoor sitManDoor
-  
+
   postulate
     Melissa Naomi : Human
     sitUttering-mandoor : SitUttering
     s≡m  : SitUttering.speaker  sitUttering-mandoor ≡ Melissa
     l≡n  : SitUttering.listener sitUttering-mandoor ≡ Naomi
-    p≡md : SitUttering.phr      sitUttering-mandoor ≡ "A man is at the door" 
+    p≡md : SitUttering.phr      sitUttering-mandoor ≡ "A man is at the door"
   loc = SitUttering.l sitUttering-mandoor
   tim = SitUttering.t sitUttering-mandoor
   postulate
@@ -124,10 +124,10 @@ module theSit where    -- Our situation
 
 
   _ : Σ[ x ∈ Human ] x at-the-door door
-  _ = Melissa-man , Melissa-mandoor 
+  _ = Melissa-man , Melissa-mandoor
 
   _ : Σ[ x ∈ Human ] Σ[ y ∈ Door ] x at-the-door y
-  _ = Melissa-man , door , Melissa-mandoor 
+  _ = Melissa-man , door , Melissa-mandoor
 
   -- the type of Humans Melissa refers to
   _ : Σ[ x ∈ Human ] Σ[ p ∈ String ] Σ[ l ∈ LOC ] Σ[ t ∈ TIM ]
@@ -153,7 +153,7 @@ module theSit where    -- Our situation
         ; phrase = "man"
         ; referring =
             subst (λ x → x refers-to ⟪ Melissa-man ⟫ via "man" / loc , tim)
-            (sym s≡m) mrefm 
+            (sym s≡m) mrefm
         }
 
 
@@ -174,7 +174,7 @@ module theSit where    -- Our situation
     OMc : Object <: Meaning
     OMc = coerce (fRM ∘ fOR)
     DMc : Door <: Meaning
-    DMc = coerce (fRM ∘ fOR ∘ fDO) 
+    DMc = coerce (fRM ∘ fOR ∘ fDO)
     HMc : Human <: Meaning
     HMc = coerce (fRM ∘ fOR ∘ fHO)
     MMc : Meaning <: Meaning
@@ -186,19 +186,19 @@ module theSit where    -- Our situation
   -- Simple uttering cannot be meaningful, there should be some reference.
   record SitMeaning (A : Set) : Set where
     field
-      sitmu   : A → SitUttering 
+      sitmu   : A → SitUttering
       meaning : A → Referable -- Meaning
-  
+
   open SitMeaning {{...}} public
-  
+
   -- abstract meaning
   instance
     SMRef : SitMeaning SitRef
-    sitmu   {{SMRef}}   = SitRef.situ   
+    sitmu   {{SMRef}}   = SitRef.situ
     meaning {{SMRef}} s = ⟪ SitRef.referent s ⟫
 
   -- meaning-in-use
-  _ : meaning MrD ≡ ⟪ door ⟫ 
+  _ : meaning MrD ≡ ⟪ door ⟫
   _ = refl
 
   _ : meaning MrM ≡ ⟪ Melissa-man ⟫
@@ -211,9 +211,9 @@ module theSit where    -- Our situation
               ; phrase = "door"
               ; referring =
                   subst (λ x → x refers-to ⟪ door ⟫ via "door" / loc , tim)
-                  (sym s≡m) mrefd 
+                  (sym s≡m) mrefd
               }
-              ≡ ⟪ door ⟫ 
+              ≡ ⟪ door ⟫
   _ = refl
 
 
@@ -239,7 +239,7 @@ module theSit where    -- Our situation
 
 
   -- Situations as meaning.
-  
+
   postulate
     fSR   : SIT → Referable
     fMDS : SitManDoor → SIT
@@ -263,15 +263,15 @@ module theSit where    -- Our situation
     mref-mandoor : SitUttering.speaker sitUttering-mandoor
                    refers-to ⟪ sitManDoor ⟫ via "A man is at the door"
                    / loc , tim
-    
+
   instance
     SMSIT : SitMeaning SitRef
     sitmu {{SMSIT}} = SitRef.situ
-    meaning {{SMSIT}} s = ⟪ SitRef.referent s ⟫ 
+    meaning {{SMSIT}} s = ⟪ SitRef.referent s ⟫
 
   _ : meaning record
               { situ = sitUttering-mandoor
-              ; referent  = ⟪ sitManDoor ⟫ 
+              ; referent  = ⟪ sitManDoor ⟫
               ; phrase    = "A man is at the door"
               ; referring = mref-mandoor
               }
@@ -310,5 +310,5 @@ module theSit where    -- Our situation
 --     phrase : String
 --     utters : Melissa utters phrase to Naomi / loc , tim
 --     refm   : Melissa refers-to ⟪ man sit-mr ⟫ via MAN / loc , tim
---     refd   : Melissa refers-to ⟪ door ⟫ via DOOR / loc , tim 
+--     refd   : Melissa refers-to ⟪ door ⟫ via DOOR / loc , tim
 

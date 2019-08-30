@@ -2,7 +2,7 @@
 
 open import Data.Empty using (⊥)
 open import Data.Product using (Σ-syntax; _×_; _,_; proj₂)
-open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl; trans; sym; subst) 
+open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl; trans; sym; subst)
 open import Relation.Nullary using (¬_)
 open import Relation.Nullary.Negation using (contradiction)
 
@@ -23,7 +23,7 @@ postulate
 -- there is something of type A
 record SitSmth (A : Set) : Set where
   constructor mkSitSmth
-  field 
+  field
     smth : A
 
 -- there is a man
@@ -65,13 +65,13 @@ module OneMan where
 
   -- proof in a local context (= Ralph's context)
   _ : Σ[ x ∈ Man ] x is-a-spy
-  _ = man , man-spy 
+  _ = man , man-spy
       where
       open RalphBelief
 
   -- the same without 'open'
   _ : Σ[ x ∈ Man ] x is-a-spy
-  _ = RalphBelief.man , RalphBelief.man-spy 
+  _ = RalphBelief.man , RalphBelief.man-spy
 
 
   -- we can also define SitSpy instead of postulating it
@@ -79,7 +79,7 @@ module OneMan where
     postulate
       m : Man
       mspy : m is-a-spy
-      
+
     sitSpy = record
              { sitMan = record { sitsmth = mkSitSmth m }
              ; man-spy = mspy
@@ -88,11 +88,11 @@ module OneMan where
     open SitSpy sitSpy public   -- makes 'man' available
 
     _ : man is-a-spy
-    _ = man-spy 
+    _ = man-spy
 
   -- proof in a local context
   _ : Σ[ x ∈ Man ] x is-a-spy
-  _ = man , man-spy 
+  _ = man , man-spy
       where
       open RalphBelief2
 
@@ -115,7 +115,7 @@ module OneMan' where
       man-spy  : man is-a-spy
 
     _ : man is-a-spy
-    _ = man-spy 
+    _ = man-spy
 
 
   -- modelling Ralph's belief
@@ -134,13 +134,13 @@ module OneMan' where
 
   -- proof in a local context (= Ralph's context)
   _ : Σ[ x ∈ Man ] x is-a-spy
-  _ = man , man-spy 
+  _ = man , man-spy
       where
       open RalphBelief
 
   -- the same without 'open'
   _ : Σ[ x ∈ Man ] x is-a-spy
-  _ = RalphBelief.man , RalphBelief.man-spy 
+  _ = RalphBelief.man , RalphBelief.man-spy
 
 
   -- we can also define SitSpy instead of postulating it.
@@ -149,15 +149,15 @@ module OneMan' where
     postulate
       m : Man
       mspy : m is-a-spy
-      
+
     open SitSpy record {man-spy = mspy} public   -- makes 'man' available
 
     _ : man is-a-spy
-    _ = mspy 
+    _ = mspy
 
   -- proof in a local context
   _ : Σ[ x ∈ Man ] x is-a-spy
-  _ = man , mspy 
+  _ = man , mspy
       where
       open RalphBelief2
 
@@ -168,13 +168,13 @@ module OneMan' where
 
 
 -- two men ---------------------------------
---  
+--
 module TwoMen where  -- our belief actually
 
   -- What means to believe that ...
   record SitTwo : Set where
     field
-      {man-in-a-hat}     : Man 
+      {man-in-a-hat}     : Man
       {man-on-the-beach} : Man
       hspy :   man-in-a-hat is-a-spy
       bspy : ¬ man-on-the-beach is-a-spy
@@ -186,18 +186,18 @@ module TwoMen where  -- our belief actually
     open SitTwo sit public
 
     _ : man-in-a-hat is-a-spy
-    _ = hspy 
+    _ = hspy
 
     _ : ¬ man-on-the-beach is-a-spy
-    _ = bspy 
+    _ = bspy
 
     _ : Σ[ x ∈ Man ] ¬ x is-a-spy
-    _ = man-on-the-beach , bspy 
+    _ = man-on-the-beach , bspy
 
 
   -- proof in a local context
   _ : Σ[ x ∈ Man ] ¬ x is-a-spy
-  _ = man-on-the-beach , bspy 
+  _ = man-on-the-beach , bspy
       where
       open RalphBelief
 
@@ -208,8 +208,8 @@ module TwoMen where  -- our belief actually
 
     postulate
       Ortcutt : Man
-      o≡h : Ortcutt ≡ man-in-a-hat 
-      o≡b : Ortcutt ≡ man-on-the-beach 
+      o≡h : Ortcutt ≡ man-in-a-hat
+      o≡b : Ortcutt ≡ man-on-the-beach
 
     _ : ⊥
     _ = contradiction (trans (sym o≡h) o≡b) h≢b
@@ -219,11 +219,11 @@ module TwoMen where  -- our belief actually
   --
   module OurBelief1 where      -- our belief
     open RalphBelief using (man-in-a-hat; man-on-the-beach)
-    
+
     postulate
       Ortcutt : Man
-      o≡h : Ortcutt ≡ man-in-a-hat 
-      o≡b : Ortcutt ≡ man-on-the-beach 
+      o≡h : Ortcutt ≡ man-in-a-hat
+      o≡b : Ortcutt ≡ man-on-the-beach
 
     _ : Ortcutt is-a-spy
     _ = subst (λ x → x is-a-spy) (sym (proj₂ (proj₂ hs))) hspy
@@ -242,7 +242,7 @@ module TwoMen where  -- our belief actually
     -- So we can prove the contradiction.
     -- But we can prove it more directly:
 
-    h≡b : man-in-a-hat ≡ man-on-the-beach 
+    h≡b : man-in-a-hat ≡ man-on-the-beach
     h≡b = trans (sym o≡h) o≡b
 
     -- We can prove contradiction only for Ralph's belief.
@@ -261,22 +261,22 @@ module TwoMen where  -- our belief actually
   -- open also that man-in-a-hat is a spy
   module OurBelief2 where                -- our belief
     open RalphBelief using (man-in-a-hat; man-on-the-beach; hspy)
-    
+
     postulate
       Ortcutt : Man
-      o≡h : Ortcutt ≡ man-in-a-hat 
-      o≡b : Ortcutt ≡ man-on-the-beach 
+      o≡h : Ortcutt ≡ man-in-a-hat
+      o≡b : Ortcutt ≡ man-on-the-beach
 
-    -- h≡b : man-in-a-hat ≡ man-on-the-beach 
+    -- h≡b : man-in-a-hat ≡ man-on-the-beach
     -- h≡b = trans (sym o≡h) o≡b
 
     -- no need to locally open RalphBelief
-    _ : Σ[ x ∈ Man ] x is-a-spy 
-    _ = man-in-a-hat , hspy 
+    _ : Σ[ x ∈ Man ] x is-a-spy
+    _ = man-in-a-hat , hspy
 
     -- but here I need to open it
-    _ : Σ[ x ∈ Man ] ¬ x is-a-spy 
-    _ = man-on-the-beach , bspy 
+    _ : Σ[ x ∈ Man ] ¬ x is-a-spy
+    _ = man-on-the-beach , bspy
       where open RalphBelief
 
     -- in particular, we can prove:
