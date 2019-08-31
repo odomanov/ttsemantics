@@ -72,9 +72,9 @@ record SitRef : Set where
     situ : SitUttering
   open SitUttering --public
   field
-    referent  : Referable
-    phrase    : String -- not necessarily equal to SitUttering.phr
-    referring : (speaker situ) refers-to referent via phrase / l situ , t situ
+    {referent} : Referable
+    {phrase}   : String -- not necessarily equal to SitUttering.phr
+    referring  : (speaker situ) refers-to referent via phrase / l situ , t situ
 
 
 -- someone utters 'I'
@@ -138,8 +138,6 @@ module theSit where    -- Our situation
   MrD : SitRef
   MrD = record
         { situ = sitUttering-mandoor
-        ; referent = ⟪ door ⟫
-        ; phrase = "door"
         ; referring =
             subst (λ x → x refers-to ⟪ door ⟫ via "door" / loc , tim)
             (sym s≡m) mrefd
@@ -149,8 +147,6 @@ module theSit where    -- Our situation
   MrM : SitRef
   MrM = record
         { situ = sitUttering-mandoor
-        ; referent = ⟪ Melissa-man ⟫
-        ; phrase = "man"
         ; referring =
             subst (λ x → x refers-to ⟪ Melissa-man ⟫ via "man" / loc , tim)
             (sym s≡m) mrefm
@@ -207,8 +203,6 @@ module theSit where    -- Our situation
   -- but we don't need to define MrD or MrM:
   _ : meaning record
               { situ = sitUttering-mandoor
-              ; referent = ⟪ door ⟫
-              ; phrase = "door"
               ; referring =
                   subst (λ x → x refers-to ⟪ door ⟫ via "door" / loc , tim)
                   (sym s≡m) mrefd
@@ -271,8 +265,6 @@ module theSit where    -- Our situation
 
   _ : meaning record
               { situ = sitUttering-mandoor
-              ; referent  = ⟪ sitManDoor ⟫
-              ; phrase    = "A man is at the door"
               ; referring = mref-mandoor
               }
               ≡ ⟪ sitManDoor ⟫
