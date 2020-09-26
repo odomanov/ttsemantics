@@ -1,0 +1,3 @@
+name: FuzzyTT
+depend: standard-library
+include: .
