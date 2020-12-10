@@ -4,7 +4,7 @@ open import Data.Maybe
 open import Data.String
 open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl; cong)
 
-open import LabelAlgebras
+open import ResiduatedLattices
 
 -- la = Pref
 la = Łuk

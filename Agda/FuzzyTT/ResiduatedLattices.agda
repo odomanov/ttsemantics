@@ -1,7 +1,7 @@
--- Using Labels for reasoning. Definitions of Label algebras
+-- Some Residuated Lattices
 -- TODO: Prove 0≤v⊗ etc.
 
-module LabelAlgebras where
+module _  where
 
 open import Data.Bool
 open import Data.Empty
@@ -15,7 +15,7 @@ open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl)
 
 open import ArgPrelude
 
-open import LabelAlgebra public
+open import ResiduatedLattice public
   renaming (⊤ to LA⊤; ⊥ to LA⊥; _∧_ to _LA∧_; _∨_ to _LA∨_)
 
 -- Float interval [0..1]
@@ -216,26 +216,26 @@ Trust∨ a b = record
   }
 
 postulate
-  Trust-isLabelAlgebra : IsLabelAlgebra
-    FU= FU≤ Trust⊗ Trust⊕ -- Trust⊖
-    Trust⊘ Trust∧ Trust∨ FUmean FUadiff FU1 FU0
+  Trust-isResiduatedLattice : IsResiduatedLattice
+    FU= FU≤ Trust⊗ -- Trust⊕ -- Trust⊖
+    Trust∧ Trust∨ FU1 FU0
 
-Trust : LabelAlgebra _ _ _
+Trust : ResiduatedLattice _ _ _
 Trust = record
   { Carrier = FUnit
   ; _≈_ = FU=
   ; _≤_ = FU≤
   ; _⊗_ = Trust⊗
-  ; _⊕_ = Trust⊕
+  -- ; _⊕_ = Trust⊕
   -- ; _⊖_ = Trust⊖
-  ; ⊘   = Trust⊘
+  -- ; ⊘   = Trust⊘
   ; _∧_ = Trust∧
   ; _∨_ = Trust∨
-  ; mean = FUmean
-  ; adiff = FUadiff
+  -- ; mean = FUmean
+  -- ; adiff = FUadiff
   ; ⊤ = FU1
   ; ⊥ = FU0
-  ; isLabelAlgebra = Trust-isLabelAlgebra
+  ; isResiduatedLattice = Trust-isResiduatedLattice
   ; doc = docFU
   }
 
@@ -289,26 +289,26 @@ Pref∨ a b = record
   }
 
 postulate
-  Pref-isLabelAlgebra : IsLabelAlgebra
-    FU= FU≤ Pref⊗ Pref⊕ -- Pref⊖
-    Pref⊘ Pref⊗ Pref∨ FUmean FUadiff FU1 FU0
+  Pref-isResiduatedLattice : IsResiduatedLattice
+    FU= FU≤ Pref⊗ 
+    Pref⊗ Pref∨ FU1 FU0
 
-Pref : LabelAlgebra _ _ _
+Pref : ResiduatedLattice _ _ _
 Pref = record
   { Carrier = FUnit
   ; _≈_ = FU=
   ; _≤_ = FU≤
   ; _⊗_ = Pref⊗
-  ; _⊕_ = Pref⊕
+  -- ; _⊕_ = Pref⊕
   -- ; _⊖_ = Pref⊖
-  ; ⊘   = Pref⊘
+  -- ; ⊘   = Pref⊘
   ; _∧_ = Pref⊗
   ; _∨_ = Pref∨
-  ; mean = FUmean
-  ; adiff = FUadiff
+  -- ; mean = FUmean
+  -- ; adiff = FUadiff
   ; ⊤ = FU1
   ; ⊥ = FU0
-  ; isLabelAlgebra = Pref-isLabelAlgebra
+  ; isResiduatedLattice = Pref-isResiduatedLattice
   ; doc = docFU
   }
 
@@ -361,26 +361,26 @@ postulate
   }
 
 postulate
-  Łuk-isLabelAlgebra : IsLabelAlgebra
-    FU= FU≤ Łuk⊗ Łuk⊕ -- Łuk⊖
-    Łuk⊘ Łuk∧ Łuk∨ FUmean FUadiff FU1 FU0
+  Łuk-isResiduatedLattice : IsResiduatedLattice
+    FU= FU≤ Łuk⊗ 
+    Łuk∧ Łuk∨ FU1 FU0
 
-Łuk : LabelAlgebra _ _ _
+Łuk : ResiduatedLattice _ _ _
 Łuk = record
   { Carrier = FUnit
   ; _≈_ = FU=
   ; _≤_ = FU≤
   ; _⊗_ = Łuk⊗
-  ; _⊕_ = Łuk⊕
+  -- ; _⊕_ = Łuk⊕
   -- ; _⊖_ = Łuk⊖
-  ; ⊘   = Łuk⊘
+  -- ; ⊘   = Łuk⊘
   ; _∧_ = Łuk∧
   ; _∨_ = Łuk∨
-  ; mean = FUmean
-  ; adiff = FUadiff
+  -- ; mean = FUmean
+  -- ; adiff = FUadiff
   ; ⊤ = FU1
   ; ⊥ = FU0
-  ; isLabelAlgebra = Łuk-isLabelAlgebra
+  ; isResiduatedLattice = Łuk-isResiduatedLattice
   ; doc = docFU
   }
 
@@ -414,26 +414,26 @@ Göd∧ = Göd⊗
 Göd∨ = Göd⊕
 
 postulate
-  Gödel-isLabelAlgebra : IsLabelAlgebra
-    FU= FU≤ Göd⊗ Göd⊕ -- Göd⊖
-    Göd⊘ Göd∧ Göd∨ FUmean FUadiff FU1 FU0
+  Gödel-isResiduatedLattice : IsResiduatedLattice
+    FU= FU≤ Göd⊗ 
+    Göd∧ Göd∨ FU1 FU0
 
-Gödel : LabelAlgebra _ _ _
+Gödel : ResiduatedLattice _ _ _
 Gödel = record
   { Carrier = FUnit
   ; _≈_ = FU=
   ; _≤_ = FU≤
   ; _⊗_ = Göd⊗
-  ; _⊕_ = Göd⊕
+  -- ; _⊕_ = Göd⊕
   -- ; _⊖_ = Göd⊖
-  ; ⊘   = Göd⊘
+  -- ; ⊘   = Göd⊘
   ; _∧_ = Göd∧
   ; _∨_ = Göd∨
-  ; mean = FUmean
-  ; adiff = FUadiff
+  -- ; mean = FUmean
+  -- ; adiff = FUadiff
   ; ⊤ = FU1
   ; ⊥ = FU0
-  ; isLabelAlgebra = Gödel-isLabelAlgebra
+  ; isResiduatedLattice = Gödel-isResiduatedLattice
   ; doc = docFU
   }
 
@@ -469,26 +469,26 @@ prod∧ = FUmin
 prod∨ = FUmax
 
 postulate
-  Product-isLabelAlgebra : IsLabelAlgebra
-    FU= FU≤ prod⊗ prod⊕ -- prod⊖
-    prod⊘ prod∧ prod∨ FUmean FUadiff FU1 FU0
+  Product-isResiduatedLattice : IsResiduatedLattice
+    FU= FU≤ prod⊗ 
+    prod∧ prod∨ FU1 FU0
 
-Product : LabelAlgebra _ _ _
+Product : ResiduatedLattice _ _ _
 Product = record
   { Carrier = FUnit
   ; _≈_ = FU=
   ; _≤_ = FU≤
   ; _⊗_ = prod⊗
-  ; _⊕_ = prod⊕
+  -- ; _⊕_ = prod⊕
   -- ; _⊖_ = prod⊖
-  ; ⊘   = prod⊘
+  -- ; ⊘   = prod⊘
   ; _∧_ = prod∧
   ; _∨_ = prod∨
-  ; mean = FUmean
-  ; adiff = FUadiff
+  -- ; mean = FUmean
+  -- ; adiff = FUadiff
   ; ⊤ = FU1
   ; ⊥ = FU0
-  ; isLabelAlgebra = Product-isLabelAlgebra
+  ; isResiduatedLattice = Product-isResiduatedLattice
   ; doc = docFU
   }
 
