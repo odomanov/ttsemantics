@@ -4,10 +4,10 @@ open import Algebra
 open import Data.Nat using (ℕ)
 open import Data.Product
 open import Level
-open import Relation.Binary
+open import Relation.Binary hiding (_⇒_)
 open import Relation.Binary.Lattice using (Supremum; Infimum)
 -- open import Relation.Binary.Properties.BoundedLattice --using (Supremum; Infimum)
-open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl)
+open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl) 
 open import Relation.Nullary
 
 open import WLPretty
@@ -16,6 +16,7 @@ record IsResiduatedLattice {c ℓ₁ ℓ₂} {A : Set c}
                          (_≈_ : Rel A ℓ₁)
                          (_≤_ : Rel A ℓ₂)
                          (_⊗_ : Op₂ A)
+                         (_⇒_ : Op₂ A)
                          -- (_⊕_ : Op₂ A)
                          -- (_⊖_ : Op₂ A)
                          -- (⊘   : Op₁ A)          -- negation
@@ -69,7 +70,8 @@ record ResiduatedLattice c ℓ₁ ℓ₂ : Set (suc (c ⊔ ℓ₁ ⊔ ℓ₂)) w
     Carrier : Set c
     _≈_     : Rel Carrier ℓ₁  -- The underlying equality.
     _≤_     : Rel Carrier ℓ₂  -- The partial order.
-    _⊗_     : Op₂ Carrier     -- The support operation.
+    _⊗_     : Op₂ Carrier     -- The ?
+    _⇒_     : Op₂ Carrier     -- The residuum
     -- _⊕_     : Op₂ Carrier     -- The aggregation operation.
     -- _⊖_     : Op₂ Carrier     -- The conflict operation.
     -- ⊘       : Op₁ Carrier     -- The negation operation.
@@ -77,7 +79,7 @@ record ResiduatedLattice c ℓ₁ ℓ₂ : Set (suc (c ⊔ ℓ₁ ⊔ ℓ₂)) w
     _∨_     : Op₂ Carrier     -- The maximum operation.
     ⊤       : Carrier         -- The maximum.
     ⊥       : Carrier         -- The minimum.
-    isResiduatedLattice : IsResiduatedLattice _≈_ _≤_ _⊗_ _∧_ _∨_ ⊤ ⊥ 
+    isResiduatedLattice : IsResiduatedLattice _≈_ _≤_ _⊗_ _⇒_ _∧_ _∨_ ⊤ ⊥ 
     doc : Carrier → Doc
     
   open IsResiduatedLattice isResiduatedLattice public
