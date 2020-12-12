@@ -87,30 +87,60 @@ a = aa ! MC⊥ ⦂ AA
 -----------------------------------------------------------------------------
 
 -- Fuzzy Type
-record FuzzyTy {ℓ} (A : Set ℓ) : Set (lsuc ℓ) where
+record FuzzyTy {l} (A : Set l) : Set (lsuc l) where
   constructor _!_
   field
     fa : A
     fα : MC
-
 open FuzzyTy
 
+-- data FuzzyTy {l} {m} : Set (lsuc l ⊔ lsuc m) where
+--   _!_ : ∀ {A : Set l} → A → MC → FuzzyTy   
+--   fun : ∀ {A : Set l} {B : A → Set m} → ((x : A) → B x) → FuzzyTy -- ((x : A) → B x)
+--   _,_ : ∀ {A : Set l} {B : A → Set m} → (x : A) → B x → FuzzyTy
 
--- (Example of) function definition (by defining ffa and ffα):
-f : ∀ {l m} → (A : Set l) → (B : A → Set m) → (a : FuzzyTy A) → FuzzyTy (B (fa a))
-f {l} {m} = λ (A : Set l) B (a ! α) → ffa A B a ! ffα A (a , α)
-  where
-  postulate
-    ffa : ∀ (A : Set l) (B : A → Set m) → (a : A) → B a
-    ffα : ∀ A → A × MC → MC
+-- FuzzyTy = ∀ {l} (A : Set l) → A × MC
 
--- Function application
-appl : ∀ {A : Set} {B : Set} (f : FuzzyTy A → FuzzyTy B) → FuzzyTy A → FuzzyTy B
-appl f a = (fa (f a)) ! ((fα (f a)) ⟪⨂⟫ (fα a))
+data FuzzyPi {l m} (A : Set l) (B : A → Set m) : Set (l ⊔ lsuc m) where
+  fun : ((x : A) → B x) → ((x : A) → MC) → FuzzyPi A B
+
+_●_ : ∀ {l m} {A : Set l} {B : A → Set m} → FuzzyPi A B → (aα : FuzzyTy A) → FuzzyTy (B (fa aα))
+fun f fMC ● aα = (f (fa aα)) ! (fMC (fa aα) ⟪⨂⟫ fα aα)
+
+-- операция, обратная к _●_
+toPi : ∀ {l m} {A : Set l} {B : A → Set m} → ((aα : FuzzyTy A) → FuzzyTy (B (fa aα))) → FuzzyPi A B
+toPi f = fun (λ x → fa (f (x ! MC⊤))) λ x → fα (f (x ! MC⊤))  -- мы считаем, что результат функции равен
+                                                              -- α ⇒ β и *не зависит от α*.  Поэтому
+                                                              -- здесь везде может стоять MC⊤!
 
 
--- data FuzzySigma {a b} (A : Set a) (B : A → Set b) : Set (lsuc a ⊔ lsuc b) where
---   _,_ : (a : FuzzyTy A) → FuzzyTy (B (fa a))  → FuzzySigma A B
+-- -- (Example of) function definition (by defining ffa and ffα).
+-- -- So functions keep the value of ⇒
+-- -- f : ∀ {l m} → (A : Set l) → (B : A → Set m) → (aα : FuzzyTy A) → FuzzyTy (B (fa aα))
+-- -- f {l} {m} = λ (A : Set l) B (a ! α) → ffa A B a ! ffα A (a , α)
+-- --   where
+-- --   postulate    -- postulated in the example, but in real life should be defined
+-- --     ffa : ∀ (A : Set l) (B : A → Set m) → (a : A) → B a
+-- --     ffα : ∀ A → A × MC → MC       -- should give α ⇒ β to make application correct
+
+-- -- _●_ : ∀ {l m} {A : Set l} {B : A → Set m}
+-- --          (f : (aα : FuzzyTy A) → FuzzyTy (B (fa aα)))
+-- --          → (aα' : FuzzyTy A)
+-- --          → FuzzyTy (B (fa aα'))
+-- -- f ● aα' = fa (f aα') ! (fα (f aα') ⟪⨂⟫ (fα aα'))
+
+-- -- -- Function type
+-- -- data FuzzyFun {l} {m} (A : Set l) (B : A → Set m) : Set (l ⊔ lsuc m) where
+-- --   fun : FuzzyTy ((x : A) → B x) → FuzzyFun A B
+
+-- -- -- Function application
+-- -- _●_ : ∀ {l m} {A : Set l} {B : A → Set m}
+-- --          (f : FuzzyFun A B) 
+-- --          → (aα : FuzzyTy A)
+-- --          → FuzzyTy (B (fa aα))
+-- -- (fun f) ● aα = ((fa f) (fa aα)) ! ((fα f) ⟪⨂⟫ (fα aα))
+
+infixl 4 _●_
 
 record FuzzySigma {a b} (A : Set a) (B : A → Set b) : Set (lsuc a ⊔ lsuc b) where
   constructor _,_
@@ -118,11 +148,22 @@ record FuzzySigma {a b} (A : Set a) (B : A → Set b) : Set (lsuc a ⊔ lsuc b) 
     π1 : FuzzyTy A
     π2 : FuzzyTy (B (fa π1)) 
 
--- when g depends on both x and y
-Σ-elimxy : ∀ {l m} {A : Set l} {B : A → Set m} {C : FuzzySigma A B → Set}  
-       → (g : (x : FuzzyTy A) → (y : FuzzyTy (B (fa x))) → FuzzyTy (C (x , y)))
-       → ((z : FuzzySigma A B) → FuzzyTy (C z))
-Σ-elimxy g (z1 , z2) = (fa (g z1 z2)) ! h
-  where
-  h : MC
-  h = ({!fα x!} ⟪⇒⟫ ({!!} ⟪⇒⟫ {!!})) ⟪⨂⟫ ((fα z1) ⟪⨂⟫ (fα z2))
+-- -- when g depends on both x and y
+-- Σ-elimxy : ∀ {l m} {A : Set l} {B : A → Set m} {C : FuzzySigma A B → Set}  
+--        → (g : (x : FuzzyTy A) → (y : FuzzyTy (B (fa x))) → FuzzyTy (C (x , y)))
+--        → ((z : FuzzySigma A B) → FuzzyTy (C z))
+-- Σ-elimxy g (z1 , z2) = {!!} --g ● z1 ● z2  -- (fa (g z1 z2)) ! h
+--   where
+--   h : MC
+--   h = ((fα {!!}) ⟪⇒⟫ ((fα {!!}) ⟪⇒⟫ (fα {!!}))) ⟪⨂⟫ ((fα z1) ⟪⨂⟫ (fα z2))
+
+fun2 : ∀ {l m n} {A : Set l} {B : A → Set m} (C : FuzzySigma A B → Set n)
+     → FuzzyPi A B
+     → FuzzyPi A (λ x → (y : B x) → C (fa {!!} , {!!}))
+fun2 = {!!}
+
+-- Σ-elimxy : ∀ {l m} {A : Set l} {B : A → Set m} {C : FuzzySigma A B → Set}  
+--        → (g : FuzzyPi A B) → (y : FuzzyTy (B (fa x))) → FuzzyTy (C (x , y)))
+--        → ((z : FuzzySigma A B) → FuzzyTy (C z))
+-- Σ-elimxy g (z1 , z2) = {!!} --g ● z1 ● z2  -- (fa (g z1 z2)) ! h
+
