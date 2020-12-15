@@ -77,7 +77,7 @@ record Monad (M : ∀ {a} → Set a → Set (suc (a ⊔ c ⊔ ℓ₁ ⊔ ℓ₂)
 
 
 
--- open Monad public
+-- Fuzzy Type
 
 record Fuzzy {a} (A : Set a) : Set (suc (a ⊔ c ⊔ ℓ₁ ⊔ ℓ₂)) where
   constructor mkFuzzy

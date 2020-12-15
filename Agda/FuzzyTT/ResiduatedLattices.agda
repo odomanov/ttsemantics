@@ -172,43 +172,6 @@ Trust⇒ a b = record
   ; v≤1 = v≤1⊗ a b
   }
 
-postulate
-  0≤v⊕ : ∀ x y → 0.0 [≤] ((x [+] y) [-] (x [*] y)) ≡ true
-  v≤1⊕ : ∀ x y → ((x [+] y) [-] (x [*] y)) [≤] 1.0 ≡ true
-
-Trust⊕ : FUnit → FUnit → FUnit
-Trust⊕ a b = record
-  { value = (value a) [+] (value b) [-] ((value a) [*] (value b))
-  ; 0≤v = 0≤v⊕ (value a) (value b)
-  ; v≤1 = v≤1⊕ (value a) (value b)
-  }
-
--- value⊖ : Float → Float → Float
--- value⊖ a b with 1.0 [=] a | 1.0 [=] b
--- ... | true  | false = 1.0
--- ... | false | _ with (a [<] b) ∨ not (a [=] b) | 1.0 [=] b
--- ...            | true | false = ((a [-] b) [/] (1.0 [-] b))
--- ...            | _    | _     = 0.0
--- value⊖ _ _ | _ | _ = 0.0
-
--- postulate
---   0≤v⊖ : ∀ x y → 0.0 [≤] (value⊖ x y) ≡ true
---   v≤1⊖ : ∀ x y → (value⊖ x y) [≤] 1.0 ≡ true
-
--- Trust⊖ : FUnit → FUnit → FUnit
--- Trust⊖ a b = record
---   { value = value⊖ (value a) (value b)
---   ; 0≤v = 0≤v⊖ (value a) (value b)
---   ; v≤1 = v≤1⊖ (value a) (value b)
---   }
-
-Trust⊘ : FUnit → FUnit
-Trust⊘ a = record
-  { value = (value FU1) [-] (value a)
-  ; 0≤v = 0≤v⊘ a
-  ; v≤1 = v≤1⊘ a 
-  }
-
 Trust∧ : FUnit → FUnit → FUnit
 Trust∧ a b = record
   { value = fmin (value a) (value b)
@@ -225,8 +188,7 @@ Trust∨ a b = record
 
 postulate
   Trust-isResiduatedLattice : IsResiduatedLattice
-    FU= FU≤ Trust⊗ Trust⇒ 
-    Trust∧ Trust∨ FU1 FU0
+    FU= FU≤ Trust⊗ Trust⇒ Trust∧ Trust∨ FU1 FU0
 
 Trust : ResiduatedLattice _ _ _
 Trust = record
@@ -235,13 +197,8 @@ Trust = record
   ; _≤_ = FU≤
   ; _⊗_ = Trust⊗
   ; _⇒_ = Trust⇒
-  -- ; _⊕_ = Trust⊕
-  -- ; _⊖_ = Trust⊖
-  -- ; ⊘   = Trust⊘
   ; _∧_ = Trust∧
   ; _∨_ = Trust∨
-  -- ; mean = FUmean
-  -- ; adiff = FUadiff
   ; ⊤ = FU1
   ; ⊥ = FU0
   ; isResiduatedLattice = Trust-isResiduatedLattice
@@ -269,35 +226,6 @@ Pref⇒ a b = record
   ; v≤1 = minv≤1 a b 
   }
 
-postulate
-  pref0≤v⊕ : ∀ x y → 0.0 [≤] (fmin (value x [+] value y) 1.0) ≡ true
-  prefv≤1⊕ : ∀ x y → (fmin (value x [+] value y) 1.0) [≤] 1.0 ≡ true
-
-Pref⊕ : FUnit → FUnit → FUnit
-Pref⊕ a b = record
-  { value = fmin (value a [+] value b) 1.0
-  ; 0≤v = pref0≤v⊕ a b 
-  ; v≤1 = prefv≤1⊕ a b 
-  }
-
--- postulate
---   pref0≤v⊖ : ∀ x y → 0.0 [≤] (fmax ((value x) [-] (value y)) 0.0) ≡ true
---   prefv≤1⊖ : ∀ x y → (fmax ((value x) [-] (value y)) 0.0) [≤] 1.0 ≡ true
-
--- Pref⊖ : FUnit → FUnit → FUnit
--- Pref⊖ a b = record
---   { value = fmax ((value a) [-] (value b)) 0.0
---   ; 0≤v = pref0≤v⊖ a b 
---   ; v≤1 = prefv≤1⊖ a b 
---   }
-
-Pref⊘ : FUnit → FUnit
-Pref⊘ a = record
-  { value = (value FU1) [-] (value a)
-  ; 0≤v = 0≤v⊘ a 
-  ; v≤1 = v≤1⊘ a 
-  }
-
 Pref∨ : FUnit → FUnit → FUnit
 Pref∨ a b = record
   { value = fmax (value a) (value b)
@@ -307,8 +235,7 @@ Pref∨ a b = record
 
 postulate
   Pref-isResiduatedLattice : IsResiduatedLattice
-    FU= FU≤ Pref⊗ Pref⇒ 
-    Pref⊗ Pref∨ FU1 FU0
+    FU= FU≤ Pref⊗ Pref⇒ Pref⊗ Pref∨ FU1 FU0
 
 Pref : ResiduatedLattice _ _ _
 Pref = record
@@ -317,13 +244,8 @@ Pref = record
   ; _≤_ = FU≤
   ; _⊗_ = Pref⊗
   ; _⇒_ = Pref⇒
-  -- ; _⊕_ = Pref⊕
-  -- ; _⊖_ = Pref⊖
-  -- ; ⊘   = Pref⊘
   ; _∧_ = Pref⊗
   ; _∨_ = Pref∨
-  -- ; mean = FUmean
-  -- ; adiff = FUadiff
   ; ⊤ = FU1
   ; ⊥ = FU0
   ; isResiduatedLattice = Pref-isResiduatedLattice
@@ -357,24 +279,6 @@ postulate
   ; v≤1 = lukv≤1⇒ a b 
   }
 
-postulate
-  luk0≤v⊕ : ∀ x y → 0.0 [≤] (fmin (value x [+] value y) 1.0) ≡ true
-  lukv≤1⊕ : ∀ x y → (fmin (value x [+] value y) 1.0) [≤] 1.0 ≡ true
-
-Łuk⊕ : FUnit → FUnit → FUnit
-Łuk⊕ a b = record
-  { value = fmin (value a [+] value b) 1.0
-  ; 0≤v = luk0≤v⊕ a b 
-  ; v≤1 = lukv≤1⊕ a b 
-  }
-
-Łuk⊘ : FUnit → FUnit
-Łuk⊘ a = record
-  { value = (value FU1) [-] (value a)
-  ; 0≤v = 0≤v⊘ a 
-  ; v≤1 = v≤1⊘ a 
-  }
-
 Łuk∧ : FUnit → FUnit → FUnit
 Łuk∧ a b = record
   { value = fmin (value a) (value b)
@@ -391,8 +295,7 @@ postulate
 
 postulate
   Łuk-isResiduatedLattice : IsResiduatedLattice
-    FU= FU≤ Łuk⊗ Łuk⇒ 
-    Łuk∧ Łuk∨ FU1 FU0
+    FU= FU≤ Łuk⊗ Łuk⇒ Łuk∧ Łuk∨ FU1 FU0
 
 Łuk : ResiduatedLattice _ _ _
 Łuk = record
@@ -401,13 +304,8 @@ postulate
   ; _≤_ = FU≤
   ; _⊗_ = Łuk⊗
   ; _⇒_ = Łuk⇒
-  -- ; _⊕_ = Łuk⊕
-  -- ; _⊖_ = Łuk⊖
-  -- ; ⊘   = Łuk⊘
   ; _∧_ = Łuk∧
   ; _∨_ = Łuk∨
-  -- ; mean = FUmean
-  -- ; adiff = FUadiff
   ; ⊤ = FU1
   ; ⊥ = FU0
   ; isResiduatedLattice = Łuk-isResiduatedLattice
@@ -436,28 +334,18 @@ Göd⇒ a b = record
   ; v≤1 = godv≤1⇒ a b 
   }
 
-Göd⊕ : FUnit → FUnit → FUnit
-Göd⊕ a b = record
+Göd∨ : FUnit → FUnit → FUnit
+Göd∨ a b = record
   { value = fmax (value a) (value b)
   ; 0≤v = max0≤v a b 
   ; v≤1 = maxv≤1 a b 
   }
 
-Göd⊘ : FUnit → FUnit
-Göd⊘ = FUGneg
--- Göd⊘ a = record
---   { value = (value FU1) [-] (value a)
---   ; 0≤v = 0≤v⊘ a 
---   ; v≤1 = v≤1⊘ a 
---   }
-
 Göd∧ = Göd⊗
-Göd∨ = Göd⊕
 
 postulate
   Gödel-isResiduatedLattice : IsResiduatedLattice
-    FU= FU≤ Göd⊗ Göd⇒ 
-    Göd∧ Göd∨ FU1 FU0
+    FU= FU≤ Göd⊗ Göd⇒ Göd∧ Göd∨ FU1 FU0
 
 Gödel : ResiduatedLattice _ _ _
 Gödel = record
@@ -466,13 +354,8 @@ Gödel = record
   ; _≤_ = FU≤
   ; _⊗_ = Göd⊗
   ; _⇒_ = Göd⇒
-  -- ; _⊕_ = Göd⊕
-  -- ; _⊖_ = Göd⊖
-  -- ; ⊘   = Göd⊘
   ; _∧_ = Göd∧
   ; _∨_ = Göd∨
-  -- ; mean = FUmean
-  -- ; adiff = FUadiff
   ; ⊤ = FU1
   ; ⊥ = FU0
   ; isResiduatedLattice = Gödel-isResiduatedLattice
@@ -486,8 +369,6 @@ Gödel = record
 postulate
   prod0≤v⊗ : ∀ x y → 0.0 [≤] ((value x) [*] (value y)) ≡ true
   prodv≤1⊗ : ∀ x y → ((value x) [*] (value y)) [≤] 1.0 ≡ true
-  prod0≤v⊕ : ∀ x y → 0.0 [≤] (value x) [+] (value y) [-] ((value x) [*] (value y)) ≡ true
-  prodv≤1⊕ : ∀ x y → (value x) [+] (value y) [-] ((value x) [*] (value y)) [≤] 1.0 ≡ true
 
 prod⊗ : FUnit → FUnit → FUnit
 prod⊗ a b = record
@@ -507,24 +388,12 @@ prod⇒ a b = record
   ; v≤1 = prodv≤1⇒ a b 
   }
 
-prod⊕ : FUnit → FUnit → FUnit
-prod⊕ a b = record
-  { value = (value a) [+] (value b) [-] ((value a) [*] (value b))
-  ; 0≤v = prod0≤v⊕ a b 
-  ; v≤1 = prodv≤1⊕ a b 
-  }
-
-prod⊘ : FUnit → FUnit
-prod⊘ = FULneg
--- prod⊘ = FUGneg
-
 prod∧ = FUmin
 prod∨ = FUmax
 
 postulate
   Product-isResiduatedLattice : IsResiduatedLattice
-    FU= FU≤ prod⊗ prod⇒
-    prod∧ prod∨ FU1 FU0
+    FU= FU≤ prod⊗ prod⇒ prod∧ prod∨ FU1 FU0
 
 Product : ResiduatedLattice _ _ _
 Product = record
@@ -533,13 +402,8 @@ Product = record
   ; _≤_ = FU≤
   ; _⊗_ = prod⊗
   ; _⇒_ = prod⇒
-  -- ; _⊕_ = prod⊕
-  -- ; _⊖_ = prod⊖
-  -- ; ⊘   = prod⊘
   ; _∧_ = prod∧
   ; _∨_ = prod∨
-  -- ; mean = FUmean
-  -- ; adiff = FUadiff
   ; ⊤ = FU1
   ; ⊥ = FU0
   ; isResiduatedLattice = Product-isResiduatedLattice
