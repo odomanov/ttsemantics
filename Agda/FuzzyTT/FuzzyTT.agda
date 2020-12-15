@@ -30,9 +30,9 @@ record FuzzySigma {a b} (A : Set a) (B : A → Set b) : Set (lsuc a ⊔ lsuc b) 
 open FuzzySigma
 
 Σ-elim : ∀ {l m k} {A : Set l} {B : A → Set m} {C : Σ A B → Set k}  
-       → (g : {A : Set l} {B : A → Set m} {C : Σ A B → Set k} (x : A) (y : (B x)) → Fuzzy (C (x , y)))
+       → (g : (x : A) (y : (B x)) → Fuzzy (C (x , y)))
        → (z : FuzzySigma A B) → Fuzzy (C (fa (π1 z) , fa (π2 z)))
-Σ-elim {B = B} {C = C} g (z1 , z2) = join (g {B = B} {C = C} <$> z1 <*> z2)
+Σ-elim g (z1 , z2) = join (g <$> z1 <*> z2)
 
 
 data FuzzySum {a b} (A : Set a) (B : Set b) : Set (lsuc a ⊔ lsuc b) where
@@ -44,11 +44,11 @@ fa⊎ (finj₁ ma) = inj₁ (fa ma)
 fa⊎ (finj₂ mb) = inj₂ (fa mb)
 
 Sum-elim : ∀ {l m k} {A : Set l} {B : Set m} {C : A ⊎ B → Set k}
-         → (f : {A : Set l} {C : A ⊎ B → Set k} (x : A) → Fuzzy (C (inj₁ x)))
-         → (g : {B : Set m} {C : A ⊎ B → Set k} (x : B) → Fuzzy (C (inj₂ x)))
+         → (f : (x : A) → Fuzzy (C (inj₁ x)))
+         → (g : (x : B) → Fuzzy (C (inj₂ x)))
          → (z : FuzzySum A B) → Fuzzy (C (fa⊎ z))
-Sum-elim {C = C} f g (finj₁ ma) = ma >>= f {C = C}  
-Sum-elim {C = C} f g (finj₂ mb) = mb >>= g {C = C} 
+Sum-elim f g (finj₁ ma) = ma >>= f
+Sum-elim f g (finj₂ mb) = mb >>= g
 
 
 -- The next two basically coincide with the definition of >>=
