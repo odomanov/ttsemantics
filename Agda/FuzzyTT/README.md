@@ -1,0 +1,1 @@
+Tested with Agda 2.6.1.1, std-lib 1.4
