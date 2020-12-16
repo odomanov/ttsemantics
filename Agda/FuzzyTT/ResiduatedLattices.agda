@@ -13,7 +13,7 @@ open import Data.Unit
 open import Level renaming (zero to lzero; suc to lsuc)
 open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl)
 
-open import ArgPrelude
+open import Float
 
 open import ResiduatedLattice public
   renaming (⊤ to LA⊤; ⊥ to LA⊥; _∧_ to _LA∧_; _∨_ to _LA∨_)
