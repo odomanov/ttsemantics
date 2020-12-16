@@ -9,6 +9,7 @@ open import Data.Maybe hiding (_>>=_)
 open import Data.Product hiding (_<*>_)
 open import Data.Sum
 open import Data.Unit
+open import Relation.Binary.HeterogeneousEquality using (_≅_; ≡-to-≅)
 open import Relation.Binary.PropositionalEquality
      using (_≡_; _≢_; refl; trans)
 
@@ -87,6 +88,14 @@ private
   ≡-elim' f ma mb p rewrite (ffa p) = f (ffa mb)
 
 
+-- Checking rules for equality
+
 ≡-trans : ∀ {l} {A : Set l} {a b c : A} → Fuzzy (a ≡ b) → Fuzzy (b ≡ c) → Fuzzy (a ≡ c)
 ≡-trans ab bc = trans <$> ab <*> bc
 
+
+eq1 : ∀ {l} {A B : Set l} → Fuzzy A → A ≡ B → Fuzzy B
+eq1 a A≡B rewrite A≡B = a
+
+eq2 : ∀ {l} {A B : Set l} {a b : A}  → Fuzzy (_≡_ {A = A} a b) → A ≡ B → Fuzzy (a ≅ b)
+eq2 {l} {A} {B} {a} {b} a≡b A≡B rewrite A≡B = ≡-to-≅ <$> a≡b
