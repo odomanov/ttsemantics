@@ -10,10 +10,15 @@ MC = Maybe (Carrier la)
 MC⊥ = just (⊥ la)
 MC⊤ = just (⊤ la)
 
--- applying a binary operation to the Maybe label (TODO: rewrite with >>=)
+private
+  _<*>_ : ∀ {l} {A B : Set l} → Maybe (A → B) → Maybe A → Maybe B
+  mf <*> mx = mf >>= λ f → mx >>= λ x → just (f x)
+
+infixl 4 _<*>_
+
+-- applying a binary operation to the Maybe label
 _⟪_⟫_ : MC → ((Carrier la) → (Carrier la) → (Carrier la)) → MC → MC
-just v1 ⟪ op ⟫ just v2 = just (op v1 v2)
-_ ⟪ _ ⟫ _ = nothing
+a ⟪ op ⟫ b = (just op) <*> a <*> b
 
 -- the "or" version of ⟪∙⟫
 -- _⟪_⟫⁺_ : MC → ((Carrier la) → (Carrier la) → (Carrier la)) → MC → MC
@@ -26,8 +31,7 @@ _ ⟪ _ ⟫ _ = nothing
 infixr 10 ⟪_⟫_
 
 ⟪_⟫_ : ((Carrier la) → (Carrier la)) → MC → MC
-⟪ op ⟫ (just v) = just (op v)
-⟪ _ ⟫  nothing  = nothing
+⟪ op ⟫ a = just op <*> a
 
 infixl 10 _⟪⨂⟫_  -- _⟪⨁⟫⁺_
 
