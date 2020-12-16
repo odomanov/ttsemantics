@@ -29,10 +29,10 @@ record FuzzySigma {a b} (A : Set a) (B : A → Set b) : Set (lsuc a ⊔ lsuc b) 
     π2 : Fuzzy (B (fa π1)) 
 open FuzzySigma
 
-Σ-elim : ∀ {l m k} {A : Set l} {B : A → Set m} {C : Σ A B → Set k}  
+Sigma-elim : ∀ {l m k} {A : Set l} {B : A → Set m} {C : Σ A B → Set k}  
        → (g : (x : A) (y : (B x)) → Fuzzy (C (x , y)))
        → (z : FuzzySigma A B) → Fuzzy (C (fa (π1 z) , fa (π2 z)))
-Σ-elim g (z1 , z2) = join (g <$> z1 <*> z2)
+Sigma-elim g (z1 , z2) = join (g <$> z1 <*> z2)
 
 
 data FuzzySum {a b} (A : Set a) (B : Set b) : Set (lsuc a ⊔ lsuc b) where
@@ -61,6 +61,8 @@ Unit-elim : ∀ {l} {C : ⊤ → Set l} (c : Fuzzy (C tt))
           → (z : Fuzzy ⊤) → Fuzzy (C (fa z))
 Unit-elim c z = z >>= const c          
 
+
+-- Actually, this has nothing to do with Fuzzy. See below.
 ≡-elim : ∀ {l m} {A : Set l} {C : (x : A) → (y : A) → x ≡ y → Set m}
        → (f : (x : A) → Fuzzy (C x x refl))
        → (ma : Fuzzy A)
@@ -68,5 +70,21 @@ Unit-elim c z = z >>= const c
        → (p : Fuzzy (fa ma ≡ fa mb))
        → Fuzzy (C (fa ma) (fa mb) (fa p))
 ≡-elim f ma mb p rewrite (fa p) = f (fa mb)
+
+-- check that ≡-elim is valid for any suitable F:
+private
+  record F {k j} (A : Set j) : Set (lsuc j ⊔ k) where
+    field
+      ffa : A
+  open F
+  
+  ≡-elim' : ∀ {l m k} {A : Set l} {C : (x : A) → (y : A) → x ≡ y → Set m}
+         → (f : (x : A) → F {k} (C x x refl))
+         → (ma : F {k} A)
+         → (mb : F {k} A)
+         → (p : F {k} (ffa ma ≡ ffa mb))
+         → F (C (ffa ma) (ffa mb) (ffa p))
+  ≡-elim' f ma mb p rewrite (ffa p) = f (ffa mb)
+
 
 
