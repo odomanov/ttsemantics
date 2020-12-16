@@ -82,29 +82,6 @@ FULneg a = record
   ; v≤1 = v≤1⊘ a 
   }
 
-postulate
-  0≤vmean : ∀ n x y → 0.0 [≤] ((fromℕ n) [*] value y [+] value x) [/] (fromℕ (suc n)) ≡ true
-  v≤1mean : ∀ n x y → ((fromℕ n) [*] value y [+] value x) [/] (fromℕ (suc n)) [≤] 1.0 ≡ true
-
--- adding n+1-th element (here ℕ denotes n)
-FUmean : FUnit → FUnit → ℕ → FUnit
-FUmean a acc n = record
-  { value = (((fromℕ n) [*] value acc) [+] value a) [/] (fromℕ (suc n)) -- <n+1> = (n * <n> + a) / (n+1) 
-  ; 0≤v = 0≤vmean n a acc 
-  ; v≤1 = v≤1mean n a acc
-  }
-
-postulate
-  0≤vadiff : ∀ a b → 0.0 [≤] (if value a [-] value b [≤] 0.0 then value b [-] value a else value a [-] value b) ≡ true
-  v≤1adiff : ∀ a b → (if value a [-] value b [≤] 0.0 then value b [-] value a else value a [-] value b) [≤] 1.0 ≡ true
-
-FUadiff : FUnit → FUnit → FUnit
-FUadiff a b = record
-  { value = if value a [-] value b [≤] 0.0 then value b [-] value a else value a [-] value b
-  ; 0≤v = 0≤vadiff a b
-  ; v≤1 = v≤1adiff a b
-  }
-
 min0≤v : ∀ x y → (0.0 [≤] (fmin (value x) (value y)) ≡ true)
 min0≤v x y with (value x) [<] (value y)
 min0≤v (mkFUnit _ 0≤v₁ _) y | true = 0≤v₁

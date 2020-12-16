@@ -14,7 +14,7 @@ open import Relation.Binary.PropositionalEquality
 
 open import ResiduatedLattices
 
--- la = Pref
+-- la = Gödel
 la = Łuk
 -- la = Product
 
