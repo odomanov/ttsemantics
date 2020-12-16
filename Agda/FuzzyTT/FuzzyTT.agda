@@ -61,3 +61,12 @@ Unit-elim : ∀ {l} {C : ⊤ → Set l} (c : Fuzzy (C tt))
           → (z : Fuzzy ⊤) → Fuzzy (C (fa z))
 Unit-elim c z = z >>= const c          
 
+≡-elim : ∀ {l m} {A : Set l} {C : (x : A) → (y : A) → x ≡ y → Set m}
+       → (f : (x : A) → Fuzzy (C x x refl))
+       → (ma : Fuzzy A)
+       → (mb : Fuzzy A)
+       → (p : Fuzzy (fa ma ≡ fa mb))
+       → Fuzzy (C (fa ma) (fa mb) (fa p))
+≡-elim f ma mb p rewrite (fa p) = f (fa mb)
+
+
