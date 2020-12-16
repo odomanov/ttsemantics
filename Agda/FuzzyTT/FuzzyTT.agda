@@ -10,7 +10,7 @@ open import Data.Product hiding (_<*>_)
 open import Data.Sum
 open import Data.Unit
 open import Relation.Binary.PropositionalEquality
-     using (_≡_; _≢_; refl; cong; subst; subst₂)
+     using (_≡_; _≢_; refl; trans)
 
 open import ResiduatedLattices
 
@@ -87,4 +87,6 @@ private
   ≡-elim' f ma mb p rewrite (ffa p) = f (ffa mb)
 
 
+≡-trans : ∀ {l} {A : Set l} {a b c : A} → Fuzzy (a ≡ b) → Fuzzy (b ≡ c) → Fuzzy (a ≡ c)
+≡-trans ab bc = trans <$> ab <*> bc
 
