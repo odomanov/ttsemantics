@@ -1,8 +1,10 @@
 -- Some Residuated Lattices
 -- TODO: Prove 0≤v⊗ etc.
+-- TODO: Prove that the algebras are residuated lattices
 
 module _  where
 
+open import Algebra
 open import Data.Bool
 open import Data.Empty
 open import Data.Maybe
@@ -11,6 +13,8 @@ open import Data.Product
 open import Data.String renaming (_++_ to _+++_)
 open import Data.Unit
 open import Level renaming (zero to lzero; suc to lsuc)
+open import Relation.Binary.Core
+open import Relation.Binary.Definitions
 open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl)
 
 open import Float
@@ -45,6 +49,13 @@ FU< a b = if (value a) [<] (value b) then ⊤ else ⊥
 
 FU≤ : FUnit → FUnit → Set
 FU≤ a b = if (value a) [≤] (value b) then ⊤ else ⊥ 
+
+
+FU=-sym : Symmetric FU=
+FU=-sym refl = refl
+
+FU=-trans : Transitive FU=
+FU=-trans refl eq = eq
 
 
 fmin : Float → Float → Float
@@ -161,6 +172,41 @@ postulate
   ; 0≤v = max0≤v a b
   ; v≤1 = maxv≤1 a b
   }
+
+Łuk-cong : Congruent₂ FU= Łuk⊗
+Łuk-cong refl refl = refl
+
+postulate
+  Łuk1+v=v : ∀ x → FU= (Łuk⊗ FU1 x) x
+  Łukv+1=v : ∀ x → FU= (Łuk⊗ x FU1) x 
+
+-- Łuk-assoc : Associative FU= Łuk⊗
+-- Łuk-assoc (mkFUnit x px1 px2) y z = {!refl!} 
+Łuk-identity : Identity FU= FU1 Łuk⊗
+Łuk-identity = L , R
+  where
+  L : LeftIdentity FU= FU1 Łuk⊗
+  L x = Łuk1+v=v x
+  R : RightIdentity FU= FU1 Łuk⊗
+  R x = Łukv+1=v x
+-- Łuk-comm : Commutative FU= Łuk⊗
+-- Łuk-comm (mkFUnit value₁ 0≤v₁ v≤2) (mkFUnit value₂ 0≤v₂ v≤3) = {!refl!}
+
+-- Łuk-isCommutativeMonoid : IsCommutativeMonoid FU= Łuk⊗ FU1
+-- Łuk-isCommutativeMonoid = record
+--                  { isMonoid = record
+--                    { isSemigroup = record
+--                      { isMagma = record
+--                        { isEquivalence = record
+--                          { refl = refl ; sym = FU=-sym ; trans = FU=-trans }
+--                        ; ∙-cong = {!!}
+--                        }
+--                      ; assoc = {!!}
+--                      }
+--                    ; identity = {!!}
+--                    }
+--                  ; comm = {!!}
+--                  }  
 
 postulate
   Łuk-isResiduatedLattice : IsResiduatedLattice

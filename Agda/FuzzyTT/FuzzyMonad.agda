@@ -77,6 +77,13 @@ record Monad (M : ∀ {a} → Set a → Set (suc (a ⊔ c ⊔ ℓ₁ ⊔ ℓ₂)
 
 
 
+-- Check that MC is a Residuated lattice
+_ : IsResiduatedLattice _ _ _ _ _ _ _ _
+_ = MCisResiduatedLattice  
+
+
+
+
 -- Fuzzy Type
 
 record Fuzzy {a} (A : Set a) : Set (suc (a ⊔ c ⊔ ℓ₁ ⊔ ℓ₂)) where
