@@ -2,9 +2,6 @@ open import ResiduatedLattice
 
 module FuzzyMonad.Properties {c ℓ₁ ℓ₂} (la : ResiduatedLattice c ℓ₁ ℓ₂) where
 
-open import FuzzyMonad la
--- open import RLMaybe hiding (_⟪⨂⟫_)
-
 open import Algebra
 open import Data.Maybe
 open import Data.Product hiding (_<*>_)
@@ -12,6 +9,8 @@ open import Relation.Binary.Core hiding (_⇒_)
 open import Relation.Binary.Definitions
 open import Relation.Binary.PropositionalEquality
 open import Relation.Binary.Structures 
+
+open import FuzzyMonad la
 
 private
   CommMon : CommutativeMonoid c ℓ₁
