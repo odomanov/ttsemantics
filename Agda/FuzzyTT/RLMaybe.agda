@@ -2,7 +2,7 @@
 
 open import ResiduatedLattice
 
-module RLMaybe {c} {ℓ₁} {ℓ₂} (la : ResiduatedLattice c ℓ₁ ℓ₂) where
+module RLMaybe {c ℓ₁ ℓ₂} (la : ResiduatedLattice c ℓ₁ ℓ₂) where
 
 open import Data.Maybe
 

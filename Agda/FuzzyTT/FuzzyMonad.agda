@@ -3,7 +3,7 @@
 
 open import ResiduatedLattice
 
-module FuzzyMonad {c} {ℓ₁} {ℓ₂} (la : ResiduatedLattice c ℓ₁ ℓ₂) where
+module FuzzyMonad {c ℓ₁ ℓ₂} (la : ResiduatedLattice c ℓ₁ ℓ₂) where
 
 open import Data.Maybe hiding (_>>=_)
 open import Level
