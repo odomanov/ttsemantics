@@ -25,23 +25,23 @@ private
 
   infixl 4 _<*>_
 
-  CommMon : CommutativeMonoid c ℓ₁
-  CommMon = record
-              { Carrier = Carrier la
-              ; _≈_ = _≈_ la
-              ; _∙_ = _⊗_ la
-              ; ε = ⊤ la
-              ; isCommutativeMonoid = isCommutativeMonoid la
-              }
-  
-  BoundLat : BoundedLattice c ℓ₁
-  BoundLat = record
-               { Carrier = Carrier la
-               ; _≈_ = _≈_ la
-               ; _∙_ = _∧_ la
-               ; ε = ⊤ la
-               ; isIdempotentCommutativeMonoid = isBoundedLattice la
-               }
+CommMon : CommutativeMonoid c ℓ₁
+CommMon = record
+            { Carrier = Carrier la
+            ; _≈_ = _≈_ la
+            ; _∙_ = _⊗_ la
+            ; ε = ⊤ la
+            ; isCommutativeMonoid = isCommutativeMonoid la
+            }
+
+BoundLat : BoundedLattice c ℓ₁
+BoundLat = record
+             { Carrier = Carrier la
+             ; _≈_ = _≈_ la
+             ; _∙_ = _∧_ la
+             ; ε = ⊤ la
+             ; isIdempotentCommutativeMonoid = isBoundedLattice la
+             }
 
 
 data M-rel {c} {ℓ} {A : Set c} : Rel A ℓ → Rel (Maybe A) ℓ where
@@ -174,7 +174,29 @@ MCisBoundedLattice = record
                      }
 
 MCisResiduatedLattice : IsResiduatedLattice _⟪≈⟫_ (M-rel (_≤_ la))
-                        _⟪⨂⟫_ (M-op (_⇒_ la)) _ (M-op (_∨_ la)) MC⊤ MC⊥
+                        _⟪⨂⟫_ (M-op (_⇒_ la)) _⟪∧⟫_ _⟪∨⟫_ MC⊤ MC⊥
 MCisResiduatedLattice = record { isBoundedLattice = MCisBoundedLattice
                                ; isCommutativeMonoid = MCisCommutativeMonoid
                                }
+
+open import WLPretty
+
+docMC : MC → Doc
+docMC nothing  = text "Nothing"
+docMC (just x) = text "Just " <> (doc la) x
+
+MRL : ResiduatedLattice _ _ _
+MRL = record
+  { Carrier = MC
+  ; _≈_ = _⟪≈⟫_
+  ; _≤_ = M-rel (_≤_ la)
+  ; _⊗_ = _⟪⨂⟫_
+  ; _⇒_ = (M-op (_⇒_ la))
+  ; _∧_ = _⟪∧⟫_
+  ; _∨_ = _⟪∨⟫_
+  ; ⊤ = MC⊤
+  ; ⊥ = MC⊥
+  ; isResiduatedLattice = MCisResiduatedLattice
+  ; doc = docMC
+  }
+
