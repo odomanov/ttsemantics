@@ -1,6 +1,8 @@
 -- Type Theory with fuzzy types
 
-module FuzzyTT where
+open import ResiduatedLattices
+
+module FuzzyTT {c ℓ₁ ℓ₂} (la : ResiduatedLattice c ℓ₁ ℓ₂) where
 
 open import Level renaming (zero to lzero; suc to lsuc)
 open import Data.Empty 
@@ -13,17 +15,12 @@ open import Relation.Binary.HeterogeneousEquality using (_≅_; ≡-to-≅)
 open import Relation.Binary.PropositionalEquality
      using (_≡_; _≢_; refl; trans)
 
-open import ResiduatedLattices
-
--- la = Gödel
-la = Łuk
--- la = Product
 
 open import FuzzyMonad la  
 open Monad MonadFuzzy
 
 
-record FuzzySigma {a b} (A : Set a) (B : A → Set b) : Set (lsuc a ⊔ lsuc b) where
+record FuzzySigma {a b} (A : Set a) (B : A → Set b) : Set (lsuc c ⊔ lsuc ℓ₁ ⊔ lsuc ℓ₂ ⊔ lsuc a ⊔ lsuc b) where
   constructor _,_
   field
     π1 : Fuzzy A
@@ -36,7 +33,7 @@ Sigma-elim : ∀ {l m k} {A : Set l} {B : A → Set m} {C : Σ A B → Set k}
 Sigma-elim g (z1 , z2) = join (g <$> z1 <*> z2)
 
 
-data FuzzySum {a b} (A : Set a) (B : Set b) : Set (lsuc a ⊔ lsuc b) where
+data FuzzySum {a b} (A : Set a) (B : Set b) : Set (lsuc c ⊔ lsuc ℓ₁ ⊔ lsuc ℓ₂ ⊔ lsuc a ⊔ lsuc b) where
   finj₁ : Fuzzy A → FuzzySum A B
   finj₂ : Fuzzy B → FuzzySum A B
 
