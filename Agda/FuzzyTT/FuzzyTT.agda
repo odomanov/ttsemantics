@@ -16,8 +16,8 @@ open import Relation.Binary.PropositionalEquality
      using (_≡_; _≢_; refl; trans)
 
 
-open import FuzzyMonad pa  
-open Monad MonadFuzzy
+open import FuzzyMonad pa public
+open Monad MonadFuzzy public
 
 
 record FuzzySigma {a b} (A : Set a) (B : A → Set b) : Set (lsuc c ⊔ lsuc ℓ₁ ⊔ lsuc ℓ₂ ⊔ lsuc a ⊔ lsuc b) where
