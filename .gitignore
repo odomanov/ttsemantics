@@ -23,3 +23,5 @@ auto/
 \#*\#
 /*.synctex(busy)
 *.agdai
+MAlonzo
+_build
