@@ -25,3 +25,4 @@ auto/
 *.agdai
 MAlonzo
 _build
+*.exe
