@@ -14,7 +14,7 @@ open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl; con
 open import Function using (id; _∘_; const)
 
 
-import PAMaybe; open PAMaybe pa public   -- This checks that MC is a Persuasion algebra (if pa is)
+import PAMaybe; open PAMaybe {{pa}} public   -- This checks that MC is a Persuasion algebra (if pa is)
 
 open module PA = PersuasionAlgebra.PersuasionAlgebra pa
 

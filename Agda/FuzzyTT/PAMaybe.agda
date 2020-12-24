@@ -2,7 +2,7 @@
 
 open import PersuasionAlgebra
 
-module PAMaybe {c ℓ₁ ℓ₂} (la : PersuasionAlgebra c ℓ₁ ℓ₂) where
+module PAMaybe {c ℓ₁ ℓ₂} {{pa : PersuasionAlgebra c ℓ₁ ℓ₂}} where
 
 open import Algebra
 open import Data.Maybe
@@ -14,12 +14,12 @@ open import Relation.Binary
 -- open import Relation.Binary.PropositionalEquality
 -- open import Relation.Binary.Structures 
 
--- open import FuzzyMonad la
+-- open import FuzzyMonad pa
 
 
-MC = Maybe (Carrier la)
--- MC⊥ = just (⊥ la)
-MCε = just (ε la)
+MC = Maybe (Carrier)
+-- MC⊥ = just (⊥)
+MCε = just (ε)
 
 private
   _<*>_ : ∀ {l} {A B : Set l} → Maybe (A → B) → Maybe A → Maybe B
@@ -29,28 +29,28 @@ private
 
 CommMon : CommutativeMonoid c ℓ₁
 CommMon = record
-            { Carrier = Carrier la
-            ; _≈_ = _≈_ la
-            ; _∙_ = _⊗_ la
-            ; ε = ε la
-            ; isCommutativeMonoid = isCommutativeMonoid la
+            { Carrier = Carrier
+            ; _≈_ = _≈_
+            ; _∙_ = _⊗_
+            ; ε = ε
+            ; isCommutativeMonoid = isCommutativeMonoid
             }
 
 POrder : Poset c ℓ₁ ℓ₂
 POrder = record
-             { Carrier = Carrier la
-             ; _≈_ = _≈_ la
-             ; _≤_ = _≤_ la
-             ; isPartialOrder = isPartialOrder la
+             { Carrier = Carrier
+             ; _≈_ = _≈_
+             ; _≤_ = _≤_
+             ; isPartialOrder = isPartialOrder
              }
 
 -- BoundLat : BoundedLattice c ℓ₁
 -- BoundLat = record
---              { Carrier = Carrier la
---              ; _≈_ = _≈_ la
---              ; _∙_ = _∧_ la
---              ; ε = ε la
---              ; isIdempotentCommutativeMonoid = isBoundedLattice la
+--              { Carrier = Carrier
+--              ; _≈_ = _≈_
+--              ; _∙_ = _∧_
+--              ; ε = ε
+--              ; isIdempotentCommutativeMonoid = isBoundedLattice
 --              }
 
 
@@ -67,25 +67,25 @@ M-op₁ op x = just op <*> x
 
 infixl 10 _⟪⨂⟫_  -- _⟪⨁⟫⁺_
 
-_⟪≈⟫_ = M-rel (_≈_ la)
-_⟪≤⟫_ = M-rel (_≤_ la)
+_⟪≈⟫_ = M-rel (_≈_)
+_⟪≤⟫_ = M-rel (_≤_)
 
-_⟪⨂⟫_ = M-op (_⊗_ la)
--- _⟪⇒⟫_ = M-op (_⇒_ la)
--- _⟪∧⟫_ = M-op (_∧_ la)
--- _⟪∨⟫_ = M-op (_∨_ la)
+_⟪⨂⟫_ = M-op (_⊗_)
+-- _⟪⇒⟫_ = M-op (_⇒_)
+-- _⟪∧⟫_ = M-op (_∧_)
+-- _⟪∨⟫_ = M-op (_∨_)
 
--- ⟪neg⟫ = M-op₁ (⊘ la)
+-- ⟪neg⟫ = M-op₁ (⊘)
 
 -- the "or" version of ⟪∙⟫
--- _⟪_⟫⁺_ : MC → ((Carrier la) → (Carrier la) → (Carrier la)) → MC → MC
+-- _⟪_⟫⁺_ : MC → ((Carrier) → (Carrier) → (Carrier)) → MC → MC
 -- just v1 ⟪ op ⟫⁺ just v2 = just (op v1 v2)
 -- nothing ⟪ op ⟫⁺ just v2 = just v2
 -- just v1 ⟪ op ⟫⁺ nothing = just v1
 -- nothing ⟪ op ⟫⁺ nothing = nothing
 
 -- _⟪⨁⟫⁺_ : MC → MC → MC
--- x ⟪⨁⟫⁺ y = x ⟪ _⊕_ la ⟫⁺ y 
+-- x ⟪⨁⟫⁺ y = x ⟪ _⊕_ ⟫⁺ y 
 
 
 
@@ -195,15 +195,15 @@ open import WLPretty
 
 docMC : MC → Doc
 docMC nothing  = text "Nothing"
-docMC (just x) = text "Just " <> (doc la) x
+docMC (just x) = text "Just " <> (doc) x
 
 MRL : PersuasionAlgebra _ _ _
 MRL = record
   { Carrier = MC
   ; _≈_ = _⟪≈⟫_
-  ; _≤_ = M-rel (_≤_ la)
+  ; _≤_ = M-rel (_≤_)
   ; _⊗_ = _⟪⨂⟫_
-  -- ; _⇒_ = (M-op (_⇒_ la))
+  -- ; _⇒_ = (M-op (_⇒_))
   -- ; _∧_ = _⟪∧⟫_
   -- ; _∨_ = _⟪∨⟫_
   ; ε = MCε

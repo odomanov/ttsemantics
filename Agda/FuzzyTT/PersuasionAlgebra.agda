@@ -45,4 +45,4 @@ record PersuasionAlgebra c ℓ₁ ℓ₂ : Set (suc (c ⊔ ℓ₁ ⊔ ℓ₂)) w
     
   open IsPersuasionAlgebra isPersuasionAlgebra public
 
-open PersuasionAlgebra public
+open PersuasionAlgebra {{...}} public
