@@ -8,7 +8,8 @@ open import Algebra
 open import Data.Bool
 open import Data.Empty
 open import Data.Maybe
-open import Data.Nat
+open import Data.Nat as ℕ
+open import Data.Nat.Show renaming (show to ℕshow)
 open import Data.Product
 open import Data.String renaming (_++_ to _+++_)
 open import Data.Unit
@@ -20,7 +21,6 @@ open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl)
 open import Float
 
 open import PersuasionAlgebra public
-  -- renaming (⊤ to LA⊤; ⊥ to LA⊥; _∧_ to _LA∧_; _∨_ to _LA∨_)
 
 -- Float interval [0..1]
 record FUnit : Set where
@@ -326,6 +326,28 @@ Product = record
   -- ; ⊥ = FU0
   ; isPersuasionAlgebra = Product-isPersuasionAlgebra
   ; doc = docFU
+  }
+
+
+-------------------------------------------------------
+-- PANat
+
+docℕ : ℕ → Doc
+docℕ n = text (ℕshow n)
+
+
+postulate
+  PANat-isPersuasionAlgebra : IsPersuasionAlgebra _≡_ ℕ._≤_ ℕ._+_ zero
+
+PANat : PersuasionAlgebra _ _ _
+PANat = record
+  { Carrier = ℕ
+  ; _≈_ = _≡_
+  ; _≤_ = ℕ._≤_
+  ; _⊗_ = ℕ._+_
+  ; ε = zero
+  ; isPersuasionAlgebra = PANat-isPersuasionAlgebra
+  ; doc = docℕ
   }
 
 
