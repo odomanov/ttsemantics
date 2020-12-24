@@ -60,7 +60,7 @@ postulate
 
 ŁukRL : ResiduatedLattice _ _ _
 ŁukRL = record
-  { pa  = Łuk
+  { persuasionAlgebra  = Łuk
   ; _⇒_ = Łuk⇒
   ; _∧_ = Łuk∧
   ; _∨_ = Łuk∨
@@ -100,7 +100,7 @@ postulate
 
 GödelRL : ResiduatedLattice _ _ _
 GödelRL = record
-  { pa = Gödel
+  { persuasionAlgebra = Gödel
   ; _⇒_ = Göd⇒
   ; _∧_ = Göd∧
   ; _∨_ = Göd∨
@@ -134,7 +134,7 @@ postulate
 
 ProductRL : ResiduatedLattice _ _ _
 ProductRL = record
-  { pa = Product
+  { persuasionAlgebra = Product
   ; _⇒_ = prod⇒
   ; _∧_ = prod∧
   ; _∨_ = prod∨

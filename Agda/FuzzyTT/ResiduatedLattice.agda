@@ -29,7 +29,7 @@ record IsResiduatedLattice {c ℓ₁ ℓ₂} {A : Set c}
 record ResiduatedLattice c ℓ₁ ℓ₂ : Set (suc (c ⊔ ℓ₁ ⊔ ℓ₂)) where
   constructor mkResiduatedLattice
   field
-    {{pa}} : PersuasionAlgebra c ℓ₁ ℓ₂ 
+    {{persuasionAlgebra}} : PersuasionAlgebra c ℓ₁ ℓ₂ 
     _⇒_     : Op₂ Carrier     -- The residuum
     _∧_     : Op₂ Carrier     -- The minimum operation.
     _∨_     : Op₂ Carrier     -- The maximum operation.
