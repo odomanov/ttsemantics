@@ -1,6 +1,5 @@
 module Examples.ExBlackHoles where
 
-open import Level renaming (zero to lzero; suc to lsuc; _⊔_ to _l⊔_)
 open import Data.Empty
 open import Data.String as S renaming (_++_ to _+++_)
 open import Relation.Binary.PropositionalEquality
