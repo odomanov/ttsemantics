@@ -1,8 +1,8 @@
 -- Type Theory with fuzzy types
 
-open import ResiduatedLattices
+open import PersuasionAlgebras
 
-module FuzzyTT {c ℓ₁ ℓ₂} (la : ResiduatedLattice c ℓ₁ ℓ₂) where
+module FuzzyTT {c ℓ₁ ℓ₂} (pa : PersuasionAlgebra c ℓ₁ ℓ₂) where
 
 open import Level renaming (zero to lzero; suc to lsuc)
 open import Data.Empty 
@@ -16,7 +16,7 @@ open import Relation.Binary.PropositionalEquality
      using (_≡_; _≢_; refl; trans)
 
 
-open import FuzzyMonad la  
+open import FuzzyMonad pa  
 open Monad MonadFuzzy
 
 

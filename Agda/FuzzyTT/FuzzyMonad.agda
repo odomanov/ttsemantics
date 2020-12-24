@@ -1,23 +1,22 @@
 -- A Writer monad actually, generalized
 
 
-import ResiduatedLattice as RL
+import PersuasionAlgebra 
 
-module FuzzyMonad {c ℓ₁ ℓ₂} (la : RL.ResiduatedLattice c ℓ₁ ℓ₂) where
+module FuzzyMonad {c ℓ₁ ℓ₂} (pa : PersuasionAlgebra.PersuasionAlgebra c ℓ₁ ℓ₂) where
 
 open import Data.Maybe hiding (_>>=_)
 open import Level
 open import Algebra renaming (CommutativeMonoid to CM)
 open import Data.Product hiding (_<*>_)
--- open import Data.Unit
 open import Relation.Binary.HeterogeneousEquality using (_≅_; ≡-to-≅; ≅-to-≡)
 open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl; cong)
 open import Function using (id; _∘_; const)
 
 
-import RLMaybe; open RLMaybe la public   -- This checks that MC is a Residuated lattice (if la is)
+import PAMaybe; open PAMaybe pa public   -- This checks that MC is a Persuasion algebra (if pa is)
 
-open RL.ResiduatedLattice la
+open module PA = PersuasionAlgebra.PersuasionAlgebra pa
 
 record Monad (M : ∀ {a} → Set a → Set (suc (a ⊔ c ⊔ ℓ₁ ⊔ ℓ₂)))
              (fa : ∀ {l} {A : Set l} → M A → A)
@@ -93,7 +92,7 @@ open Fuzzy public
 private
   retFuzzy : ∀ {a} {A : Set a} → A → Fuzzy A
   fa (retFuzzy a) = a
-  fα (retFuzzy a) = ⊤
+  fα (retFuzzy a) = ε
   bindFuzzy : ∀ {a b} {A : Set a} {B : A → Set b}
     → (ma : Fuzzy A) → ((y : A) → Fuzzy (B y)) → Fuzzy (B (fa ma))
   fa (bindFuzzy (a ! α) f) = fa (f a) 
@@ -106,6 +105,7 @@ open Monad MonadFuzzy
 
 -- Let's check the Monad Laws 
 
+-- Equality for fuzzy types
 data _f≡_ {i} {A : Set i} (u : Fuzzy A) (v : Fuzzy A) : Set (suc (i ⊔ c ⊔ ℓ₁ ⊔ ℓ₂)) where
   frefl : fa u ≅ fa v → (fα u) ≈ (fα v) → u f≡ v
 
