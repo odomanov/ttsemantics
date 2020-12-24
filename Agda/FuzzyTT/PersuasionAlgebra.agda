@@ -6,7 +6,7 @@ open import Data.Product
 open import Relation.Binary hiding (_⇒_)
 -- open import Relation.Binary.Lattice using (Supremum; Infimum)
 
-open import WLPretty
+open import WLPretty hiding (_<$>_)
 
 record IsPersuasionAlgebra {c ℓ₁ ℓ₂} {A : Set c}
                          (_≈_ : Rel A ℓ₁)
