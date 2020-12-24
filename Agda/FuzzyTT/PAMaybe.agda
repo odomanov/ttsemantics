@@ -197,17 +197,20 @@ docMC : MC → Doc
 docMC nothing  = text "Nothing"
 docMC (just x) = text "Just " <> (doc) x
 
+instance
+  ppMC : Pretty MC
+  pretty {{ppMC}} = docMC
+  pppMC : PPrint MC
+  prettytype {{pppMC}} = ppMC
+
+
 MRL : PersuasionAlgebra _ _ _
 MRL = record
   { Carrier = MC
   ; _≈_ = _⟪≈⟫_
   ; _≤_ = M-rel (_≤_)
   ; _⊗_ = _⟪⨂⟫_
-  -- ; _⇒_ = (M-op (_⇒_))
-  -- ; _∧_ = _⟪∧⟫_
-  -- ; _∨_ = _⟪∨⟫_
   ; ε = MCε
-  -- ; ⊥ = MC⊥
   ; isPersuasionAlgebra = MCisPersuasionAlgebra
   ; doc = docMC
   }
