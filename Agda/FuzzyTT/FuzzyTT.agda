@@ -50,39 +50,38 @@ Sum-elim f g (finj₂ mb) = mb >>= g
 
 
 -- The next two basically coincide with the definition of >>=
-Empty-elim : ∀ {l} {C : ⊥ → Set l} (f : (x : ⊥) → Fuzzy (C x))
-           → (z : Fuzzy ⊥) → Fuzzy (C (fa z))
-Empty-elim f z = z >>= f
+Empty-elim : ∀ {l} {C : ⊥ → Set l} → (z : Fuzzy ⊥) → Fuzzy (C (fa z))
+Empty-elim z = z >>= ⊥-elim
 
 
-Unit-elim : ∀ {l} {C : ⊤ → Set l} (c : Fuzzy (C tt))
-          → (z : Fuzzy ⊤) → Fuzzy (C (fa z))
+Unit-elim : ∀ {l} {C : ⊤ → Set l} (c : Fuzzy (C tt)) → (z : Fuzzy ⊤) → Fuzzy (C (fa z))
 Unit-elim c z = z >>= const c          
 
 
--- Actually, this has nothing to do with Fuzzy. See below.
+-- Another variant of Empty-elim:
+Empty-elim' : ∀ {l} {C : ⊥ → Set l}
+              → (f : (x : ⊥) → Fuzzy (C x))
+              → (z : Fuzzy ⊥) → Fuzzy (C (fa z))
+Empty-elim' f z = z >>= f
+
+
+-- Equality
+
+-- Standard equality elimination (Martin-Lof's axiom J)
+J : ∀ {l m} {A : Set l} {C : (x : A) → (y : A) → x ≡ y → Set m}
+       → (f : (x : A) → C x x refl)
+       → (a : A) → (b : A) → (a≡b : a ≡ b) → C a b a≡b
+J f a .a refl = f a
+
+-- Fuzzy equality.
 ≡-elim : ∀ {l m} {A : Set l} {C : (x : A) → (y : A) → x ≡ y → Set m}
        → (f : (x : A) → Fuzzy (C x x refl))
        → (ma : Fuzzy A)
        → (mb : Fuzzy A)
-       → (p : Fuzzy (fa ma ≡ fa mb))
-       → Fuzzy (C (fa ma) (fa mb) (fa p))
-≡-elim f ma mb p rewrite (fa p) = f (fa mb)
+       → (mp : Fuzzy (fa ma ≡ fa mb))
+       → Fuzzy (C (fa ma) (fa mb) (fa mp))
+≡-elim {C = C} f ma mb mp = join (J {C = λ x y p → Fuzzy (C x y p)} f <$> ma <*> mb <*> mp)
 
--- check that ≡-elim is valid for any suitable F:
-private
-  record F {k j} (A : Set j) : Set (lsuc j ⊔ k) where
-    field
-      ffa : A
-  open F
-  
-  ≡-elim' : ∀ {l m k} {A : Set l} {C : (x : A) → (y : A) → x ≡ y → Set m}
-         → (f : (x : A) → F {k} (C x x refl))
-         → (ma : F {k} A)
-         → (mb : F {k} A)
-         → (p : F {k} (ffa ma ≡ ffa mb))
-         → F (C (ffa ma) (ffa mb) (ffa p))
-  ≡-elim' f ma mb p rewrite (ffa p) = f (ffa mb)
 
 
 -- Checking rules for equality
