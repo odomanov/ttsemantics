@@ -89,12 +89,20 @@ record Fuzzy {a} (A : Set a) : Set (suc (a ⊔ c ⊔ ℓ₁ ⊔ ℓ₂)) where
 
 open Fuzzy public
 
+
+-- Equality for fuzzy types
+data _f≡_ {i} {A : Set i} (u : Fuzzy A) (v : Fuzzy A) : Set (suc (i ⊔ c ⊔ ℓ₁ ⊔ ℓ₂)) where
+  frefl : fa u ≅ fa v → (fα u) ≈ (fα v) → u f≡ v
+
+
 private
   retFuzzy : ∀ {a} {A : Set a} → A → Fuzzy A
   fa (retFuzzy a) = a
   fα (retFuzzy a) = ε
   bindFuzzy : ∀ {a b} {A : Set a} {B : A → Set b}
-    → (ma : Fuzzy A) → ((y : A) → Fuzzy (B y)) → Fuzzy (B (fa ma))
+              → (ma : Fuzzy A)
+              → ((y : A) → Fuzzy (B y))
+              → Fuzzy (B (fa ma))
   fa (bindFuzzy (a ! α) f) = fa (f a) 
   fα (bindFuzzy (a ! α) f) = α ⊗ fα (f a)
 
@@ -104,10 +112,6 @@ MonadFuzzy = record { _>>=_ = bindFuzzy ; return = retFuzzy }
 open Monad MonadFuzzy
 
 -- Let's check the Monad Laws 
-
--- Equality for fuzzy types
-data _f≡_ {i} {A : Set i} (u : Fuzzy A) (v : Fuzzy A) : Set (suc (i ⊔ c ⊔ ℓ₁ ⊔ ℓ₂)) where
-  frefl : fa u ≅ fa v → (fα u) ≈ (fα v) → u f≡ v
 
 unitl : ∀ {i k} {A : Set i} {B : A → Set k} (a : A) (f : (x : A) → Fuzzy (B x))
   -- → (bindFuzzy (retFuzzy a) f) f≡ (f a)
