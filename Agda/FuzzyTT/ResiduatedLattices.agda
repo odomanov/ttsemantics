@@ -1,27 +1,23 @@
--- Some Residuated Lattices
+-- Some Residuated Lattices (derived from Persuasion algebras)
 -- TODO: Prove 0≤v⊗ etc.
 -- TODO: Prove that the algebras are residuated lattices
 
 module _  where
 
+open import Level renaming (zero to lzero; suc to lsuc)
 open import Algebra
 open import Data.Bool
 open import Data.Empty
 open import Data.Maybe
 open import Data.Nat
 open import Data.Product
-open import Data.String renaming (_++_ to _+++_)
 open import Data.Unit
-open import Level renaming (zero to lzero; suc to lsuc)
 open import Relation.Binary.Core
 open import Relation.Binary.Definitions
 open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl)
 
 open import Float
-
 open import ResiduatedLattice public
-  renaming (⊤ to LA⊤; ⊥ to LA⊥; _∧_ to _LA∧_; _∨_ to _LA∨_)
-
 open import PersuasionAlgebras
 
 

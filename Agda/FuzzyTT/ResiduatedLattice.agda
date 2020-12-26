@@ -1,10 +1,11 @@
+-- ResiduatedLattice is a superclass of PersuasionAlgebra
+
 module ResiduatedLattice where
 
 open import Level
 open import Algebra
 open import Data.Product
 open import Relation.Binary hiding (_⇒_)
-open import Relation.Binary.Lattice using (Supremum; Infimum)
 
 open import WLPretty
 

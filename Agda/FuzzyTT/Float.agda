@@ -1,4 +1,6 @@
-module _ where
+-- Necessary float definitions and functions.
+
+module Float where
 
 open import Data.Bool 
 open import Data.Integer hiding (_*_)
@@ -23,7 +25,7 @@ _[≤]_ : Float → Float → Bool
 x [≤] y = (x Data.Float.≤ᵇ y) ∨ (x [=] y) 
 
 
--- Definitions are correct !
+-- Check that definitions are correct.
 
 _ : 0.0 [≤] 0.0 ≡ true
 _ = refl
@@ -32,7 +34,7 @@ _ : 0.0 [<] 0.0 ≡ false
 _ = refl
 
 
--- Some Docs
+-- Some Docs for pretty printing
 
 open import WLPretty public
 

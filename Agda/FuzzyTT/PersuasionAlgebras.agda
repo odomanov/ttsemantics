@@ -4,6 +4,7 @@
 
 module _  where
 
+open import Level renaming (zero to lzero; suc to lsuc)
 open import Algebra
 open import Data.Bool
 open import Data.Empty
@@ -13,7 +14,6 @@ open import Data.Nat.Show renaming (show to ℕshow)
 open import Data.Product
 open import Data.String renaming (_++_ to _+++_)
 open import Data.Unit
-open import Level renaming (zero to lzero; suc to lsuc)
 open import Relation.Binary.Core
 open import Relation.Binary.Definitions
 open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl)
@@ -50,6 +50,9 @@ FU< a b = if (value a) [<] (value b) then ⊤ else ⊥
 FU≤ : FUnit → FUnit → Set
 FU≤ a b = if (value a) [≤] (value b) then ⊤ else ⊥ 
 
+
+FU=-refl : Reflexive FU=
+FU=-refl = refl
 
 FU=-sym : Symmetric FU=
 FU=-sym refl = refl
@@ -148,37 +151,15 @@ postulate
   ; v≤1 = lukv≤1⊗ a b 
   }
 
--- postulate
---   luk0≤v⇒ : ∀ x y → 0.0 [≤] (fmin 1.0 (1.0 [-] (value x) [+] (value y))) ≡ true
---   lukv≤1⇒ : ∀ x y → (fmin 1.0 (1.0 [-] (value x) [+] (value y))) [≤] 1.0 ≡ true
-
--- Łuk⇒ : FUnit → FUnit → FUnit
--- Łuk⇒ a b = record
---   { value = fmin 1.0 (1.0 [-] (value a) [+] (value b))
---   ; 0≤v = luk0≤v⇒ a b 
---   ; v≤1 = lukv≤1⇒ a b 
---   }
-
--- Łuk∧ : FUnit → FUnit → FUnit
--- Łuk∧ a b = record
---   { value = fmin (value a) (value b)
---   ; 0≤v = min0≤v a b
---   ; v≤1 = minv≤1 a b
---   }
-
--- Łuk∨ : FUnit → FUnit → FUnit
--- Łuk∨ a b = record
---   { value = fmax (value a) (value b)
---   ; 0≤v = max0≤v a b
---   ; v≤1 = maxv≤1 a b
---   }
-
 Łuk-cong : Congruent₂ FU= Łuk⊗
 Łuk-cong refl refl = refl
 
 postulate
   Łuk1+v=v : ∀ x → FU= (Łuk⊗ FU1 x) x
   Łukv+1=v : ∀ x → FU= (Łuk⊗ x FU1) x 
+
+
+-- TODO:
 
 -- Łuk-assoc : Associative FU= Łuk⊗
 -- Łuk-assoc (mkFUnit x px1 px2) y z = {!refl!} 
@@ -209,8 +190,7 @@ postulate
 --                  }  
 
 postulate
-  Łuk-isPersuasionAlgebra : IsPersuasionAlgebra
-    FU= FU≤ Łuk⊗ FU1
+  Łuk-isPersuasionAlgebra : IsPersuasionAlgebra FU= FU≤ Łuk⊗ FU1
 
 Łuk : PersuasionAlgebra _ _ _
 Łuk = record
@@ -218,12 +198,7 @@ postulate
   ; _≈_ = FU=
   ; _≤_ = FU≤
   ; _⊗_ = Łuk⊗
-  -- ; _⇒_ = Łuk⇒
-  -- ; _∧_ = Łuk∧
-  -- ; _∨_ = Łuk∨
   ; ε = FU1
-  -- ; ⊤ = FU1
-  -- ; ⊥ = FU0
   ; isPersuasionAlgebra = Łuk-isPersuasionAlgebra
   ; doc = docFU
   }
@@ -239,29 +214,8 @@ Göd⊗ a b = record
   ; v≤1 = minv≤1 a b 
   }
 
--- postulate
---   god0≤v⇒ : ∀ x y → 0.0 [≤] (if (value x) [≤] (value y) then 1.0 else (value y)) ≡ true
---   godv≤1⇒ : ∀ x y → (if (value x) [≤] (value y) then 1.0 else (value y)) [≤] 1.0 ≡ true
-
--- Göd⇒ : FUnit → FUnit → FUnit
--- Göd⇒ a b = record
---   { value = if (value a) [≤] (value b) then 1.0 else (value b)
---   ; 0≤v = god0≤v⇒ a b 
---   ; v≤1 = godv≤1⇒ a b 
---   }
-
--- Göd∨ : FUnit → FUnit → FUnit
--- Göd∨ a b = record
---   { value = fmax (value a) (value b)
---   ; 0≤v = max0≤v a b 
---   ; v≤1 = maxv≤1 a b 
---   }
-
--- Göd∧ = Göd⊗
-
 postulate
-  Gödel-isPersuasionAlgebra : IsPersuasionAlgebra
-    FU= FU≤ Göd⊗ FU1
+  Gödel-isPersuasionAlgebra : IsPersuasionAlgebra FU= FU≤ Göd⊗ FU1
 
 Gödel : PersuasionAlgebra _ _ _
 Gödel = record
@@ -269,12 +223,7 @@ Gödel = record
   ; _≈_ = FU=
   ; _≤_ = FU≤
   ; _⊗_ = Göd⊗
-  -- ; _⇒_ = Göd⇒
-  -- ; _∧_ = Göd∧
-  -- ; _∨_ = Göd∨
   ; ε = FU1
-  -- ; ⊤ = FU1
-  -- ; ⊥ = FU0
   ; isPersuasionAlgebra = Gödel-isPersuasionAlgebra
   ; doc = docFU
   }
@@ -294,23 +243,8 @@ prod⊗ a b = record
   ; v≤1 = prodv≤1⊗ a b 
   }
 
--- postulate
---   prod0≤v⇒ : ∀ x y → 0.0 [≤] (if (value x) [≤] (value y) then 1.0 else (value y) [/] (value x)) ≡ true
---   prodv≤1⇒ : ∀ x y → (if (value x) [≤] (value y) then 1.0 else (value y) [/] (value x)) [≤] 1.0 ≡ true
-
--- prod⇒ : FUnit → FUnit → FUnit
--- prod⇒ a b = record
---   { value = if (value a) [≤] (value b) then 1.0 else (value b) [/] (value a)
---   ; 0≤v = prod0≤v⇒ a b 
---   ; v≤1 = prodv≤1⇒ a b 
---   }
-
--- prod∧ = FUmin
--- prod∨ = FUmax
-
 postulate
-  Product-isPersuasionAlgebra : IsPersuasionAlgebra
-    FU= FU≤ prod⊗ FU1 
+  Product-isPersuasionAlgebra : IsPersuasionAlgebra FU= FU≤ prod⊗ FU1 
 
 Product : PersuasionAlgebra _ _ _
 Product = record
@@ -318,12 +252,7 @@ Product = record
   ; _≈_ = FU=
   ; _≤_ = FU≤
   ; _⊗_ = prod⊗
-  -- ; _⇒_ = prod⇒
-  -- ; _∧_ = prod∧
-  -- ; _∨_ = prod∨
   ; ε = FU1
-  -- ; ⊤ = FU1
-  -- ; ⊥ = FU0
   ; isPersuasionAlgebra = Product-isPersuasionAlgebra
   ; doc = docFU
   }

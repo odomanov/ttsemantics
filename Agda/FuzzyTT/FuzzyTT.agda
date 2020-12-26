@@ -1,6 +1,6 @@
 -- Type Theory with fuzzy types
 
-open import PersuasionAlgebras
+open import PersuasionAlgebra
 
 module FuzzyTT {c ℓ₁ ℓ₂} (pa : PersuasionAlgebra c ℓ₁ ℓ₂) where
 
@@ -12,44 +12,47 @@ open import Data.Product hiding (_<*>_)
 open import Data.Sum
 open import Data.Unit
 open import Relation.Binary.HeterogeneousEquality using (_≅_; ≡-to-≅)
-open import Relation.Binary.PropositionalEquality
-     using (_≡_; _≢_; refl; trans)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; trans)
 
 
 open import FuzzyMonad pa public
-open Monad MonadFuzzy public
+open DependentMonad MonadFuzzy public
 
 
-record FuzzySigma {a b} (A : Set a) (B : A → Set b) : Set (lsuc c ⊔ lsuc ℓ₁ ⊔ lsuc ℓ₂ ⊔ lsuc a ⊔ lsuc b) where
-  constructor _,_
-  field
-    π1 : Fuzzy A
-    π2 : Fuzzy (B (fa π1)) 
-open FuzzySigma
+-- Sigma type.
+
+FuzzySigma = λ {i j} (A : Set i) (B : A → Set j) → Σ (Fuzzy A) (λ x → Fuzzy (B (fa x)))
+
+-- Extracting the ordinary type from the fuzzy one.
+faSigma : ∀ {i j} {A : Set i} {B : A → Set j} → FuzzySigma A B → Σ A B
+faSigma (a , b) = (fa a , fa b)
+
 
 Sigma-elim : ∀ {l m k} {A : Set l} {B : A → Set m} {C : Σ A B → Set k}  
        → (g : (x : A) (y : (B x)) → Fuzzy (C (x , y)))
-       → (z : FuzzySigma A B) → Fuzzy (C (fa (π1 z) , fa (π2 z)))
+       → (z : FuzzySigma A B) → Fuzzy (C (faSigma z))
 Sigma-elim g (z1 , z2) = join (g <$> z1 <*> z2)
 
 
-data FuzzySum {a b} (A : Set a) (B : Set b) : Set (lsuc c ⊔ lsuc ℓ₁ ⊔ lsuc ℓ₂ ⊔ lsuc a ⊔ lsuc b) where
-  finj₁ : Fuzzy A → FuzzySum A B
-  finj₂ : Fuzzy B → FuzzySum A B
+-- Sum type.
 
-fa⊎ : ∀ {l m} {A : Set l} {B : Set m} → FuzzySum A B → A ⊎ B
-fa⊎ (finj₁ ma) = inj₁ (fa ma)
-fa⊎ (finj₂ mb) = inj₂ (fa mb)
+FuzzySum = λ {i j} (A : Set i) (B : Set j) → Fuzzy A ⊎ Fuzzy B
+
+-- Extracting the ordinary type from the fuzzy one.
+faSum : ∀ {l m} {A : Set l} {B : Set m} → FuzzySum A B → A ⊎ B
+faSum (inj₁ ma) = inj₁ (fa ma)
+faSum (inj₂ mb) = inj₂ (fa mb)
+
 
 Sum-elim : ∀ {l m k} {A : Set l} {B : Set m} {C : A ⊎ B → Set k}
          → (f : (x : A) → Fuzzy (C (inj₁ x)))
          → (g : (x : B) → Fuzzy (C (inj₂ x)))
-         → (z : FuzzySum A B) → Fuzzy (C (fa⊎ z))
-Sum-elim f g (finj₁ ma) = ma >>= f
-Sum-elim f g (finj₂ mb) = mb >>= g
+         → (z : FuzzySum A B) → Fuzzy (C (faSum z))
+Sum-elim f g (inj₁ ma) = ma >>= f
+Sum-elim f g (inj₂ mb) = mb >>= g
 
 
--- The next two basically coincide with the definition of >>=
+-- The next two rules basically coincide with the definition of >>=
 Empty-elim : ∀ {l} {C : ⊥ → Set l} → (z : Fuzzy ⊥) → Fuzzy (C (fa z))
 Empty-elim z = z >>= ⊥-elim
 
@@ -67,20 +70,22 @@ Empty-elim' f z = z >>= f
 
 -- Equality
 
--- Standard equality elimination (Martin-Lof's axiom J)
+-- Standard equality elimination (Martin-Löf's axiom J):
 J : ∀ {l m} {A : Set l} {C : (x : A) → (y : A) → x ≡ y → Set m}
        → (f : (x : A) → C x x refl)
        → (a : A) → (b : A) → (a≡b : a ≡ b) → C a b a≡b
 J f a .a refl = f a
 
--- Fuzzy equality.
+-- Fuzzy equality elimination.
 ≡-elim : ∀ {l m} {A : Set l} {C : (x : A) → (y : A) → x ≡ y → Set m}
        → (f : (x : A) → Fuzzy (C x x refl))
        → (ma : Fuzzy A)
        → (mb : Fuzzy A)
        → (mp : Fuzzy (fa ma ≡ fa mb))
        → Fuzzy (C (fa ma) (fa mb) (fa mp))
-≡-elim {C = C} f ma mb mp = join (J {C = λ x y p → Fuzzy (C x y p)} f <$> ma <*> mb <*> mp)
+≡-elim {C = C} f ma mb mp = join (J {C = CF} f <$> ma <*> mb <*> mp)
+  where
+  CF = λ x y p → Fuzzy (C x y p)
 
 
 
@@ -93,5 +98,5 @@ J f a .a refl = f a
 eq1 : ∀ {l} {A B : Set l} → Fuzzy A → A ≡ B → Fuzzy B
 eq1 a A≡B rewrite A≡B = a
 
-eq2 : ∀ {l} {A B : Set l} {a b : A}  → Fuzzy (_≡_ {A = A} a b) → A ≡ B → Fuzzy (a ≅ b)
+eq2 : ∀ {l} {A B : Set l} {a b : A}  → Fuzzy (a ≡ b) → A ≡ B → Fuzzy (a ≅ b)
 eq2 {l} {A} {B} {a} {b} a≡b A≡B rewrite A≡B = ≡-to-≅ <$> a≡b

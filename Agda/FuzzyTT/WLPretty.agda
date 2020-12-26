@@ -111,7 +111,7 @@ x <> y = Cat x y
 
 
 ------------------------------------------------------------------------
--- Utility functions (could be later raplaced by standard ones)
+-- Utility functions (could be later replaced by standard ones)
 ------------------------------------------------------------------------
 
 folddoc : (Doc → Doc → Doc) → List Doc → Doc 
