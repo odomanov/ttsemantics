@@ -34,3 +34,14 @@ record PersuasionAlgebra c ℓ₁ ℓ₂ : Set (suc (c ⊔ ℓ₁ ⊔ ℓ₂)) w
   open IsPersuasionAlgebra isPersuasionAlgebra public
 
 open PersuasionAlgebra {{...}} public
+
+
+data toPA c ℓ₁ ℓ₂ {ℓ} (A : Set ℓ) : Set (suc (c ⊔ ℓ₁ ⊔ ℓ₂) ⊔ ℓ) where
+  topa : (A → PersuasionAlgebra c ℓ₁ ℓ₂) → toPA c ℓ₁ ℓ₂ A 
+
+getPA : ∀ {c ℓ₁ ℓ₂ ℓ} {A : Set ℓ} → A → {{toPA c ℓ₁ ℓ₂ A}} → PersuasionAlgebra c ℓ₁ ℓ₂
+getPA x {{topa f}} = f x
+
+instance
+  PAtoPA : ∀ {c ℓ₁ ℓ₂} → toPA c ℓ₁ ℓ₂ (PersuasionAlgebra c ℓ₁ ℓ₂)
+  PAtoPA = topa (λ x → x)

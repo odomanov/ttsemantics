@@ -15,7 +15,7 @@ open import ResiduatedLattices hiding (⊥)
 pa = PANat
 -- pa = persuasionAlgebra ProductRL
 
-open import FuzzyTT pa
+open import FuzzyTT pa {{PAtoPA}}
 
 postulate 
   I-хорошо-известно : Set

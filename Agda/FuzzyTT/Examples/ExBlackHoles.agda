@@ -11,10 +11,10 @@ open import ResiduatedLattices hiding (⊥)
 -- pa = Łuk
 -- pa = Gödel
 -- pa = Product
--- pa = ProductRL
-pa = persuasionAlgebra ProductRL
+pa = ProductRL
+-- pa = persuasionAlgebra ProductRL
 
-open import FuzzyTT pa
+open import FuzzyTT pa {{RLtoPA}}
 
 postulate 
   I-хорошо-известно : Set

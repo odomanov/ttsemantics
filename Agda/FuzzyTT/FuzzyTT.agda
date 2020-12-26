@@ -2,7 +2,7 @@
 
 open import PersuasionAlgebra
 
-module FuzzyTT {c ℓ₁ ℓ₂} (pa : PersuasionAlgebra c ℓ₁ ℓ₂) where
+module FuzzyTT {c ℓ₁ ℓ₂ ℓ} {Alg : Set ℓ} (alg : Alg) {{coe : toPA c ℓ₁ ℓ₂ Alg}} where
 
 open import Level renaming (zero to lzero; suc to lsuc)
 open import Data.Empty 
@@ -14,8 +14,7 @@ open import Data.Unit
 open import Relation.Binary.HeterogeneousEquality using (_≅_; ≡-to-≅)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; trans)
 
-
-open import FuzzyMonad pa public
+open import FuzzyMonad (getPA alg {{coe}}) public
 open DependentMonad MonadFuzzy public
 
 
