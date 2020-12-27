@@ -5,15 +5,11 @@ open import Data.Nat.Base
 open import Data.String as S renaming (_++_ to _+++_)
 open import Relation.Binary.PropositionalEquality
 
-open import PersuasionAlgebras
+open import PersuasionAlgebras.Nat
 open import ResiduatedLattices hiding (⊥)
 
 
--- pa = Łuk
--- pa = Gödel
--- pa = Product
 pa = PANat
--- pa = persuasionAlgebra ProductRL
 
 open import FuzzyTT pa {{PAtoPA}}
 

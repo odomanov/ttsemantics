@@ -2,7 +2,7 @@
 -- TODO: Prove 0≤v⊗ etc.
 -- TODO: Prove that the algebras are persuasion algebras
 
-module _  where
+module PersuasionAlgebras.Standard where
 
 open import Level renaming (zero to lzero; suc to lsuc)
 open import Algebra
@@ -255,28 +255,6 @@ Product = record
   ; ε = FU1
   ; isPersuasionAlgebra = Product-isPersuasionAlgebra
   ; doc = docFU
-  }
-
-
--------------------------------------------------------
--- PANat
-
-docℕ : ℕ → Doc
-docℕ n = text (ℕshow n)
-
-
-postulate
-  PANat-isPersuasionAlgebra : IsPersuasionAlgebra _≡_ ℕ._≤_ ℕ._+_ zero
-
-PANat : PersuasionAlgebra _ _ _
-PANat = record
-  { Carrier = ℕ
-  ; _≈_ = _≡_
-  ; _≤_ = ℕ._≤_
-  ; _⊗_ = ℕ._+_
-  ; ε = zero
-  ; isPersuasionAlgebra = PANat-isPersuasionAlgebra
-  ; doc = docℕ
   }
 
 

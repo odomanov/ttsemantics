@@ -2,7 +2,7 @@
 -- TODO: Prove 0≤v⊗ etc.
 -- TODO: Prove that the algebras are residuated lattices
 
-module _  where
+module ResiduatedLattices.Standard where
 
 open import Level renaming (zero to lzero; suc to lsuc)
 open import Algebra
@@ -18,7 +18,7 @@ open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl)
 
 open import Float
 open import ResiduatedLattice public
-open import PersuasionAlgebras
+open import PersuasionAlgebras.Standard
 
 
 

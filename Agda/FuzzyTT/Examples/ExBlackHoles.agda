@@ -4,8 +4,8 @@ open import Data.Empty
 open import Data.String as S renaming (_++_ to _+++_)
 open import Relation.Binary.PropositionalEquality
 
-open import PersuasionAlgebras
-open import ResiduatedLattices hiding (⊥)
+open import PersuasionAlgebras.Standard
+open import ResiduatedLattices.Standard hiding (⊥)
 
 
 -- pa = Łuk
@@ -98,6 +98,8 @@ fs9 = join (fa4 <$> fs7 <*> fs5)
 
 f¬s4 = fs9-4 =<< fs9
 
+f⊥4 = f¬s4 <*> fs4
+f⊥9 = f¬s9 <*> fs9
 
 
 
@@ -130,3 +132,5 @@ main = run (putStrLn stringToPrint)
     +++ "\nS9-4 = " +++ ppretty ws (doc pa (fα (fs9-4 s9)))
     +++ "\n-S4  = " +++ ppretty ws (doc pa (fα (f¬s4)))
     +++ "\n-S9  = " +++ ppretty ws (doc pa (fα (f¬s9)))
+    +++ "\nbot4 = " +++ ppretty ws (doc pa (fα (f⊥4)))
+    +++ "\nbot9 = " +++ ppretty ws (doc pa (fα (f⊥9)))
