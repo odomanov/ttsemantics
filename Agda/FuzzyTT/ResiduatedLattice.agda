@@ -46,7 +46,4 @@ open ResiduatedLattice public
 
 instance
   RLtoPA : ∀ {c ℓ₁ ℓ₂} → toPA c ℓ₁ ℓ₂ (ResiduatedLattice c ℓ₁ ℓ₂)
-  RLtoPA {c} {ℓ₁} {ℓ₂}= topa f
-    where
-    f : ResiduatedLattice c ℓ₁ ℓ₂ → PersuasionAlgebra c ℓ₁ ℓ₂
-    f r = persuasionAlgebra r
+  RLtoPA {c} {ℓ₁} {ℓ₂}= topa persuasionAlgebra
