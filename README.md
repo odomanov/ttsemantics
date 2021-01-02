@@ -6,6 +6,7 @@
   and modules.
 * `IntensionalLogic` — Monads in intensional logic.
 * `Experiments` — Various experiments.
+* `FuzzyTT` — A variant of P.Martin-Löf ’s intuitionistic type theory with fuzzy type membership.
 
 ## Coq
 
