@@ -6,7 +6,7 @@ open import Data.String as S renaming (_++_ to _+++_)
 open import Relation.Binary.PropositionalEquality
 
 open import PersuasionAlgebras.ProductPositive
-open import ResiduatedLattices hiding (⊥)
+open import ResiduatedLattices.Standard hiding (⊥)
 
 
 pa = ProductPositive
