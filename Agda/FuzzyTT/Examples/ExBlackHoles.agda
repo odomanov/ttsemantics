@@ -1,5 +1,6 @@
 module Examples.ExBlackHoles where
 
+open import Level renaming (zero to lzero; suc to lsuc)
 open import Data.Empty
 open import Data.String as S renaming (_++_ to _+++_)
 open import Relation.Binary.PropositionalEquality
@@ -115,7 +116,7 @@ open import IO
 ws = 80 
 
 
-main = run (putStrLn stringToPrint)
+main = run {lzero} (putStrLn stringToPrint)
   where
   stringToPrint = ""
     +++   "S1   = " +++ ppretty ws (doc pa (fα fs1))

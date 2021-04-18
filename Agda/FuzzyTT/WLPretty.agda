@@ -9,12 +9,13 @@ open import Data.Bool
 open import Data.Char renaming (Char to BChar) 
 open import Data.Float hiding (⌊_⌋; _+_)
 open import Data.Integer using (ℤ; ∣_∣) 
+open import Data.Integer.Show using (show) 
 open import Data.List as L hiding (align) 
 open import Data.Maybe hiding (align)
 open import Data.Nat as ℕ
 open import Data.Nat.Show using (show)
 open import Data.Product
-open import Data.String as S renaming (_++_ to _+++_) hiding (braces; parens; _<+>_; words) 
+open import Data.String as S renaming (_++_ to _+++_) hiding (braces; parens; _<+>_; words; lines) 
 open import Function using (_∘_; id)
 open import Level renaming (zero to lzero; suc to lsuc)
 open import Relation.Nullary.Decidable
@@ -282,7 +283,7 @@ nat : ℕ → Doc
 nat i = text (Data.Nat.Show.show i)
 
 integer : ℤ → Doc
-integer i = text (Data.Integer.show i)
+integer i = text (Data.Integer.Show.show i)
 
 float : Float → Doc
 float f = text (Data.Float.show f)
