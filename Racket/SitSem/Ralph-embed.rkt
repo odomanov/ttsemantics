@@ -38,7 +38,7 @@
 
   (define-datatype spymh : Type
     [sh : spymh])
-  (define spymb ⊥)
+  (define-datatype spymb : Type)
   (define/rec/match spy : man -> Type
     [mh => spymh]
     [mb => spymb])
