@@ -1,24 +1,18 @@
-#lang cur
+#lang s-exp "SitSem.rkt"
+
 (require
-  ;cur/stdlib/sugar
-  cur/stdlib/axiom
   cur/stdlib/sigma
-  ;cur/stdlib/prop
-  cur/stdlib/list
-  ;cur/stdlib/equality
-  ;"cur-more.rkt"
-  ;cur/curnel/cic-saccharata
   rackunit/turnstile+
-  ;"rackunit-ntac.rkt"
   rackunit/private/check
+  "compose.rkt"
   )
 
 
-(module common cur
+(module common "SitSem.rkt"
   (provide ⊥ ⊤ ¬)
-  (data ⊥ : 0 Type)
-  (data ⊤ : 0 Type
-        [tt : ⊤])
+  (define-datatype ⊥ : Type)
+  (define-datatype ⊤ : Type
+    [tt : ⊤])
 
   (define-typed-syntax (¬ τ) ≫
     [⊢ τ ≫ τ- ⇒ (~Type _)]
@@ -31,26 +25,27 @@
 ;; Ralph's belief
 ;; --------------
 
-(module RB cur
+(module RB "SitSem.rkt"
   (require
     (submod ".." common)
-    ;cur/stdlib/sugar
-    cur/stdlib/axiom
     cur/stdlib/sigma
-    ;cur/stdlib/prop
-    ;"cur-more.rkt"
+    cur/stdlib/sugar
     rackunit/turnstile+)
   (provide man mh mb spy sh sb)
-  (data man : 0 Type
-        [mh : man]
-        [mb : man])
+  (define-datatype man : Type
+    [mh : man]
+    [mb : man])
 
-  (define-axiom spy (-> man Type))
-  (define-axiom sh (spy mh))
+  (define-datatype spymh : Type
+    [sh : spymh])
+  (define spymb ⊥)
+  (define/rec/match spy : man -> Type
+    [mh => spymh]
+    [mb => spymb])
   (check-type (spy mh) : Type)
   ;(cur-type-check? (spy mh) Type)   ;unbound?
 
-  (define-axiom sb (¬ (spy mb)))
+  (define/rec/match sb : spymb -> ⊥)
   (check-type (spy mb) : Type)
   (check-type (¬ (spy mb)) : Type)
   (check-type sb : (¬ (spy mb)))
@@ -60,49 +55,24 @@
   (check-type sb : (¬spy mb))
 
   (define ¬spy-mb (-> (spy mb) ⊥))
-  (define-axiom sb2 ¬spy-mb)
-  (check-type sb2 : ¬spy-mb)
-  (check-type sb2 : (¬ (spy mb)))
-  (check-type sb2 : (-> (spy mb) ⊥))
+  (check-type sb : ¬spy-mb)
+  (check-type sb : (¬ (spy mb)))
+  (check-type sb : (-> (spy mb) ⊥))
 
   ;; some proofs
   (check-type (pair  spy mh sh)  : (Σ man spy))
   (check-type (pair ¬spy mb sb)  : (Σ man ¬spy))
-  (check-type (pair ¬spy mb sb2) : (Σ man ¬spy))
+  ;(check-type (pair ¬spy mb sb2) : (Σ man ¬spy))
   (check-type (pair (λ [m : man] (¬ (spy m))) mb sb) : (Σ man (λ [m : man] (¬ (spy m)))))
 
   )
 
-(provide man o spy
-         RB.man RB.mh RB.mb RB.sh RB.sb RB.spy)
 
-(data man : 0 Type
-      [o : man])
-(define-axiom spy (-> man Type))
-;(require racket)(syntax-debug-info #'o)
-#;(begin-for-syntax
-    (printf "info=~a\n" (get-datatype-info #'man))
-    )
+(define-datatype man : Type
+  [o : man])
 
 
-(require syntax/parse/define)
-
-(define-syntax (require-situation stx)
-  (syntax-parse stx
-    [(_ sit)
-     #:with prefix (format-id #'sit "~a." (cadr (syntax->datum #'sit)))
-     #'(require (prefix-in prefix sit))]))
-
-(require-situation 'RB)
-
-;(require (prefix-in RB. 'RB))
-
-#;(begin-for-syntax
-  (require racket/pretty)
-  (pretty-print (syntax-property-symbol-keys #'RB.mh))
-  (pretty-print (syntax-property-symbol-keys #'o))
-  (pretty-print (syntax-property-symbol-keys #''RB))
-  )
+(embed-sit 'RB)
 
 
 ;; counterparts via functions
@@ -212,9 +182,9 @@
 ;; ==========================
 
 
-(data cp-rel : 0 (Π man RB.man Type)
-      [omh : (cp-rel o RB.mh)]
-      [omb : (cp-rel o RB.mb)])
+(define-datatype cp-rel : (Π man RB.man Type)
+  [omh : (cp-rel o RB.mh)]
+  [omb : (cp-rel o RB.mb)])
 
 ;; o's counterparts
 (define cpo2
@@ -251,8 +221,8 @@
 
 ;;  Another variant
 
-(data REL : 2 (Π (A : Type) (B : Type) Type)
-      [rel : (Π (A : Type) (B : Type) (a : A) (b : B) (REL A B))])
+(define-datatype REL (A : Type) (B : Type) : Type
+  [rel : (-> (a : A) (b : B) (REL A B))])
 
 (define cp-rel3 (REL man RB.man))
 (define omh3 (rel man RB.man o RB.mh))
@@ -292,8 +262,8 @@
 ;; The best version (presumably)
 ;; -----------------------------
 
-(data cpWR : 0 Type
-      [cp : (Π [xw : man] [xr : RB.man] cpWR)])  ;establishing connection
+(define-datatype cpWR : Type
+  [cp : (Π [xw : man] [xr : RB.man] cpWR)])  ;establishing connection
 (define omh4 (cp o RB.mh))
 (define omb4 (cp o RB.mb))
 

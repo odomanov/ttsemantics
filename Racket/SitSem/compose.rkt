@@ -1,14 +1,18 @@
+;; tools for composing situations
 #lang s-exp "SitSem.rkt"
 (require rackunit/turnstile+
          macrotypes/postfix-in
          (postfix-in - racket/base)
          racket/pretty
          syntax/parse/define  ;define-simple-macro
+         cur/stdlib/sugar
          (for-syntax syntax/id-table
                      syntax/stx
                      racket/pretty
                      (postfix-in - racket/base)
                      ))
+
+(provide embed-sit with-link with-link2)
 
 (begin-for-syntax
   (define-syntax-class prelink
@@ -38,27 +42,27 @@
      #'id-table
      ]))
 
-
-(module RB "SitSem.rkt"
-  (provide man mh mb)
-  (define-datatype man : Type
-    [mh : man] [mb : man]))
-
-(define-datatype man : Type
-  [o : man])
-
-(embed-sit 'RB)
-RB.mh
-(check-type RB.mh : RB.man)
-
-(begin-for-syntax
-  (define-syntax-class link
-    (pattern ((obj . objemb) ...))))
-
+; with local-require
 (define-syntax (with-link stx)
   (syntax-parse stx
-    [(_ sit:id (prelink:prelink ...) body ...)
-     #:with prefix (format-id #'sit "~a." (syntax-e #'sit))
+    [(_ sit (prelink:prelink ...) body ...)
+     ;#:do [(#%app- print- #'(prelink.obj ...))]
+     ;#:do [(#%app- print- (typeof #'(prelink.obj ...)))]
+     ;#:do [(#%app- print- (detach #'(prelink.obj ...) 'key1))]
+     #:with link (stx-map (λ (x y) (cons x y))
+                          #'(prelink.obj ...) #'(prelink.objemb ...))
+     #:with (((o1 . o2) ...) ...) (variants #'link)
+     #'(let- ()
+             (local-require- sit)
+             (#%app- values-
+                     (letλ ([o1 o2] ...)
+                           (begint body ...))
+                     ...))]))
+
+(define-syntax (with-link2 stx)
+  (syntax-parse stx
+    [(_ sit (prelink:prelink ...) body ...)
+     #:with prefix (format-id #'sit "~a." (cadr (syntax->datum #'sit)))
      #:do [(define (addprfx s) (format-id #'s "~a~a" #'prefix s))]
      #:with (prfx-obj ...) (stx-map addprfx #'(prelink.objemb ...))
      #:with link (stx-map (λ (x y) (cons x y))
@@ -67,41 +71,3 @@ RB.mh
      #'(#%app- values-
                (let- ([o1 o2] ...)
                      body ...) ...)]))
-
-(with-link RB ([o mh] [o mb])
-  (#%app- println- RB.mb)
-  o)
-
-;; simpler variant
-(define-syntax (with-link2 stx)
-  (syntax-parse stx
-    [(_ (prelink:prelink ...) body ...)
-     #:with link (stx-map (λ (x y) (cons x y))
-                          #'(prelink.obj ...) #'(prelink.objemb ...))
-     #:with (((o1 . o2) ...) ...) (variants #'link)
-     #'(#%app- values-
-               (let- ([o1 o2] ...)
-                     body ...) ...)]))
-
-(with-link2 ([o RB.mh] [o RB.mb])
-  (#%app- print- RB.mb)
-  o)
-
-; with local-require
-(define-syntax (with-link3 stx)
-  (syntax-parse stx
-    [(_ sit (prelink:prelink ...) body ...)
-     #:with link (stx-map (λ (x y) (cons x y))
-                          #'(prelink.obj ...) #'(prelink.objemb ...))
-     #:with (((o1 . o2) ...) ...) (variants #'link)
-     #'(let- ()
-             (local-require- sit)
-             (#%app- values-
-                     (let- ([o1 o2] ...)
-                           body ...) ...))]))
-(with-link3 'RB ([o mh] [o mb])
-  (#%app- print- mh)
-  (#%app- print- o)
-  (check-type mh : man)
-  ;(check-type o : man)  ;not working
-  o)

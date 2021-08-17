@@ -13,6 +13,7 @@
  ;; define-values begin define #%app λ
  #%plain-app void #%plain-lambda printf displayln quote begin
  define-syntax define-for-syntax
+ begint letλ
  (for-syntax
   (all-from-out racket/base
                 syntax/parse
@@ -30,6 +31,8 @@
                   ⇒ ⇐ ≫ ⊢ ≻)
          turnstile+/eval
          turnstile+/typedefs
+         macrotypes/postfix-in
+         (postfix-in - racket/base)
          (for-syntax macrotypes/stx-utils syntax/stx
                      (for-syntax racket/base syntax/parse)))
 (provide (all-from-out turnstile+/base turnstile+/eval turnstile+/typedefs))
@@ -39,6 +42,20 @@
 
 (require (for-syntax "link.rkt"))
 (provide (for-syntax (all-from-out "link.rkt")))
+
+;; typed begin form.
+;; the last expression should be typed
+(define-typed-syntax (begint e ... e_last) ≫
+  [⊢ e ≫ e- ⇒ _] ...
+  [⊢ e_last ≫ e_last- ⇒ τ_out]
+  --------
+  [⊢ (begin- e- ... e_last-) ⇒ τ_out])
+
+(define-typed-syntax (letλ ([x y] ...) e) ≫
+  [⊢ y ≫ y- ⇒ τ] ...
+  [[x ≫ x-- : τ] ... ⊢ [e ≫ e- ⇒ τ_out]]
+  -----------
+  [⊢ ((λ (x : τ) ... e) y ...) ⇒ τ_out])
 
 (define-syntax (#%datum syn)
   (raise-syntax-error
