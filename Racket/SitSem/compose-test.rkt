@@ -27,20 +27,22 @@
 
 (module RB "SitSem.rkt"
   (require (submod ".." common)
-           rackunit/turnstile
-           cur/stdlib/sugar)
+           cur/stdlib/sugar
+           (only-in turnstile
+                    define-typed-variable)
+           rackunit/turnstile)
   (provide man mh mb spy sh sb)
   (define-datatype man : Type
     [mh : man] [mb : man])
-  (define-datatype spymh : Type
-    [sh : spymh])
-  (define-datatype spymb : Type)
-  (define/rec/match spy : man -> Type
-    [mh => spymh]
-    [mb => spymb])
+
+  (define-datatype spy : (-> man Type)
+    [sh : (spy mh)])
   (check-type (spy mh) : Type)
-  
-  (define/rec/match sb : spymb -> ⊥)
+  (check-type sh : (spy mh))
+  (check-type (spy mh) : Type)
+
+  ;; postulate sb
+  (define-typed-variable sb 'sb ⇒ (-> (spy mb) ⊥))
   (check-type (spy mh) : Type)
   )
 
@@ -51,5 +53,13 @@
   o)
 
 (with-link 'RB ([o mh] [o mb])
-  (spy o))
-
+  ;(#%app- print- mh)
+  (#%app- println- o)
+  (check-type mh : man)
+  (check-type o : man)
+  (check-type man : Type)
+  (check-type sh : (spy mh))
+  o
+  (#%app- println- (spy o))
+  (spy o)
+  )

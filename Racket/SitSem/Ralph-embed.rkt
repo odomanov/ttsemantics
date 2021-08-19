@@ -30,22 +30,21 @@
     (submod ".." common)
     cur/stdlib/sigma
     cur/stdlib/sugar
+    (only-in turnstile
+             define-typed-variable)
     rackunit/turnstile+)
   (provide man mh mb spy sh sb)
   (define-datatype man : Type
     [mh : man]
     [mb : man])
 
-  (define-datatype spymh : Type
-    [sh : spymh])
-  (define-datatype spymb : Type)
-  (define/rec/match spy : man -> Type
-    [mh => spymh]
-    [mb => spymb])
+  (define-datatype spy : (-> man Type)
+    [sh : (spy mh)])
   (check-type (spy mh) : Type)
-  ;(cur-type-check? (spy mh) Type)   ;unbound?
+  (check-type sh : (spy mh))
 
-  (define/rec/match sb : spymb -> ⊥)
+  ;; postulate sb
+  (define-typed-variable sb 'sb ⇒ (-> (spy mb) ⊥))
   (check-type (spy mb) : Type)
   (check-type (¬ (spy mb)) : Type)
   (check-type sb : (¬ (spy mb)))
@@ -66,7 +65,6 @@
   (check-type (pair (λ [m : man] (¬ (spy m))) mb sb) : (Σ man (λ [m : man] (¬ (spy m)))))
 
   )
-
 
 (define-datatype man : Type
   [o : man])
