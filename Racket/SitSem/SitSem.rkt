@@ -46,10 +46,9 @@
 ;; typed begin form.
 ;; the last expression should be typed
 (define-typed-syntax (begint e ... e_last) ≫
-  [⊢ e ≫ e- ⇒ _] ...
   [⊢ e_last ≫ e_last- ⇒ τ_out]
   --------
-  [⊢ (begin- e- ... e_last-) ⇒ τ_out])
+  [⊢ (begin- e ... e_last-) ⇒ τ_out])
 
 (define-typed-syntax (letλ ([x y] ...) e) ≫
   [⊢ y ≫ y- ⇒ τ] ...
