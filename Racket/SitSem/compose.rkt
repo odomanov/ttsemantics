@@ -5,7 +5,7 @@
          (postfix-in - racket/base)
          racket/pretty
          syntax/parse/define  ;define-simple-macro
-         cur/stdlib/sugar
+         (only-in cur/stdlib/sugar let)
          (for-syntax syntax/id-table
                      syntax/stx
                      racket/pretty
@@ -55,7 +55,7 @@
      #'(let- ()
              (local-require- sit)
              (#%app- values-
-                     (letλ ([o1 o2] ...)
+                     (let ([o1 o2] ...)
                            (begint body ...))
                      ...))]))
 

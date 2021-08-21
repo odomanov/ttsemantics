@@ -29,7 +29,6 @@
   (require
     (submod ".." common)
     cur/stdlib/sigma
-    cur/stdlib/sugar
     (only-in turnstile
              define-typed-variable)
     rackunit/turnstile+)
@@ -188,10 +187,6 @@
 (define cpo2
   (Σ RB.man (λ [x : RB.man] (cp-rel o x))))
 
-(check-type
- (pair (λ [x : RB.man] (cp-rel o x))
-       RB.mh omh) : cpo2)
-
 ;; there is an o's counterpart (cpo is not empty)
 (check-type
  (pair (λ [x : RB.man] (cp-rel o x)) RB.mh omh)
@@ -261,7 +256,7 @@
 ;; -----------------------------
 
 (define-datatype cpWR : Type
-  [cp : (Π [xw : man] [xr : RB.man] cpWR)])  ;establishing connection
+  [cp : (Π man RB.man cpWR)])  ;establishing connection
 (define omh4 (cp o RB.mh))
 (define omb4 (cp o RB.mb))
 
