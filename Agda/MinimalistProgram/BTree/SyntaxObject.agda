@@ -328,8 +328,8 @@ Pos→List : {s : SO} → Position s → List SO
 Pos→List (pos p) = Path→List p
 
 -- the last SO in position
-Pos→Last : {s0 : SO} → Position s0 → SO
-Pos→Last (pos {s} p) = s
+Pos→SO : {s0 : SO} → Position s0 → SO
+Pos→SO (pos {s} p) = s
 
 
 internalMerge? : SO → Bool
@@ -383,15 +383,15 @@ sister (pos (x cr)) = just (pos (x cl))
 
 sisterL : {s0 : SO} → Position s0 → Maybe SO
 sisterL (pos c0) = nothing
-sisterL (pos (x cl)) = just (Pos→Last (pos (x cr)))
-sisterL (pos (x cr)) = just (Pos→Last (pos (x cl)))
+sisterL (pos (x cl)) = just (Pos→SO (pos (x cr)))
+sisterL (pos (x cr)) = just (Pos→SO (pos (x cl)))
 
 
 -- the list of c-commanded positions
 c-commanded : {s0 : SO} → Position s0 → List (Position s0)
 c-commanded (pos c0) = []
-c-commanded (pos (x cl)) = map (prependPath (x cr)) (positions (Pos→Last (pos (x cr))))
-c-commanded (pos (x cr)) = map (prependPath (x cl)) (positions (Pos→Last (pos (x cl))))
+c-commanded (pos (x cl)) = map (prependPath (x cr)) (positions (Pos→SO (pos (x cr))))
+c-commanded (pos (x cr)) = map (prependPath (x cl)) (positions (Pos→SO (pos (x cl))))
 
 c-commandedL : {s0 : SO} → Position s0 → List (List SO)
 c-commandedL p = map Pos→List (c-commanded p)

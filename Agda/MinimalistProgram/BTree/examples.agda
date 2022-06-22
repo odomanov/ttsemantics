@@ -356,7 +356,7 @@ module ex8 where
   _ : Pos→List pp41 ≡ so4 ∷ so1 ∷ []
   _ = refl
 
-  _ : Pos→Last pp41 ≡ so1
+  _ : Pos→SO pp41 ≡ so1
   _ = refl
 
   pp42 : Position so4
@@ -365,7 +365,7 @@ module ex8 where
   _ : Pos→List pp42 ≡ so4 ∷ so0 ∷ so1 ∷ []
   _ = refl
 
-  _ : Pos→Last pp42 ≡ so1
+  _ : Pos→SO pp42 ≡ so1
   _ = refl
 
 
