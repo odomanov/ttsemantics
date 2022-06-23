@@ -63,7 +63,7 @@ module features-adger where
   
   data SYNCore : Set where
     cD cN cV cA cP cv cC : SYNCore
-    _⦂_ : (A : SYNType) → (SYNVal A) → SYNCore
+    _⦂_ : (A : SYNType) → SYNVal A → SYNCore
 
 
 module features-ms where
@@ -92,7 +92,7 @@ module features-ms where
   
   data SYNCore : Set where
     cD cN cV cA cP cv : SYNCore
-    _⦂_ : (A : SYNType) → (SYNVal A) → SYNCore
+    _⦂_ : (A : SYNType) → SYNVal A → SYNCore
 
 -- open features-ms
 open features-adger
@@ -129,40 +129,41 @@ instance
   _==_ {{EqTyp}} = _==ᵗ_
 
 private
+
+  mk-cls2 : Name → Name → Maybe Clause
+  mk-cls2 (quote _⦂_) q2 = nothing
+  mk-cls2 q1 (quote _⦂_) = nothing
+  mk-cls2 q1 q2 with primQNameEquality q1 q2
+  ... | true  = just (clause [] (vra (con q1 []) ∷ vra (con q2 []) ∷ [])
+                             (con (quote true)  []))
+  ... | false = just (clause [] (vra (con q1 []) ∷ vra (con q2 []) ∷ [])
+                             (con (quote false) []))
   
-  -- ddef3 : Name → TC ⊤
-  -- ddef3 fname = do
-  --      δ ← getDefinition (quote SYNCore)
-  --      u ← getDefinition (quote SYNVal)
-  --      let constrs-δ = constructors δ
-  --      let constrs-u = constructors u
-  --      let clauses1 = map2Maybe mk-cls2 constrs-δ constrs-δ
-  --      let clauses2 = clause (("x" , (vra (def (quote SYNType) []))) ∷ 
-  --                             ("y" , (vra (def (quote SYNType) []))) ∷ [])
-  --                            (vra (con (quote _⦂_) (vra (var 1) ∷
-  --                                                   vra (con (quote nothing) []) ∷ [])) ∷ 
-  --                             vra (con (quote _⦂_) (vra (var 0) ∷
-  --                                                   vra (con (quote nothing) []) ∷ [])) ∷ [])
-  --                            (def (quote _==_) (vra (var 1 []) ∷ (vra (var 0 []) ∷ []))) ∷ []
-  --      let clauses3 = map2      mk-clsu constrs-u constrs-u
-  --      let clauses4 = clause (("x" , (vra (def (quote SYNCore) []))) ∷ 
-  --                             ("y" , (vra (def (quote SYNCore) []))) ∷ [])
-  --                            ((vra (var 1)) ∷ vra (var 0) ∷ [])
-  --                            (con (quote false) []) ∷ []
-  --      let clauses = clauses1 ++ clauses2 ++ clauses3 ++ clauses4
-  --      defineFun fname clauses
+  ddef3 : Name → TC ⊤
+  ddef3 fname = do
+       δ ← getDefinition (quote SYNCore)
+       let constrs-δ = constructors δ
+       let clauses1 = map2Maybe mk-cls2 constrs-δ constrs-δ   -- skip _⦂_
+       let clause2  = clause (("x1" , (vra (def (quote SYNType) []))) ∷ 
+                              ("x2" , (vra (def (quote SYNType) []))) ∷ 
+                              ("y1" , (vra (def (quote SYNVal) (vra (var 1 []) ∷ [])))) ∷ 
+                              ("y2" , (vra (def (quote SYNVal) (vra (var 1 []) ∷ [])))) ∷ [])
+                             (vra (con (quote _⦂_) (vra (var 2) ∷ vra (var 0) ∷ [])) ∷ 
+                              vra (con (quote _⦂_) (vra (var 3) ∷ vra (var 1) ∷ [])) ∷ [])
+                             (def (quote _∧_) (vra (def (quote _==_) (vra (var 3 []) ∷
+                                                                     (vra (var 2 []) ∷ []))) ∷
+                                               vra (def (quote _==_) (vra (var 1 []) ∷
+                                                                     (vra (var 0 []) ∷ []))) ∷
+                                               [])) ∷ []
+       let clause3  = clause (("x" , (vra (def (quote SYNCore) []))) ∷         -- "false" clause
+                              ("y" , (vra (def (quote SYNCore) []))) ∷ [])
+                             ((vra (var 1)) ∷ vra (var 0) ∷ [])
+                             (con (quote false) []) ∷ []
+       let clauses = clauses1 ++ clause2 ++ clause3
+       defineFun fname clauses
 
   _==ᶠ_ : SYNCore → SYNCore → Bool
-  -- unquoteDef _==ᶠ_ = ddef3 _==ᶠ_
-  cD ==ᶠ cD = true    
-  cN ==ᶠ cN = true   
-  cV ==ᶠ cV = true   
-  cA ==ᶠ cA = true   
-  cP ==ᶠ cP = true   
-  cv ==ᶠ cv = true
-  cC ==ᶠ cC = true
-  (x1 ⦂ y1) ==ᶠ (x2 ⦂ y2) = (x1 == x2) ∧ (y1 == y2)
-  _ ==ᶠ _ = false
+  unquoteDef _==ᶠ_ = ddef3 _==ᶠ_
   
 
 instance
@@ -363,3 +364,33 @@ private
 
 
 
+-- -- Hierarchy of projections  
+-- -- This is actually a feature list (or partial order?)
+-- data HoP : Set where
+--   ∅   : HoP
+--   _⟩_ : {A : SYNType} → (x : SYNVal A) → HoP → HoP
+
+-- infixr 5 _⟩_ 
+
+-- vHoP : HoP
+-- vHoP = v ⟩ V ⟩ ∅
+
+
+-- HoP' = SYNList
+
+-- vHoP' : HoP'
+-- vHoP' = v ∷ V ∷ []
+
+-- _∣ : {A : SYNType} → SYNVal A → HoP'
+-- _∣ x = x ∷ []
+
+-- _⟩'_ : {A : SYNType} → SYNVal A → HoP' → HoP'
+-- x ⟩' y = x ∷ y
+
+-- infixr 3 _⟩'_
+-- infix  5 _∣
+
+-- vHoP'' : HoP'
+-- vHoP'' = v ⟩' V ∣
+
+-- sHoP = T ⟩ v ⟩ V ⟩ ∅

@@ -37,18 +37,3 @@ mk-cls q1 q2 with primQNameEquality q1 q2
 ... | true  = clause [] (vra (con q1 []) ∷ vra (con q2 []) ∷ []) (con (quote true)  [])
 ... | false = clause [] (vra (con q1 []) ∷ vra (con q2 []) ∷ []) (con (quote false) [])
 
--- mk-cls2 : Name → Name → Maybe Clause
--- mk-cls2 (quote _⦂_) q2 = nothing
--- mk-cls2 q1 (quote _⦂_) = nothing
--- mk-cls2 q1 q2 with primQNameEquality q1 q2
--- ... | true  = just (clause [] (vra (con q1 []) ∷ vra (con q2 []) ∷ []) (con (quote true)  []))
--- ... | false = just (clause [] (vra (con q1 []) ∷ vra (con q2 []) ∷ []) (con (quote false) []))
-
--- mk-clsu : Name → Name → Clause
--- mk-clsu q1 q2 = clause (("x" , (vra (def (quote SYNType) []))) ∷ 
---                         ("y" , (vra (def (quote SYNType) []))) ∷ [])
---                        (vra (con (quote _⦂_) (vra (var 1) ∷
---                                               vra (con (quote just) (vra (con q1 []) ∷ [])) ∷ [])) ∷ 
---                         vra (con (quote _⦂_) (vra (var 0) ∷
---                                               vra (con (quote just) (vra (con q2 []) ∷ [])) ∷ [])) ∷ [])
---                        (def (quote _==_) ((vra (con q1 [])) ∷ ((vra (con q2 [])) ∷ [])))
