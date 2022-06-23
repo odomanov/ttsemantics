@@ -119,15 +119,15 @@ LA→Label x = LI→Label (LAhead x)
 
 -- Syntax object
 data SO : Set where
-  ⟦_⊣⟧    : LexArr → SO                      -- selected (from LexArr)
+  ⟦_⟧    : LexArr → SO                      -- selected (from LexArr)
   ⟦_-_-_⟧ : Maybe Label → SO → SO → SO       -- merge
 
--- infix 7 ⟦_⊣⟧
+-- infix 7 ⟦_⟧
 infixr 6 ⟦_-_-_⟧
 
 instance
   EqSO : Eq SO SO
-  _==_ ⦃ EqSO ⦄ ⟦ x1 ⊣⟧ ⟦ x2 ⊣⟧ = x1 == x2 
+  _==_ ⦃ EqSO ⦄ ⟦ x1 ⟧ ⟦ x2 ⟧ = x1 == x2 
   _==_ ⦃ EqSO ⦄ ⟦ x1 - s11 - s12 ⟧ ⟦ x2 - s21 - s22 ⟧ =
        x1 == x2 ∧ ((s11 == s21 ∧ s12 == s22) ∨ (s11 == s22 ∧ s12 == s21)) -- no order 
   _==_ ⦃ EqSO ⦄ _ _ = false
@@ -136,16 +136,16 @@ instance
 
 -- the label of SO
 lbl : SO → Maybe Label
-lbl ⟦ x ⊣⟧ = just (LA→Label x)
+lbl ⟦ x ⟧ = just (LA→Label x)
 lbl ⟦ x - _ - _ ⟧ = x
 
 -- decomposing Merge  (???)
 unMergel : SO → SO
-unMergel ⟦ x ⊣⟧ = ⟦ x ⊣⟧
+unMergel ⟦ x ⟧ = ⟦ x ⟧
 unMergel ⟦ _ - s - _ ⟧ = s
 
 unMerger : SO → SO
-unMerger ⟦ x ⊣⟧ = ⟦ x ⊣⟧
+unMerger ⟦ x ⟧ = ⟦ x ⟧
 unMerger ⟦ _ - _ - s ⟧ = s
 
 
@@ -164,7 +164,7 @@ _is-max s = is-maxˡ-Maybe (lbl s)
 
 -- minimal projection
 _is-min : SO → Bool
-⟦ _ ⊣⟧ is-min = true
+⟦ _ ⟧ is-min = true
 _ is-min = false
 
 
@@ -214,35 +214,35 @@ data DTree : Set where
   Merge  : DTree → DTree → DTree
 
 DTree→SO : DTree → SO
-DTree→SO (Select x)     = ⟦ x ⊣⟧
+DTree→SO (Select x)     = ⟦ x ⟧
 DTree→SO (Merge s₁ s₂)  = ⟦ LMerge  (lbl so₁) (lbl so₂) - so₁ - so₂ ⟧
   where
   so₁ = DTree→SO s₁
   so₂ = DTree→SO s₂
 
 SO→DTree : SO → DTree
-SO→DTree ⟦ x ⊣⟧ = Select x
+SO→DTree ⟦ x ⟧ = Select x
 SO→DTree ⟦ _ - s1 - s2 ⟧ = Merge (SO→DTree s1) (SO→DTree s2) 
 
 
 -- ???  -- very strange definition
 -- map : (SO → SO) → SO → SO
--- map f s@(⟦ _ ⊣⟧) = f s
+-- map f s@(⟦ _ ⟧) = f s
 -- map f ⟦ _ - s1 - s2 ⟧ = ⟦ LMerge (lbl s1') (lbl s2') - s1' - s2' ⟧
 --   where
 --   s1' = map f s1
 --   s2' = map f s2
 
 foldl : {A : Set} → (SO → SO → A → A) → A → SO → A
-foldl _ a ⟦ x ⊣⟧ = a
+foldl _ a ⟦ x ⟧ = a
 foldl f a ⟦ _ - s1 - s2 ⟧ = foldl f (foldl f (f s1 s2 a) s1) s2
 
 foldr : {A : Set} → (SO → A → A → A) → (SO → A) → SO → A
-foldr _ g s@(⟦ _ ⊣⟧) = g s
+foldr _ g s@(⟦ _ ⟧) = g s
 foldr f g s@(⟦ _ - s1 - s2 ⟧) = f s (foldr f g s1) (foldr f g s2)
 
 foldrLbl : {A : Set} → (Maybe Label → A → A → A) → (Label → A) → SO → A
-foldrLbl _ g ⟦ x ⊣⟧ = g (LA→Label x)
+foldrLbl _ g ⟦ x ⟧ = g (LA→Label x)
 foldrLbl f g ⟦ x - s1 - s2 ⟧ = f x (foldrLbl f g s1) (foldrLbl f g s2) 
 
 
@@ -277,7 +277,7 @@ Constituents so = foldl f (so ∷ []) so
 
 -- another definition (equivalent actually)
 Constituents' : SO → List SO
-Constituents' s@(⟦ _ ⊣⟧) = s ∷ []
+Constituents' s@(⟦ _ ⟧) = s ∷ []
 Constituents' s@(⟦ _ - s1 - s2 ⟧) = s ∷ (Constituents' s1 ++ Constituents' s2)
 
 
@@ -308,7 +308,7 @@ path s0 to s = s0 contains s
 -- t1 s s0 (cr p) = {!!}
 
 -- t2 : (s s0 : SO) → s0 containsᵇ s ≡ true → s0 contains s
--- t2 ⟦ x ⊣⟧ s p = {!c0!}
+-- t2 ⟦ x ⟧ s p = {!c0!}
 -- t2 ⟦ x - s1 - s2 ⟧ s p = {!!}
 
 
@@ -333,7 +333,7 @@ Pos→SO (pos {s} p) = s
 
 
 internalMerge? : SO → Bool
-internalMerge? ⟦ _ ⊣⟧ = false           -- not a Merge
+internalMerge? ⟦ _ ⟧ = false           -- not a Merge
 internalMerge? ⟦ _ - s₁ - s₂ ⟧ = (s₁ containsᵇ s₂) ∨ (s₂ containsᵇ s₁)
 
 
@@ -353,7 +353,7 @@ prependPath c (pos x) = pos (c > x)
 
 -- all paths starting from s0
 positions : (s0 : SO) → List (Position s0)
-positions ⟦ _ ⊣⟧ = pos c0 ∷ []
+positions ⟦ _ ⟧ = pos c0 ∷ []
 positions ⟦ _ - s1 - s2 ⟧ = pos c0 ∷ map (prependPath (c0 cl)) (positions s1) ++
                                      map (prependPath (c0 cr)) (positions s2) 
 

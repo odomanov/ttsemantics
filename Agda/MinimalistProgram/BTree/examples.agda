@@ -30,20 +30,20 @@ module ex9 where
   vˡᵃ    = vˡⁱ ∷ careˡᵃ
   Tˡᵃ    = Tˡⁱ ∷ vˡᵃ
 
-  that = ⟦ thatˡᵃ ⊣⟧
-  I    = ⟦ Iˡᵃ ⊣⟧
-  care = ⟦ careˡᵃ ⊣⟧
-  v    = ⟦ vˡᵃ ⊣⟧
-  T    = ⟦ Tˡᵃ ⊣⟧
+  that = ⟦ thatˡᵃ ⟧
+  I    = ⟦ Iˡᵃ ⟧
+  care = ⟦ careˡᵃ ⟧
+  v    = ⟦ vˡᵃ ⟧
+  T    = ⟦ Tˡᵃ ⟧
 
-  stc = Merge (Select thatˡᵃ)
+  dtc = Merge (Select thatˡᵃ)
               (Merge (Select Iˡᵃ)
                      (Merge (Select Tˡᵃ)
                             (Merge (Select Iˡᵃ)
                                    (Merge (Select vˡᵃ)
                                           (Select careˡᵃ)))))
 
-  soc = DTree→SO stc
+  soc = DTree→SO dtc
 
   _ : soc ≡ ⟦ ("that" ∷ []) ∙ [] ∙ (Cᶠ ∷ []) ∙ []
               - that
@@ -74,21 +74,21 @@ module ex9 where
   T2ˡᵃ         = T2ˡⁱ ∷ v2ˡᵃ
   C2ˡᵃ         = Cˡⁱ ∷ T2ˡᵃ
 
-  prove      = ⟦ proveˡᵃ ⊣⟧
-  everything = ⟦ everythingˡᵃ ⊣⟧
-  v2         = ⟦ v2ˡᵃ ⊣⟧
-  T2         = ⟦ T2ˡᵃ ⊣⟧
-  C2         = ⟦ C2ˡᵃ ⊣⟧
+  prove      = ⟦ proveˡᵃ ⟧
+  everything = ⟦ everythingˡᵃ ⟧
+  v2         = ⟦ v2ˡᵃ ⟧
+  T2         = ⟦ T2ˡᵃ ⟧
+  C2         = ⟦ C2ˡᵃ ⟧
 
-  st = Merge (Select C2ˡᵃ)
-             (Merge stc
+  dt = Merge (Select C2ˡᵃ)
+             (Merge dtc
                     (Merge (Select T2ˡᵃ)
-                           (Merge stc
+                           (Merge dtc
                                   (Merge (Select v2ˡᵃ)
                                          (Merge (Select proveˡᵃ)
                                                 (Select everythingˡᵃ))))))
 
-  so = DTree→SO st
+  so = DTree→SO dt
 
   _ : so ≡ ⟦ ("C" ∷ []) ∙ [] ∙ (Cᶠ ∷ []) ∙ []
              - C2
@@ -105,16 +105,16 @@ module ex9 where
                                  - everything ⟧ ⟧ ⟧ ⟧ ⟧ ⟧
   _ = refl                                 
 
-  st0 = Merge (Select proveˡᵃ) (Select everythingˡᵃ)
-  st1 = Merge (Select v2ˡᵃ) st0
-  st2 = Merge stc st1
-  st3 = Merge (Select T2ˡᵃ) st2
-  st4 = Merge stc st3
-  so0 = DTree→SO st0
-  so1 = DTree→SO st1
-  so2 = DTree→SO st2
-  so3 = DTree→SO st3
-  so4 = DTree→SO st4
+  dt0 = Merge (Select proveˡᵃ) (Select everythingˡᵃ)
+  dt1 = Merge (Select v2ˡᵃ) dt0
+  dt2 = Merge dtc dt1
+  dt3 = Merge (Select T2ˡᵃ) dt2
+  dt4 = Merge dtc dt3
+  so0 = DTree→SO dt0
+  so1 = DTree→SO dt1
+  so2 = DTree→SO dt2
+  so3 = DTree→SO dt3
+  so4 = DTree→SO dt4
 
 
   _ : chainL soc so ≡ (so ∷ so4 ∷ soc ∷ [])
@@ -429,23 +429,23 @@ module ex6 where
   loveˡᵃ       = loveˡⁱ ∷ Peterˡᵃ
   whichˡᵃ      = whichˡⁱ ∷ loveˡᵃ
 
-  picture    = ⟦ pictureˡᵃ ⊣⟧
-  of-himself = ⟦ of-himselfˡᵃ ⊣⟧
-  Peter      = ⟦ Peterˡᵃ ⊣⟧
-  love       = ⟦ loveˡᵃ ⊣⟧
-  which      = ⟦ whichˡᵃ ⊣⟧
+  picture    = ⟦ pictureˡᵃ ⟧
+  of-himself = ⟦ of-himselfˡᵃ ⟧
+  Peter      = ⟦ Peterˡᵃ ⟧
+  love       = ⟦ loveˡᵃ ⟧
+  which      = ⟦ whichˡᵃ ⟧
 
-  stw = Merge (Select whichˡᵃ)
+  dtw = Merge (Select whichˡᵃ)
               (Merge (Select of-himselfˡᵃ)
                      (Select pictureˡᵃ))
                      
-  st = Merge stw
+  dt = Merge dtw
              (Merge (Select Peterˡᵃ)
                     (Merge (Select loveˡᵃ)
-                           stw))
+                           dtw))
 
-  sow = DTree→SO stw
-  so = DTree→SO st
+  sow = DTree→SO dtw
+  so = DTree→SO dt
 
   _ : so ≡ ⟦ ("love" ∷ []) ∙ [] ∙ V ∷ [] ∙ []  --("which" ∷ []) ∙ [] ∙ Wh:* ∷ [] ∙ []  
              - ⟦ ("which" ∷ []) ∙ [] ∙ Wh:* ∷ [] ∙ []
@@ -479,12 +479,12 @@ module ex6 where
   _ : so-wrong ≡ ⟦ nothing - Peter - picture ⟧
   _ = refl             
 
-  st0 = Merge (Select of-himselfˡᵃ) (Select pictureˡᵃ)
-  st1 = Merge (Select loveˡᵃ) stw
-  st2 = Merge (Select Peterˡᵃ) st1
-  so0 = DTree→SO st0
-  so1 = DTree→SO st1
-  so2 = DTree→SO st2
+  dt0 = Merge (Select of-himselfˡᵃ) (Select pictureˡᵃ)
+  dt1 = Merge (Select loveˡᵃ) dtw
+  dt2 = Merge (Select Peterˡᵃ) dt1
+  so0 = DTree→SO dt0
+  so1 = DTree→SO dt1
+  so2 = DTree→SO dt2
 
   _ : positions so ≡ pos c0 
                    ∷ pos (c0 cl) 
@@ -553,19 +553,19 @@ module ex51 where
   Машаˡᵃ = Машаˡⁱ ∷ vˡᵃ
   кашуˡᵃ = кашуˡⁱ ∷ Машаˡᵃ
   
-  Маша      = ⟦ Машаˡᵃ ⊣⟧
-  ела       = ⟦ елаˡᵃ ⊣⟧
-  кашу      = ⟦ кашуˡᵃ ⊣⟧
-  v         = ⟦ vˡᵃ ⊣⟧
+  Маша      = ⟦ Машаˡᵃ ⟧
+  ела       = ⟦ елаˡᵃ ⟧
+  кашу      = ⟦ кашуˡᵃ ⟧
+  v         = ⟦ vˡᵃ ⟧
 
-  stv = Merge (Select vˡᵃ)
+  dtv = Merge (Select vˡᵃ)
               (Merge (Select елаˡᵃ)
                      (Select кашуˡᵃ))
                      
-  st = Merge (Select Машаˡᵃ) stv
+  dt = Merge (Select Машаˡᵃ) dtv
 
-  sov = DTree→SO stv
-  so = DTree→SO st
+  sov = DTree→SO dtv
+  so = DTree→SO dt
 
   _ : sov ≡ ⟦ ("v" ∷ []) ∙ [] ∙ vᶠ ∷ [] ∙ N ∷ [] 
               - v 
@@ -628,15 +628,15 @@ module ex3 where
   Cˡᵃ    = Cˡⁱ ∷ Tˡᵃ
 
   -- Syntax Objects
-  что  = ⟦ чтоˡᵃ ⊣⟧
-  есть = ⟦ естьˡᵃ ⊣⟧
-  Миша = ⟦ Мишаˡᵃ ⊣⟧
-  v = ⟦ vˡᵃ ⊣⟧
-  T = ⟦ Tˡᵃ ⊣⟧
-  C = ⟦ Cˡᵃ ⊣⟧
+  что  = ⟦ чтоˡᵃ ⟧
+  есть = ⟦ естьˡᵃ ⟧
+  Миша = ⟦ Мишаˡᵃ ⟧
+  v = ⟦ vˡᵃ ⟧
+  T = ⟦ Tˡᵃ ⟧
+  C = ⟦ Cˡᵃ ⟧
 
   -- Syntax Tree
-  st = Merge (Select чтоˡᵃ)
+  dt = Merge (Select чтоˡᵃ)
              (Merge (Select Cˡᵃ)
                     (Merge (Select Мишаˡᵃ)
                            (Merge (Select Tˡᵃ)
@@ -646,7 +646,7 @@ module ex3 where
                                                        (Select чтоˡᵃ)))))))
 
   -- Syntax Object
-  so = DTree→SO st
+  so = DTree→SO dt
 
   _ : so ≡ ⟦ ("C" ∷ []) ∙ [] ∙ Cᶠ ∷ [] ∙ [] 
              - что 
@@ -688,20 +688,20 @@ module ex3 where
   _ : edgesNum so ≡ 14
   _ = refl
   
-  st0 = Merge (Select естьˡᵃ) (Select чтоˡᵃ)
-  st1 = Merge (Select vˡᵃ) st0
-  st2 = Merge (Select Мишаˡᵃ) st1
-  st3 = Merge (Select Tˡᵃ) st2
-  st4 = Merge (Select Мишаˡᵃ) st3
-  st5 = Merge (Select Cˡᵃ) st4
-  st6 = Merge (Select чтоˡᵃ) st5
-  so0 = DTree→SO st0
-  so1 = DTree→SO st1
-  so2 = DTree→SO st2
-  so3 = DTree→SO st3
-  so4 = DTree→SO st4
-  so5 = DTree→SO st5
-  so6 = DTree→SO st6
+  dt0 = Merge (Select естьˡᵃ) (Select чтоˡᵃ)
+  dt1 = Merge (Select vˡᵃ) dt0
+  dt2 = Merge (Select Мишаˡᵃ) dt1
+  dt3 = Merge (Select Tˡᵃ) dt2
+  dt4 = Merge (Select Мишаˡᵃ) dt3
+  dt5 = Merge (Select Cˡᵃ) dt4
+  dt6 = Merge (Select чтоˡᵃ) dt5
+  so0 = DTree→SO dt0
+  so1 = DTree→SO dt1
+  so2 = DTree→SO dt2
+  so3 = DTree→SO dt3
+  so4 = DTree→SO dt4
+  so5 = DTree→SO dt5
+  so6 = DTree→SO dt6
 
   _ : so ≡ so6
   _ = refl
@@ -830,9 +830,9 @@ module ex1 where
   Johnˡᵃ : LexArr
   Johnˡᵃ = Johnˡⁱ ∷ runˡᵃ
   
-  John = ⟦ Johnˡᵃ ⊣⟧
-  run  = ⟦ runˡᵃ  ⊣⟧
-  v    = ⟦ vˡᵃ    ⊣⟧
+  John = ⟦ Johnˡᵃ ⟧
+  run  = ⟦ runˡᵃ  ⟧
+  v    = ⟦ vˡᵃ    ⟧
   
   s01 = Select runˡᵃ
   s02 = Select Johnˡᵃ
@@ -871,7 +871,7 @@ module ex1 where
   fastˡⁱ = mkLI fastᵖ [] (A ∷ []) []
   fastˡᵃ : LexArr
   fastˡᵃ = fastˡⁱ ∷ runˡᵃ
-  fast = ⟦ fastˡᵃ ⊣⟧
+  fast = ⟦ fastˡᵃ ⟧
   
   s04 = Select fastˡᵃ
   s3  = Merge s04 s2
@@ -898,11 +898,11 @@ module ex1 where
   
   Maryˡᵃ : LexArr
   Maryˡᵃ = Maryˡⁱ ∷ runˡᵃ
-  Mary = ⟦ Maryˡᵃ ⊣⟧
+  Mary = ⟦ Maryˡᵃ ⟧
 
   run₂ˡᵃ : LexArr
   run₂ˡᵃ = runˡⁱ ∷ Maryˡᵃ
-  run₂ = ⟦ run₂ˡᵃ ⊣⟧
+  run₂ = ⟦ run₂ˡᵃ ⟧
 
   s05 = Select Maryˡᵃ
   
@@ -918,7 +918,7 @@ module ex1 where
   
   loveˡᵃ : LexArr
   loveˡᵃ = loveˡⁱ ∷ run₂ˡᵃ
-  love = ⟦ loveˡᵃ ⊣⟧
+  love = ⟦ loveˡᵃ ⟧
   
   -- John loves Mary
   s6 = Merge (Select Johnˡᵃ)
@@ -1000,10 +1000,10 @@ module ex1 where
   _ : internalMerge? so5 ≡ false
   _ = refl
 
-  _ : Constituents so6 ≡ so6 ∷ John ∷ so8 ∷ ⟦ loveˡᵃ ⊣⟧ ∷ Mary ∷ []   
+  _ : Constituents so6 ≡ so6 ∷ John ∷ so8 ∷ ⟦ loveˡᵃ ⟧ ∷ Mary ∷ []   
   _ = refl
 
-  _ : Constituents so8 ≡ so8 ∷ ⟦ loveˡᵃ ⊣⟧ ∷ Mary ∷ []   
+  _ : Constituents so8 ≡ so8 ∷ ⟦ loveˡᵃ ⟧ ∷ Mary ∷ []   
   _ = refl
 
   _ : so6 containsᵇ John ≡ true
@@ -1012,7 +1012,7 @@ module ex1 where
   _ : internalMerge? so6 ≡ false
   _ = refl
 
-  _ : Constituents so7 ≡ so7 ∷ so6 ∷ Mary ∷ John ∷ so8 ∷ ⟦ loveˡᵃ ⊣⟧ ∷ Mary ∷ []   
+  _ : Constituents so7 ≡ so7 ∷ so6 ∷ Mary ∷ John ∷ so8 ∷ ⟦ loveˡᵃ ⟧ ∷ Mary ∷ []   
   _ = refl
 
   _ : internalMerge? so7 ≡ true
