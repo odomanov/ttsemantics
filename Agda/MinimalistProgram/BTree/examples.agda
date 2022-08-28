@@ -117,7 +117,7 @@ module ex9 where
   so4 = DTree→SO dt4
 
 
-  _ : chainL soc so ≡ (so ∷ so4 ∷ soc ∷ [])
+  _ : chainSO soc so ≡ (so ∷ so4 ∷ soc ∷ [])
                     ∷ (so ∷ so4 ∷ so3 ∷ so2 ∷ soc ∷ [])
                     ∷ []
   _ = refl
@@ -309,23 +309,23 @@ module ex8 where
   _ = refl
 
 
-  _ : chainL so1 so1 ≡ (so1 ∷ []) ∷ []
+  _ : chainSO so1 so1 ≡ (so1 ∷ []) ∷ []
   _ = refl
 
-  _ : chainL so1 so0 ≡ (so0 ∷ so1 ∷ [])
+  _ : chainSO so1 so0 ≡ (so0 ∷ so1 ∷ [])
                     ∷ []
   _ = refl
 
-  _ : chainL so1 so4 ≡ (so4 ∷ so1 ∷ [])
+  _ : chainSO so1 so4 ≡ (so4 ∷ so1 ∷ [])
                     ∷ (so4 ∷ so0 ∷ so1 ∷ [])
                     ∷ []
   _ = refl
 
-  _ : chainL so0 so4 ≡ (so4 ∷ so0 ∷ [])
+  _ : chainSO so0 so4 ≡ (so4 ∷ so0 ∷ [])
                     ∷ []
   _ = refl
 
-  _ : chainL so2 so4 ≡ (so4 ∷ so0 ∷ so2 ∷ [])
+  _ : chainSO so2 so4 ≡ (so4 ∷ so0 ∷ so2 ∷ [])
                     ∷ []
   _ = refl
 
@@ -530,7 +530,7 @@ module ex6 where
                     ∷ []
   _ = refl
 
-  _ : chainL sow so ≡ (so ∷ sow ∷ [])
+  _ : chainSO sow so ≡ (so ∷ sow ∷ [])
                     ∷ (so ∷ so2 ∷ so1 ∷ sow ∷ [])
                     ∷ []
   _ = refl                   
@@ -723,7 +723,7 @@ module ex3 where
                       (so ∷ so5 ∷ so4 ∷ so3 ∷ so2 ∷ so1 ∷ so0 ∷ что ∷ []) ∷ []
   _ = refl                      
 
-  _ : chainL Миша so ≡ (so ∷ so5 ∷ so4 ∷ Миша ∷ []) ∷
+  _ : chainSO Миша so ≡ (so ∷ so5 ∷ so4 ∷ Миша ∷ []) ∷
                        (so ∷ so5 ∷ so4 ∷ so3 ∷ so2 ∷ Миша ∷ []) ∷
                        []
   _ = refl
@@ -737,10 +737,10 @@ module ex3 where
   _ : sister (pos p1) ≡ just (pos (c0 cr cr cr))
   _ = refl
 
-  _ : sisterL (pos p1) ≡ just so3
+  _ : sisterSO (pos p1) ≡ just so3
   _ = refl
 
-  _ : sisterL (pos p2) ≡ just so1
+  _ : sisterSO (pos p2) ≡ just so1
   _ = refl
 
 
@@ -752,7 +752,7 @@ module ex3 where
                            ∷ []
   _ = refl
 
-  _ : c-commandedL (pos p2) ≡  
+  _ : c-commandedSO (pos p2) ≡  
           (so ∷ so5 ∷ so4 ∷ so3 ∷ so2 ∷ so1 ∷ [])
         ∷ (so ∷ so5 ∷ so4 ∷ so3 ∷ so2 ∷ so1 ∷ v ∷ [])
         ∷ (so ∷ so5 ∷ so4 ∷ so3 ∷ so2 ∷ so1 ∷ so0 ∷ [])
@@ -761,7 +761,8 @@ module ex3 where
         ∷ []
   _ = refl
 
-  _ : c-commandedL {so} (pos (c0 cr cr cr cr cr)) ≡ (so ∷ so5 ∷ so4 ∷ so3 ∷ so2 ∷ Миша ∷ []) ∷ []
+  _ : c-commandedSO {so} (pos (c0 cr cr cr cr cr)) ≡
+         (so ∷ so5 ∷ so4 ∷ so3 ∷ so2 ∷ Миша ∷ []) ∷ []
   _ = refl
          
 

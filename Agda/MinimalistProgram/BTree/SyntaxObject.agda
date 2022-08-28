@@ -381,10 +381,10 @@ sister (pos c0) = nothing
 sister (pos (x cl)) = just (pos (x cr))
 sister (pos (x cr)) = just (pos (x cl))
 
-sisterL : {s0 : SO} → Position s0 → Maybe SO
-sisterL (pos c0) = nothing
-sisterL (pos (x cl)) = just (Pos→SO (pos (x cr)))
-sisterL (pos (x cr)) = just (Pos→SO (pos (x cl)))
+sisterSO : {s0 : SO} → Position s0 → Maybe SO
+sisterSO (pos c0) = nothing
+sisterSO (pos (x cl)) = just (Pos→SO (pos (x cr)))
+sisterSO (pos (x cr)) = just (Pos→SO (pos (x cl)))
 
 
 -- the list of c-commanded positions
@@ -393,13 +393,13 @@ c-commanded (pos c0) = []
 c-commanded (pos (x cl)) = map (prependPath (x cr)) (positions (Pos→SO (pos (x cr))))
 c-commanded (pos (x cr)) = map (prependPath (x cl)) (positions (Pos→SO (pos (x cl))))
 
-c-commandedL : {s0 : SO} → Position s0 → List (List SO)
-c-commandedL p = map Pos→List (c-commanded p)
+c-commandedSO : {s0 : SO} → Position s0 → List (List SO)
+c-commandedSO p = map Pos→List (c-commanded p)
 
 
 -- chain = List of positions
-chainL : SO → SO → List (List SO)
-chainL s s0 = flt (lasteq s) [] (positionsSO s0)
+chainSO : SO → SO → List (List SO)
+chainSO s s0 = flt (lasteq s) [] (positionsSO s0)
   where
   lasteq : SO → List SO → Bool
   lasteq s [] = false
