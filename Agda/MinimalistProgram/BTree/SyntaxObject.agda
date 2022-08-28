@@ -358,12 +358,12 @@ positions ⟦ _ - s1 - s2 ⟧ = pos c0 ∷ map (prependPath (c0 cl)) (positions 
                                      map (prependPath (c0 cr)) (positions s2) 
 
 -- positions/paths as List
-positionsL : SO → List (List SO)
-positionsL so = map Pos→List (positions so)
+positionsSO : SO → List (List SO)
+positionsSO so = map Pos→List (positions so)
 
 -- alternative definition
-positionsL' : SO → List (List SO)
-positionsL' s = foldr f g s
+positionsSO' : SO → List (List SO)
+positionsSO' s = foldr f g s
   where
   append : SO → List (List SO) → List (List SO)
   append s [] = []
@@ -399,7 +399,7 @@ c-commandedL p = map Pos→List (c-commanded p)
 
 -- chain = List of positions
 chainL : SO → SO → List (List SO)
-chainL s s0 = flt (lasteq s) [] (positionsL s0)
+chainL s s0 = flt (lasteq s) [] (positionsSO s0)
   where
   lasteq : SO → List SO → Bool
   lasteq s [] = false

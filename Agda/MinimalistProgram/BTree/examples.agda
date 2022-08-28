@@ -285,19 +285,19 @@ module ex8 where
   _ = refl
 
   
-  _ : positionsL so1 ≡ (so1 ∷ []) ∷ []
+  _ : positionsSO so1 ≡ (so1 ∷ []) ∷ []
   _ = refl
 
-  _ : positionsL so2 ≡ (so2 ∷ []) ∷ []
+  _ : positionsSO so2 ≡ (so2 ∷ []) ∷ []
   _ = refl
 
-  _ : positionsL so0 ≡ (so0 ∷ []) 
+  _ : positionsSO so0 ≡ (so0 ∷ []) 
                      ∷ (so0 ∷ so1 ∷ []) 
                      ∷ (so0 ∷ so2 ∷ []) 
                      ∷ []
   _ = refl          
                     
-  _ : positionsL so4 ≡ (so4 ∷ [])
+  _ : positionsSO so4 ≡ (so4 ∷ [])
                      ∷ (so4 ∷ so1 ∷ [])
                      ∷ (so4 ∷ so0 ∷ [])
                      ∷ (so4 ∷ so0 ∷ so1 ∷ [])
@@ -305,7 +305,7 @@ module ex8 where
                      ∷ []
   _ = refl
 
-  _ : positionsL' so4 ≡ positionsL so4
+  _ : positionsSO' so4 ≡ positionsSO so4
   _ = refl
 
 
@@ -504,7 +504,7 @@ module ex6 where
                    ∷ []
   _ = refl
 
-  _ : positionsL sow ≡ (sow ∷ [])
+  _ : positionsSO sow ≡ (sow ∷ [])
                      ∷ (sow ∷ which ∷ [])
                      ∷ (sow ∷ so0 ∷ [])
                      ∷ (sow ∷ so0 ∷ of-himself ∷ [])
@@ -512,7 +512,7 @@ module ex6 where
                      ∷ []
   _ = refl
 
-  _ : positionsL so ≡ (so ∷ [])
+  _ : positionsSO so ≡ (so ∷ [])
                     ∷ (so ∷ sow ∷ [])
                     ∷ (so ∷ sow ∷ which ∷ [])
                     ∷ (so ∷ sow ∷ so0 ∷ [])
@@ -706,7 +706,7 @@ module ex3 where
   _ : so ≡ so6
   _ = refl
 
-  _ : positionsL so ≡ (so ∷ []) ∷
+  _ : positionsSO so ≡ (so ∷ []) ∷
                       (so ∷ что ∷ []) ∷
                       (so ∷ so5 ∷ []) ∷ 
                       (so ∷ so5 ∷ C ∷ []) ∷ 
