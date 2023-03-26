@@ -2,11 +2,13 @@
 
 ## Agda
 
-* `Contexts` — Contexts in natural language semantics. Records
-  and modules.
+* [`MontagueTT`](Agda/MontagueTT/Readme.md) — Montague-like
+  type-theoretical natural language semantics.
+* `Contexts` — Contexts in natural language semantics. Records and modules.
 * `IntensionalLogic` — Monads in intensional logic.
+* `FuzzyTT` — A variant of P.Martin-Löf ’s intuitionistic type theory with
+  fuzzy type membership.
 * `Experiments` — Various experiments.
-* `FuzzyTT` — A variant of P.Martin-Löf ’s intuitionistic type theory with fuzzy type membership.
 
 ## Coq
 
