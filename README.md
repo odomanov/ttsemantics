@@ -2,7 +2,7 @@
 
 ## Agda
 
-* [`MontagueTT`](Agda/MontagueTT/Readme.md) — Montague-like
+* [`MontagueTT`](Agda/MontagueTT/) — Montague-like
   type-theoretical natural language semantics.
 * `Contexts` — Contexts in natural language semantics. Records and modules.
 * `IntensionalLogic` — Monads in intensional logic.
