@@ -16,7 +16,7 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subs
 open import Relation.Nullary renaming (no to not)  --using (Dec; yes; ¬_) 
 open import Relation.Nullary.Decidable.Core using (map′)
 
-open import EqReflection2
+open import ReflectionEq
 
 module _ where
 
@@ -196,7 +196,7 @@ module Semantics (nameCN namePN nameVI nameVT nameAdj : Set)
       g refl = refl
 
     _≟DET_ : (x y : sDET) → Dec (x ≡ y)
-    unquoteDef _≟DET_ = ddef (quote sDET) _≟DET_ 
+    unquoteDef _≟DET_ = defDecEq (quote sDET) _≟DET_ 
 
     _≟NP_ : {cx cy : sCN} (x : sNP cx) (y : sNP cy) → Dec ((cx , x) ≡ (cy , y))
     _≟NP_ {cx} {cy} (np-pn x) (np-pn y) = map′ f g (x ≟PN y )
@@ -498,10 +498,10 @@ postulate
 -- разрешимое равенство для имён
 
 eqCN : (x y : nameCN) → Dec (x ≡ y)
-unquoteDef eqCN = ddef (quote nameCN) eqCN 
+unquoteDef eqCN = defDecEq (quote nameCN) eqCN 
 
 eqPN : (x y : namePN) → Dec (x ≡ y)
-unquoteDef eqPN = ddef (quote namePN) eqPN 
+unquoteDef eqPN = defDecEq (quote namePN) eqPN 
 
 eqVI : (x y : nameVI) → Dec (x ≡ y)
 eqVI runs runs = yes refl
