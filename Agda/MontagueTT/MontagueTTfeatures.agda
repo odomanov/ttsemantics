@@ -175,9 +175,10 @@ record Model (nam : NameStructure) : Set₁ where
   field
     valCN  : nameCN → Set
     valPN  : (n : namePN)  → valCN (argPN n) 
-    valVI  : (n : nameVI)  → (valCN (argVI n) → Set)
-    valVT  : (n : nameVT)  → (valCN (proj₁ (argVT n)) → valCN (proj₂ (argVT n)) → Set)
-    valAdj : (n : nameAdj) → (valCN (argAdj n) → Set)
+    valVI  : (n : nameVI)  → valCN (argVI n) → Set
+    valVT  : (n : nameVT)  → valCN (proj₁ (argVT n))
+                           → valCN (proj₂ (argVT n)) → Set
+    valAdj : (n : nameAdj) → valCN (argAdj n) → Set
     val<:0 : ∀{n1 n2} → {{n1 <:0 n2}} → valCN n1 ⊆ valCN n2
 
 
