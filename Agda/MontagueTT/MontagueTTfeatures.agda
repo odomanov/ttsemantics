@@ -1,3 +1,5 @@
+{-# OPTIONS --overlapping-instances #-}
+--{-# OPTIONS --instance-search-depth 50 #-}
 -- Montague-like type-theoretical semantics.
 -- With coercion through features.
 
@@ -5,7 +7,7 @@ module _ where
 
 open import Data.Bool using (Bool; true; false; _∧_; _∨_)
 open import Data.Empty
-open import Data.List
+open import Data.List using (List; []; _∷_)
 open import Data.Product
 open import Function
 open import Relation.Nullary renaming (no to not)
@@ -172,392 +174,415 @@ module Semantics (nam : NameStructure) (m : Model nam) where
 
 
 -- ==================================================================
--- Example
--- =======
-
--- Name structure
-
-data nameCN  : Set where Human Dog Animate Object : nameCN
-data namePN  : Set where Alex Mary Polkan : namePN
-data nameVI  : Set where run : nameVI
-data nameVT  : Set where love : nameVT
-data nameAdj : Set where big small : nameAdj
-
-argPN : namePN → nameCN
-argPN Alex = Human
-argPN Mary = Human
-argPN Polkan = Dog
-
-argVI : nameVI → nameCN
-argVI run = Animate
-
-argVT : nameVT → nameCN × nameCN
-argVT love = Animate , Object 
-
-argAdj : nameAdj → nameCN
-argAdj big   = Object
-argAdj small = Object
-
-
--- Признаки  -- вообще говоря, относятся к синтаксису
+-- Example1
 -- ========
 
-data Feature : Set where f-animate f-dog f-human f-object : Feature
+module Ex1 where
 
--- the order itself is arbitrary (not important)
-data _<_ : Feature → Feature → Set where
-  a<o : f-animate < f-object
-  h<a : f-human < f-animate
-  h<o : f-human < f-object
-  d<h : f-dog < f-human
-  d<a : f-dog < f-animate
-  d<o : f-dog < f-object
+  -- Name structure
   
-<-trans : ∀ {i j k} → i < j → j < k → i < k
-<-trans a<o ()
-<-trans h<a a<o = h<o
-<-trans h<o ()
-<-trans d<h h<a = d<a
-<-trans d<h h<o = d<o
-<-trans d<a a<o = d<o
-<-trans d<o ()
+  data nameCN  : Set where Human Dog Animate Object : nameCN
+  data namePN  : Set where Alex Mary Polkan : namePN
+  data nameVI  : Set where run : nameVI
+  data nameVT  : Set where love : nameVT
+  data nameAdj : Set where big small : nameAdj
+  
+  argPN : namePN → nameCN
+  argPN Alex = Human
+  argPN Mary = Human
+  argPN Polkan = Dog
+  
+  argVI : nameVI → nameCN
+  argVI run = Animate
+  
+  argVT : nameVT → nameCN × nameCN
+  argVT love = Animate , Object 
+  
+  argAdj : nameAdj → nameCN
+  argAdj big   = Object
+  argAdj small = Object
+  
+  -- eqCN : (x y : nameCN) → Dec (x ≡ y)
+  -- unquoteDef eqCN = ddef (quote nameCN) eqCN 
+  
+  -- eqPN : (x y : namePN) → Dec (x ≡ y)
+  -- unquoteDef eqPN = ddef (quote namePN) eqPN 
+  
+  -- eqVI : (x y : nameVI) → Dec (x ≡ y)
+  -- eqVI run run = yes refl
+  
+  -- eqVT : (x y : nameVT) → Dec (x ≡ y)
+  -- eqVT love love = yes refl
+  
+  -- eqAdj : (x y : nameAdj) → Dec (x ≡ y)
+  -- unquoteDef eqAdj = ddef (quote nameAdj) eqAdj 
+  
+  
+  
+  -- Признаки  -- вообще говоря, относятся к синтаксису
+  -- ========
+  
+  data Feature : Set where f-animate f-dog f-human f-object : Feature
+  
+  -- the order itself is arbitrary (not important)
+  data _<_ : Feature → Feature → Set where
+    a<o : f-animate < f-object
+    h<a : f-human < f-animate
+    h<o : f-human < f-object
+    d<h : f-dog < f-human
+    d<a : f-dog < f-animate
+    d<o : f-dog < f-object
+    
+  <-trans : ∀ {i j k} → i < j → j < k → i < k
+  <-trans a<o ()
+  <-trans h<a a<o = h<o
+  <-trans h<o ()
+  <-trans d<h h<a = d<a
+  <-trans d<h h<o = d<o
+  <-trans d<a a<o = d<o
+  <-trans d<o ()
+  
+  isSTO : IsStrictTotalOrder _≡_ _<_
+  isSTO = record { isEquivalence = isEquivalence
+                 ; trans = <-trans
+                 ; compare = cmp }
+    where
+    cmp : Trichotomous _≡_ _<_
+    cmp f-animate f-animate = tri≈ (λ ()) refl (λ ())
+    cmp f-animate f-dog     = tri> (λ ()) (λ ()) d<a
+    cmp f-animate f-human   = tri> (λ ()) (λ ()) h<a
+    cmp f-animate f-object  = tri< a<o (λ ()) (λ ())
+    cmp f-dog     f-animate = tri< d<a (λ ()) (λ ())
+    cmp f-dog     f-dog     = tri≈ (λ ()) refl (λ ())
+    cmp f-dog     f-human   = tri< d<h (λ ()) (λ ())
+    cmp f-dog     f-object  = tri< d<o (λ ()) (λ ())
+    cmp f-human   f-animate = tri< h<a (λ ()) (λ ())
+    cmp f-human   f-dog     = tri> (λ ()) (λ ()) d<h
+    cmp f-human   f-human   = tri≈ (λ ()) refl (λ ())
+    cmp f-human   f-object  = tri< h<o (λ ()) (λ ())
+    cmp f-object  f-animate = tri> (λ ()) (λ ()) a<o
+    cmp f-object  f-dog     = tri> (λ ()) (λ ()) d<o
+    cmp f-object  f-human   = tri> (λ ()) (λ ()) h<o
+    cmp f-object  f-object  = tri≈ (λ ()) refl (λ ())
+
+
+  -- feature definitions should be in a separate module but this slows down
+  -- the whole thing
+
+  open IsStrictTotalOrder isSTO 
+  
+  FS = List Feature       -- feature sets
+  
+  empty : FS
+  empty = []
+  
+  -- insert guarantees 1) order, 2) uniqueness
+  insert : Feature → FS → FS
+  insert x [] = x ∷ []
+  insert x (f ∷ fs) with compare x f
+  ... | tri< a ¬b ¬c = f ∷ insert x fs
+  ... | tri≈ ¬a b ¬c = f ∷ fs
+  ... | tri> ¬a ¬b c = x ∷ f ∷ fs
+  
+  -- subset for FS, works properly only for ordered FS
+  data _⊆ᶠ_ : FS → FS → Set where
+    instance sub∅ : [] ⊆ᶠ []
+    instance sub1  : ∀{fs1 fs2 f} → {{fs1 ⊆ᶠ fs2}} → fs1 ⊆ᶠ (f ∷ fs2)  
+    instance sub2  : ∀{fs1 fs2 f} → {{fs1 ⊆ᶠ fs2}} → (f ∷ fs1) ⊆ᶠ (f ∷ fs2)  
+  
+  -- some properties
+  
+  f-⊆ᶠ-f : ∀{fs} → fs ⊆ᶠ fs
+  f-⊆ᶠ-f {[]} = sub∅
+  f-⊆ᶠ-f {x ∷ fs} = sub2 {{f-⊆ᶠ-f}} 
+  
+  
+  -- feature sets for types
+  
+  FO : FS
+  FO = insert f-object empty
+  
+  FA : FS
+  FA = insert f-animate FO
+  
+  FH : FS
+  FH = insert f-human FA
+  
+  FD : FS
+  FD = insert f-dog FA
+  
+  -- Some tests
+  
+  _ : FO ≡ f-object ∷ []
+  _ = refl
+  
+  _ : FA ≡ f-object ∷ f-animate ∷ []
+  _ = refl
+  
+  _ : FH ≡ f-object ∷ f-animate ∷ f-human ∷ []
+  _ = refl
+  
+  _ : FD ≡ f-object ∷ f-animate ∷ f-dog ∷ []
+  _ = refl
+  
+  
+  _ : empty ⊆ᶠ empty 
+  _ = it --sub∅
+  
+  _ : empty ⊆ᶠ FH
+  _ = it --sub1
+  
+  _ : FO ⊆ᶠ FA
+  _ = it --sub2
+  
+  _ : FO ⊆ᶠ FH
+  _ = it --
+  
+  _ : FO ⊆ᶠ FO
+  _ = it --sub2
+  
+  _ : FA ⊆ᶠ FD
+  _ = it --sub2
+  
+  _ : FA ⊆ᶠ FH
+  _ = it --sub2
+  
+  
+  -- Connect names and feature sets
+  
+  FSet : nameCN → FS
+  FSet Human   = FH
+  FSet Dog     = FD
+  FSet Animate = FA
+  FSet Object  = FO
+  
+  -- Syntax level coercion for basic types/names
+  _<:0_ : nameCN → nameCN → Set
+  n1 <:0 n2 = FSet n2 ⊆ᶠ FSet n1
+  
+  -- Tests
+  
+  _ : Human <:0 Animate
+  _ = it --sub2 
+  
+  _ : Dog <:0 Object
+  _ = it --sub2 
+  
+  _ : Dog <:0 Dog
+  _ = it --f-⊆ᶠ-f 
+  
+  
+  NS : NameStructure
+  NS = record { nameCN = nameCN; namePN = namePN; nameVI = nameVI
+              ; nameVT = nameVT; nameAdj = nameAdj
+              ; argPN = argPN; argVI = argVI; argVT = argVT; argAdj = argAdj
+              ; _<:0_ = _<:0_
+              }
+  
+  
+  
+  -- Семантика
+  -- =========
+  
+  -- The type of objects having features FS
+  data ⟦CN⟧ : FS → Set where
+    base : (n : namePN) → ⟦CN⟧ (FSet (argPN n))
+    ⦅_⦆  : ∀ {f1 f2} → {{f2 ⊆ᶠ f1}} → ⟦CN⟧ f1 → ⟦CN⟧ f2 -- with features f2 and more
+  
+  -- the same ⟦CN⟧ fs for the same fs
+  uniq-⟦CN⟧ : ∀{fs1 fs2} → fs1 ≡ fs2 → ⟦CN⟧ fs1 ≡ ⟦CN⟧ fs2
+  uniq-⟦CN⟧ refl = refl
+  
+  -- cannot be proven in general!
+  -- uniq' : ∀{fs1 fs2} → ⟦CN⟧ fs1 ≡ ⟦CN⟧ fs2 → fs1 ≡ fs2 
+  
+  
+  -- Useful aliases
+  
+  *Human   = ⟦CN⟧ FH
+  *Dog     = ⟦CN⟧ FD
+  *Animate = ⟦CN⟧ FA
+  *Object  = ⟦CN⟧ FO
+  
+  *Alex   = base Alex
+  *Mary   = base Mary
+  *Polkan = base Polkan
+  
+  
+  -- Tests
+  
+  -- *Mary is a member of all higher ⟦CN⟧s
+  _ : *Human
+  _ = *Mary
+  
+  _ : *Human
+  _ = ⦅ *Mary ⦆
+  
+  _ : *Animate
+  _ = ⦅ *Mary ⦆
+  
+  _ : *Object
+  _ = ⦅ *Mary ⦆
+  
+  _ : *Object
+  _ = ⦅ *Polkan ⦆
+  
+  postulate
+    _*run   : *Animate → Set
+    _*love_ : *Animate → *Object → Set
+    *big    : *Object → Set
+    *small  : *Object → Set 
+  
+  ⦅→_⦆ : ∀{fs1 fs2} → (⟦CN⟧ fs1 → Set) → {{fs1 ⊆ᶠ fs2}} → (⟦CN⟧ fs2 → Set)
+  ⦅→ f ⦆ x = f ⦅ x ⦆
+  
+  _ : *Human → Set
+  _ = λ x → ⦅ x ⦆ *run
+  
+  _ : *Dog → Set
+  _ = ⦅→ _*run ⦆ 
+  
+  
+  -- Names valuation
+  
+  valCN : nameCN → Set
+  valCN n = ⟦CN⟧ (FSet n)
+  
+  valPN  : (n : namePN)  → valCN (argPN n)
+  valPN n = base n
+  
+  valVI  : (n : nameVI)  → valCN (argVI n) → Set
+  valVI run = _*run
+  
+  valVT  : (n : nameVT)  → valCN (proj₁ (argVT n)) → valCN (proj₂ (argVT n)) → Set
+  valVT love = _*love_
+  
+  valAdj : (n : nameAdj) → valCN (argAdj n) → Set
+  valAdj big   = *big
+  valAdj small = *small
+  
+  val<:0 : ∀{n1 n2} → {{n1 <:0 n2}} → valCN n1 ⊆ valCN n2
+  val<:0 = coerce ⦅_⦆
+  
+  M : Model NS
+  M = record { valCN  = valCN
+             ; valPN  = valPN
+             ; valVI  = valVI
+             ; valVT  = valVT
+             ; valAdj = valAdj
+             ; val<:0 = λ {n1} {n2} → val<:0 {n1} {n2}
+             }
+  
+  open Syntax NS hiding (cnm; _<:_) -- hide redundant instances
+  open Semantics NS M 
+  
+  
+  
+  -- Expression examples
+  -- ===================
+  
+  
+  s1 = s-nv (np-pn Mary) (vp-vi run) 
+  
+  _ : ⟦s s1 ⟧ ≡  ⦅ *Mary ⦆ *run
+  _ = refl
+  
+  
+  s2 = s-nv (np-pn Polkan) (vp-vi run) 
+  
+  _ : ⟦s s2 ⟧ ≡  ⦅ *Polkan ⦆ *run
+  _ = refl
+  
+  
+  -- a human runs
+  s3 = s-nv (np-det a/an (use-cn Human)) (vp-vi run) 
+  
+  -- _ : ⟦s s3 ⟧ ≡ ⟪Σ⟫ *Human ⦅→ _*run ⦆ 
+  -- _ = refl
+  
+  _ : ⟦s s3 ⟧ ≡ Σ *Human (λ x → ⦅ x ⦆ *run)             --⟪Σ⟫ *Human _*run 
+  _ = refl
+  
+  _ : ⟦s s3 ⟧ ≡ Σ *Human ⦅→ _*run ⦆    
+  _ = refl
+  
+  
+  -- every human runs
+  s4 = s-nv (np-det every (use-cn Human)) (vp-vi run)
+  
+  _ : ⟦s s4 ⟧ ≡ ((x : *Human) → ⦅ x ⦆ *run)
+  _ = refl
+  
+  
+  -- the human runs
+  s5 = s-nv (np-det the (use-cn Human)) (vp-vi run)
+  
+  _ : ⟦s s5 ⟧ ≡ (Σ[ Aₚ ∈ Pointed *Human ] ⦅ theₚ Aₚ ⦆ *run)
+  _ = refl
+  
+  _ : ⟦s s5 ⟧
+  _ = Hₚ , *Mary-run
+    where
+    Hₚ : Pointed *Human 
+    Hₚ = record { theₚ = *Mary }
+  
+    postulate *Mary-run : ⦅ *Mary ⦆ *run
+  
+  
+  -- Mary loves Alex
+  
+  loves-Alex : VP _
+  loves-Alex = vp-vt love (np-pn Alex)
+  
+  s6 = s-nv (np-pn Mary) loves-Alex
+  
+  _ : ⟦s s6 ⟧ ≡ ⦅ *Mary ⦆ *love ⦅ *Alex ⦆
+  _ = refl
+  
+  
+  -- Mary loves Polkan
+  
+  s7 = s-nv (np-pn Mary) (vp-vt love (np-pn Polkan))
+  
+  _ : ⟦s s7 ⟧ ≡ ⦅ *Mary ⦆ *love ⦅ *Polkan ⦆ 
+  _ = refl
+  
+  
+  -- Прилагательные / свойства
+  
+  postulate
+    *polkan-is-big : *big ⦅ *Polkan ⦆
+  
+  big-dog : ⟦cn cn-ap (ap-a big) (use-cn Dog) ⟧ 
+  big-dog = *Polkan , *polkan-is-big 
+  
+  
+  -- Относительные конструкции (CN that VP и пр.)
+  
+  human-that-runs : CN
+  human-that-runs = rcn (use-cn Human) (vp-vi run)
+  
+  _ : ⟦cn human-that-runs ⟧
+  _ = *Mary , *Mary-runs
+    where postulate *Mary-runs : ⦅ *Mary ⦆ *run 
+  
+  
+  a-human-that-runs : NP _ 
+  a-human-that-runs = np-det a/an human-that-runs
+  
+  -- a human that runs runs
+  s8 = s-nv a-human-that-runs (vp-vi run) {{c∘ crcn Syntax.cnm}}   -- работает! 
+  
+  
+  -- Mary loves a human that runs
+  
+  s9 = s-nv (np-pn Mary) (vp-vt love a-human-that-runs 
+                                {{c∘ ((c∘ crcn (Syntax.cnm {n2 = Animate}))) Syntax.cnm}}
+                         )
+  
+  -- beware! with --overlapping-instances the search is very slow without hints
+  _ : ⟦s s9 ⟧ ≡ (Σ[ hr ∈ Σ[ h ∈ *Human ] ⦅ h ⦆ *run ] ⦅ *Mary ⦆ *love (⦅_⦆ {{sub2}} ⦅ proj₁ hr ⦆))
+  _ = refl
+  
 
-isSTO : IsStrictTotalOrder _≡_ _<_
-isSTO = record { isEquivalence = isEquivalence
-               ; trans = <-trans
-               ; compare = cmp }
-  where
-  cmp : Trichotomous _≡_ _<_
-  cmp f-animate f-animate = tri≈ (λ ()) refl (λ ())
-  cmp f-animate f-dog     = tri> (λ ()) (λ ()) d<a
-  cmp f-animate f-human   = tri> (λ ()) (λ ()) h<a
-  cmp f-animate f-object  = tri< a<o (λ ()) (λ ())
-  cmp f-dog     f-animate = tri< d<a (λ ()) (λ ())
-  cmp f-dog     f-dog     = tri≈ (λ ()) refl (λ ())
-  cmp f-dog     f-human   = tri< d<h (λ ()) (λ ())
-  cmp f-dog     f-object  = tri< d<o (λ ()) (λ ())
-  cmp f-human   f-animate = tri< h<a (λ ()) (λ ())
-  cmp f-human   f-dog     = tri> (λ ()) (λ ()) d<h
-  cmp f-human   f-human   = tri≈ (λ ()) refl (λ ())
-  cmp f-human   f-object  = tri< h<o (λ ()) (λ ())
-  cmp f-object  f-animate = tri> (λ ()) (λ ()) a<o
-  cmp f-object  f-dog     = tri> (λ ()) (λ ()) d<o
-  cmp f-object  f-human   = tri> (λ ()) (λ ()) h<o
-  cmp f-object  f-object  = tri≈ (λ ()) refl (λ ())
-
-open IsStrictTotalOrder isSTO 
-
-FS = List Feature       -- feature sets
-
-empty : FS
-empty = []
-
--- insert guarantees 1) order, 2) uniqueness
-insert : Feature → FS → FS
-insert x [] = x ∷ []
-insert x (f ∷ fs) with compare x f
-... | tri< a ¬b ¬c = f ∷ insert x fs
-... | tri≈ ¬a b ¬c = f ∷ fs
-... | tri> ¬a ¬b c = x ∷ f ∷ fs
-
--- subset for FS, works properly only for ordered FS
-data _⊆ᶠ_ : FS → FS → Set where
-  instance s0 : ∀{fs} → [] ⊆ᶠ fs
-  instance ss : ∀{fs1 fs2 f1 f2} → {{f1 ≡ f2}} → {{coe : fs1 ⊆ᶠ fs2}}
-              → (f1 ∷ fs1) ⊆ᶠ (f2 ∷ fs2)  
-
--- some properties
-
-f-⊆ᶠ-f : ∀{fs} → fs ⊆ᶠ fs
-f-⊆ᶠ-f {[]} = s0
-f-⊆ᶠ-f {x ∷ fs} = ss {{coe = f-⊆ᶠ-f}} 
-
-⊆ᶠ-to-≡  : ∀{fs1 fs2} → fs1 ⊆ᶠ fs2 → fs2 ⊆ᶠ fs1 → fs1 ≡ fs2
-⊆ᶠ-to-≡  {[]} {[]} s0 s0 = refl
-⊆ᶠ-to-≡  {f1 ∷ fs1} {f2 ∷ fs2} (ss {{refl}} {{x}}) (ss {{refl}} {{y}})
-    = cong₂ _∷_ refl (⊆ᶠ-to-≡ x y)
-
-
--- feature sets for types
-
-FO : FS
-FO = insert f-object empty
-
-FA : FS
-FA = insert f-animate FO
-
-FH : FS
-FH = insert f-human FA
-
-FD : FS
-FD = insert f-dog FA
-
--- Some tests
-
-_ : FO ≡ f-object ∷ []
-_ = refl
-
-_ : FA ≡ f-object ∷ f-animate ∷ []
-_ = refl
-
-_ : FH ≡ f-object ∷ f-animate ∷ f-human ∷ []
-_ = refl
-
-_ : FD ≡ f-object ∷ f-animate ∷ f-dog ∷ []
-_ = refl
-
-
-_ : empty ⊆ᶠ empty 
-_ = s0
-
-_ : empty ⊆ᶠ FH
-_ = s0
-
-_ : FO ⊆ᶠ FA
-_ = ss
-
-_ : FO ⊆ᶠ FH
-_ = ss
-
-_ : FO ⊆ᶠ FO
-_ = ss
-
-_ : FA ⊆ᶠ FD
-_ = ss
-
-_ : FA ⊆ᶠ FH
-_ = ss
-
-
--- Connect names and feature sets
-
-FSet : nameCN → FS
-FSet Human   = FH
-FSet Dog     = FD
-FSet Animate = FA
-FSet Object  = FO
-
--- Syntax level coercion for basic types/names
-_<:0_ : nameCN → nameCN → Set
-n1 <:0 n2 = FSet n2 ⊆ᶠ FSet n1
-
--- Tests
-
-_ : Human <:0 Animate
-_ = ss 
-
-_ : Dog <:0 Object
-_ = ss 
-
-_ : Dog <:0 Dog
-_ = f-⊆ᶠ-f 
-
-
-NS : NameStructure
-NS = record { nameCN = nameCN; namePN = namePN; nameVI = nameVI
-            ; nameVT = nameVT; nameAdj = nameAdj
-            ; argPN = argPN; argVI = argVI; argVT = argVT; argAdj = argAdj
-            ; _<:0_ = _<:0_
-            }
-
-
-
--- Семантика
--- =========
-
--- The type of objects having features FS
-data ⟦CN⟧ : FS → Set where
-  base : (n : namePN) → ⟦CN⟧ (FSet (argPN n))
-  ⦅_⦆  : ∀ {f1 f2} → {{f2 ⊆ᶠ f1}} → ⟦CN⟧ f1 → ⟦CN⟧ f2 -- with features f2 and more
-
--- the same ⟦CN⟧ fs for the same fs
-uniq-⟦CN⟧ : ∀{fs1 fs2} → fs1 ≡ fs2 → ⟦CN⟧ fs1 ≡ ⟦CN⟧ fs2
-uniq-⟦CN⟧ refl = refl
-
--- cannot be proven in general!
--- uniq' : ∀{fs1 fs2} → ⟦CN⟧ fs1 ≡ ⟦CN⟧ fs2 → fs1 ≡ fs2 
-
-
--- Useful aliases
-
-*Human   = ⟦CN⟧ FH
-*Dog     = ⟦CN⟧ FD
-*Animate = ⟦CN⟧ FA
-*Object  = ⟦CN⟧ FO
-
-*Alex   = base Alex
-*Mary   = base Mary
-*Polkan = base Polkan
-
-
--- Tests
-
--- *Mary is a member of all higher ⟦CN⟧s
-_ : *Human
-_ = *Mary
-
-_ : *Human
-_ = ⦅ *Mary ⦆
-
-_ : *Animate
-_ = ⦅ *Mary ⦆
-
-_ : *Object
-_ = ⦅ *Mary ⦆
-
-_ : *Object
-_ = ⦅ *Polkan ⦆
-
-postulate
-  _*run   : *Animate → Set
-  _*love_ : *Animate → *Object → Set
-  *big    : *Object → Set
-  *small  : *Object → Set 
-
-⦅→_⦆ : ∀{fs1 fs2} → (⟦CN⟧ fs1 → Set) → {{fs1 ⊆ᶠ fs2}} → (⟦CN⟧ fs2 → Set)
-⦅→ f ⦆ x = f ⦅ x ⦆
-
-_ : *Human → Set
-_ = λ x → ⦅ x ⦆ *run
-
-_ : *Dog → Set
-_ = ⦅→ _*run ⦆ 
-
-
--- Names valuation
-
-valCN : nameCN → Set
-valCN n = ⟦CN⟧ (FSet n)
-
-valPN  : (n : namePN)  → valCN (argPN n)
-valPN n = base n
-
-valVI  : (n : nameVI)  → valCN (argVI n) → Set
-valVI run = _*run
-
-valVT  : (n : nameVT)  → valCN (proj₁ (argVT n)) → valCN (proj₂ (argVT n)) → Set
-valVT love = _*love_
-
-valAdj : (n : nameAdj) → valCN (argAdj n) → Set
-valAdj big   = *big
-valAdj small = *small
-
-val<:0 : ∀{n1 n2} → {{n1 <:0 n2}} → valCN n1 ⊆ valCN n2
-val<:0 = coerce ⦅_⦆
-
-M : Model NS
-M = record { valCN  = valCN
-           ; valPN  = valPN
-           ; valVI  = valVI
-           ; valVT  = valVT
-           ; valAdj = valAdj
-           ; val<:0 = λ {n1} {n2} → val<:0 {n1} {n2}
-           }
-
-open Syntax NS hiding (cnm; _<:_) -- hide redundant instances
-open Semantics NS M 
-
-
-
--- Expression examples
--- ===================
-
-
-s1 = s-nv (np-pn Mary) (vp-vi run) 
-
-_ : ⟦s s1 ⟧ ≡  ⦅ *Mary ⦆ *run
-_ = refl
-
-
-s2 = s-nv (np-pn Polkan) (vp-vi run) 
-
-_ : ⟦s s2 ⟧ ≡  ⦅ *Polkan ⦆ *run
-_ = refl
-
-
--- a human runs
-s3 = s-nv (np-det a/an (use-cn Human)) (vp-vi run) 
-
-_ : ⟦s s3 ⟧ ≡ Σ *Human (λ x → ⦅ x ⦆ *run)             --⟪Σ⟫ *Human _*run 
-_ = refl
-
-_ : ⟦s s3 ⟧ ≡ Σ *Human ⦅→ _*run ⦆    
-_ = refl
-
-
--- every human runs
-s4 = s-nv (np-det every (use-cn Human)) (vp-vi run)
-
-_ : ⟦s s4 ⟧ ≡ ((x : *Human) → ⦅ x ⦆ *run)
-_ = refl
-
-
--- the human runs
-s5 = s-nv (np-det the (use-cn Human)) (vp-vi run)
-
-_ : ⟦s s5 ⟧ ≡ (Σ[ Aₚ ∈ Pointed *Human ] ⦅ theₚ Aₚ ⦆ *run)
-_ = refl
-
-_ : ⟦s s5 ⟧
-_ = Hₚ , *Mary-run
-  where
-  Hₚ : Pointed *Human 
-  Hₚ = record { theₚ = *Mary }
-
-  postulate *Mary-run : ⦅ *Mary ⦆ *run
-
-
--- Mary loves Alex
-
-loves-Alex : VP _
-loves-Alex = vp-vt love (np-pn Alex)
-
-s6 = s-nv (np-pn Mary) loves-Alex
-
-_ : ⟦s s6 ⟧ ≡ ⦅ *Mary ⦆ *love ⦅ *Alex ⦆
-_ = refl
-
-
--- Mary loves Polkan
-
-s7 = s-nv (np-pn Mary) (vp-vt love (np-pn Polkan))
-
-_ : ⟦s s7 ⟧ ≡ ⦅ *Mary ⦆ *love ⦅ *Polkan ⦆ 
-_ = refl
-
-
--- Прилагательные / свойства
-
-postulate
-  *polkan-is-big : *big ⦅ *Polkan ⦆
-
-big-dog : ⟦cn cn-ap (ap-a big) (use-cn Dog) ⟧ 
-big-dog = *Polkan , *polkan-is-big 
-
-
--- Относительные конструкции (CN that VP и пр.)
-
-human-that-runs : CN
-human-that-runs = rcn (use-cn Human) (vp-vi run)
-
-_ : ⟦cn human-that-runs ⟧
-_ = *Mary , *Mary-runs
-  where postulate *Mary-runs : ⦅ *Mary ⦆ *run 
-
-
-a-human-that-runs : NP _ 
-a-human-that-runs = np-det a/an human-that-runs
-
--- a human that runs runs
-s8 = s-nv a-human-that-runs (vp-vi run) {{c∘ crcn Syntax.cnm}}   -- работает! 
-
-
--- Mary loves a human that runs
-
-s9 = s-nv (np-pn Mary) (vp-vt love a-human-that-runs 
-                              {{c∘ ((c∘ crcn (Syntax.cnm {n2 = Animate}))) Syntax.cnm}}
-                       )
-
-_ : ⟦s s9 ⟧ ≡ (Σ[ hr ∈ Σ[ h ∈ *Human ] ⦅ h ⦆ *run ] ⦅ *Mary ⦆ *love ⦅ ⦅ proj₁ hr ⦆ ⦆)
-_ = refl
 
