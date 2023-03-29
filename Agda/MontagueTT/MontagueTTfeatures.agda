@@ -586,3 +586,312 @@ module Ex1 where
   
 
 
+-- ==================================================================
+-- Example2
+-- ========
+
+module Ex2 where
+
+  -- Name structure
+  
+  data nameCN  : Set where Human Info Phys Book : nameCN
+  data namePN  : Set where John War-and-Peace : namePN
+  data nameVI  : Set where 
+  data nameVT  : Set where take read : nameVT
+  data nameAdj : Set where
+  
+  argPN : namePN → nameCN
+  argPN John = Human
+  argPN War-and-Peace = Book
+  
+  argVI : nameVI → nameCN
+  argVI ()
+  
+  argVT : nameVT → nameCN × nameCN
+  argVT take = Human , Phys
+  argVT read = Human , Info
+  
+  argAdj : nameAdj → nameCN
+  argAdj ()
+  
+  
+  -- Признаки  -- вообще говоря, относятся к синтаксису
+  -- ========
+  
+  data Feature : Set where f-info f-phys f-human : Feature
+  
+  -- the order itself is arbitrary (not important)
+  data _<_ : Feature → Feature → Set where
+    i<p : f-info < f-phys
+    i<h : f-info < f-human
+    p<h : f-phys < f-human
+    
+  <-trans : ∀ {i j k} → i < j → j < k → i < k
+  <-trans i<p p<h = i<h
+  <-trans i<h ()
+  <-trans p<h ()
+  
+  isSTO : IsStrictTotalOrder _≡_ _<_
+  isSTO = record { isEquivalence = isEquivalence
+                 ; trans = <-trans
+                 ; compare = cmp }
+    where
+    cmp : Trichotomous _≡_ _<_
+    cmp f-info f-info = tri≈ (λ ()) refl (λ ())
+    cmp f-info f-phys = tri< i<p (λ ()) (λ ())
+    cmp f-info f-human = tri< i<h (λ ()) (λ ())
+    cmp f-phys f-info = tri> (λ ()) (λ ()) i<p
+    cmp f-phys f-phys = tri≈ (λ ()) refl (λ ())
+    cmp f-phys f-human = tri< p<h (λ ()) (λ ())
+    cmp f-human f-info = tri> (λ ()) (λ ()) i<h
+    cmp f-human f-phys = tri> (λ ()) (λ ()) p<h
+    cmp f-human f-human = tri≈ (λ ()) refl (λ ())
+
+
+  -- feature definitions should be in a separate module but this slows down
+  -- the whole thing
+
+  open IsStrictTotalOrder isSTO 
+  
+  FS = List Feature       -- feature sets
+  
+  empty : FS
+  empty = []
+  
+  -- insert guarantees 1) order, 2) uniqueness
+  insert : Feature → FS → FS
+  insert x [] = x ∷ []
+  insert x (f ∷ fs) with compare x f
+  ... | tri< a ¬b ¬c = f ∷ insert x fs
+  ... | tri≈ ¬a b ¬c = f ∷ fs
+  ... | tri> ¬a ¬b c = x ∷ f ∷ fs
+  
+  -- subset for FS, works properly only for ordered FS
+  data _⊆ᶠ_ : FS → FS → Set where
+    instance sub∅ : [] ⊆ᶠ []
+    instance sub1 : ∀{fs1 fs2 f} → {{fs1 ⊆ᶠ fs2}} → fs1 ⊆ᶠ (f ∷ fs2)  
+    instance sub2 : ∀{fs1 fs2 f} → {{fs1 ⊆ᶠ fs2}} → (f ∷ fs1) ⊆ᶠ (f ∷ fs2)  
+  
+  -- some properties
+  
+  []-⊆ᶠ-f : ∀{fs} → [] ⊆ᶠ fs
+  []-⊆ᶠ-f {[]} = sub∅
+  []-⊆ᶠ-f {x ∷ fs} = sub1 {_} {fs} {{[]-⊆ᶠ-f {fs}}}
+  
+  f-⊆ᶠ-f : ∀{fs} → fs ⊆ᶠ fs
+  f-⊆ᶠ-f {[]} = sub∅
+  f-⊆ᶠ-f {x ∷ fs} = sub2 {{f-⊆ᶠ-f}} 
+  
+  sub1ʳ : ∀{fs1 fs2 f1} → (f1 ∷ fs1) ⊆ᶠ fs2 → fs1 ⊆ᶠ fs2
+  sub1ʳ {[]} {_ ∷ _} sub1 = []-⊆ᶠ-f
+  sub1ʳ {[]} {_ ∷ _} sub2 = []-⊆ᶠ-f
+  sub1ʳ (sub1 {{p}}) = sub1 {{sub1ʳ p}}
+  sub1ʳ sub2 = sub1
+  
+  -- Can I prove this?
+  -- This seems to hold only for ordered fs!
+  -- ⊆ᶠ-to-≡  : ∀{fs1 fs2} → fs1 ⊆ᶠ fs2 → fs2 ⊆ᶠ fs1 → fs1 ≡ fs2
+  -- ⊆ᶠ-to-≡ sub∅ sub∅ = refl
+  -- ⊆ᶠ-to-≡ {f1 ∷ fs1} {f2 ∷ fs2} (sub1 {{x}}) (sub1 {{y}})
+  --     = cong₂ _∷_ (ppp x y) (⊆ᶠ-to-≡ (sub1ʳ x) (sub1ʳ y))
+  --   where
+  --   ppp : ∀{fs1 fs2 f1 f2} → (f1 ∷ fs1) ⊆ᶠ fs2 → (f2 ∷ fs2) ⊆ᶠ fs1 → f1 ≡ f2
+  --   ppp {x ∷ fs1} {y ∷ fs2} {f1} {f2} (sub1 {{p}}) (sub1 {{q}}) = ppp {!sub1!} q
+  --   ppp {x ∷ fs1} {y ∷ fs2} {f1} {.x} (sub1 {{p}}) (sub2 {{q}}) = {!!}
+  --   ppp {x ∷ fs1} {y ∷ fs2} {.y} {f2} (sub2 {{p}}) (sub1 {{q}}) = {!!}
+  --   ppp {x ∷ fs1} {y ∷ fs2} {.y} {.x} (sub2 {{p}}) (sub2 {{q}}) = ppp q p
+  -- ⊆ᶠ-to-≡ (sub1 {{x}}) (sub2 {{y}}) = cong₂ _∷_ refl (⊆ᶠ-to-≡ (sub1ʳ x) y)
+  -- ⊆ᶠ-to-≡ (sub2 {{x}}) (sub1 {{y}}) = cong₂ _∷_ refl (⊆ᶠ-to-≡ x (sub1ʳ y))
+  -- ⊆ᶠ-to-≡ (sub2 {{x}}) (sub2 {{y}}) = cong₂ _∷_ refl (⊆ᶠ-to-≡ x y)
+  
+  
+  -- feature sets for types
+  
+  FI : FS
+  FI = insert f-info empty
+  
+  FP : FS
+  FP = insert f-phys empty
+  
+  FB : FS
+  FB = insert f-phys FI
+  
+  FH : FS
+  FH = insert f-human empty
+  
+  -- Some tests
+  
+  _ : FI ≡ f-info ∷ []
+  _ = refl
+  
+  _ : FP ≡ f-phys ∷ []
+  _ = refl
+  
+  _ : FH ≡ f-human ∷ []
+  _ = refl
+  
+  _ : FB ≡ f-phys ∷ f-info ∷ []
+  _ = refl
+  
+  
+  _ : empty ⊆ᶠ empty 
+  _ = sub∅
+  
+  _ : empty ⊆ᶠ FH
+  _ = sub1
+  
+  _ : empty ⊆ᶠ FB
+  _ = sub1 
+  
+  _ : FI ⊆ᶠ (f-info ∷ [])
+  _ = sub2
+  
+  _ : FP ⊆ᶠ FB
+  _ = sub2 
+  
+  _ : FI ⊆ᶠ FB
+  _ = sub1 
+  
+  
+  -- Connect names and feature sets
+  
+  FSet : nameCN → FS
+  FSet Info  = FI
+  FSet Phys  = FP
+  FSet Book  = FB
+  FSet Human = FH
+  
+  -- Syntax level coercion for basic types/names
+  _<:0_ : nameCN → nameCN → Set
+  n1 <:0 n2 = FSet n2 ⊆ᶠ FSet n1
+  
+  -- Tests
+  
+  _ : Book <:0 Info
+  _ = sub1 
+  
+  _ : Book <:0 Phys
+  _ = sub2
+  
+  _ : Info <:0 Info
+  _ = f-⊆ᶠ-f 
+  
+  
+  NS : NameStructure
+  NS = record { nameCN = nameCN; namePN = namePN; nameVI = nameVI
+              ; nameVT = nameVT; nameAdj = nameAdj
+              ; argPN = argPN; argVI = argVI; argVT = argVT; argAdj = argAdj
+              ; _<:0_ = _<:0_
+              }
+  
+  
+  
+  -- Семантика
+  -- =========
+  
+  -- The type of objects having features FS
+  data ⟦CN⟧ : FS → Set where
+    base : (n : namePN) → ⟦CN⟧ (FSet (argPN n))
+    ⦅_⦆  : ∀ {f1 f2} → {{f2 ⊆ᶠ f1}} → ⟦CN⟧ f1 → ⟦CN⟧ f2 
+  
+  -- the same ⟦CN⟧ fs for the same fs
+  uniq-⟦CN⟧ : ∀{fs1 fs2} → fs1 ≡ fs2 → ⟦CN⟧ fs1 ≡ ⟦CN⟧ fs2
+  uniq-⟦CN⟧ refl = refl
+  
+  -- cannot be proven in general!
+  -- uniq' : ∀{fs1 fs2} → ⟦CN⟧ fs1 ≡ ⟦CN⟧ fs2 → fs1 ≡ fs2 
+  
+  
+  -- Useful aliases
+  
+  *Human = ⟦CN⟧ FH
+  *Info  = ⟦CN⟧ FI
+  *Phys  = ⟦CN⟧ FP
+  *Book  = ⟦CN⟧ FB
+  
+  *John = base John
+  *WaP  = base War-and-Peace
+  
+  
+  -- Tests
+  
+  -- *WaP is a member of all higher ⟦CN⟧s
+  _ : *Book
+  _ = *WaP
+  
+  _ : *Info
+  _ = ⦅ *WaP ⦆
+  
+  _ : *Phys
+  _ = ⦅ *WaP ⦆
+  
+  
+  postulate
+    _*take_ : *Human → *Phys → Set
+    _*read_ : *Human → *Info → Set
+  
+  
+  -- Valuation for names
+  
+  valCN : nameCN → Set
+  valCN n = ⟦CN⟧ (FSet n)
+  
+  valPN  : (n : namePN)  → valCN (argPN n)
+  valPN n = base n
+  
+  valVI  : (n : nameVI)  → valCN (argVI n) → Set
+  valVI ()
+  
+  valVT  : (n : nameVT)  → valCN (proj₁ (argVT n)) → valCN (proj₂ (argVT n)) → Set
+  valVT take = _*take_
+  valVT read = _*read_
+  
+  valAdj : (n : nameAdj) → valCN (argAdj n) → Set
+  valAdj ()
+  
+  val<:0 : ∀{n1 n2} → {{n1 <:0 n2}} → valCN n1 ⊆ valCN n2
+  val<:0 = coerce ⦅_⦆
+  
+  M : Model NS
+  M = record { valCN  = valCN
+             ; valPN  = valPN
+             ; valVI  = valVI
+             ; valVT  = valVT
+             ; valAdj = valAdj
+             ; val<:0 = λ {n1} {n2} → val<:0 {n1} {n2}
+             }
+  
+  open Syntax NS hiding (cnm; _<:_) -- hide redundant instances
+  open Semantics NS M 
+  
+  
+  
+  -- Expression examples
+  -- ===================
+  
+  s1 = s-nv (np-pn John) (vp-vt take (np-pn War-and-Peace)) 
+  
+  _ : ⟦s s1 ⟧ ≡ ⦅ *John ⦆ *take ⦅ *WaP ⦆
+  _ = refl 
+  
+  s2 = s-nv (np-pn John) (vp-vt read (np-pn War-and-Peace)) 
+  
+  _ : ⟦s s2 ⟧ ≡ ⦅ *John ⦆ *read ⦅ *WaP ⦆
+  _ = refl
+  
+  -- John take a book
+  s3 = s-nv (np-pn John) (vp-vt take (np-det a/an (use-cn Book)))
+  
+  _ : ⟦s s3 ⟧ ≡ Σ *Book λ b → ⦅ *John ⦆ *take ⦅ b ⦆
+  _ = refl
+  
+  _ : ⟦s s3 ⟧ ≡ (Σ[ b ∈ *Book ] ⦅ *John ⦆ *take ⦅ b ⦆)
+  _ = refl
+  
+  -- John read every book
+  s4 = s-nv (np-pn John) (vp-vt read (np-det every (use-cn Book)))
+  
+  _ : ⟦s s4 ⟧ ≡ ∀ (b : *Book) →  ⦅ *John ⦆ *read ⦅ b ⦆
+  _ = refl
+  
+  
