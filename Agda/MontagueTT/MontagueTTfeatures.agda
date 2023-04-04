@@ -470,6 +470,9 @@ module Ex1 where
   val<:0 : ∀{n1 n2} → {{n1 <:0 n2}} → valCN n1 ⊆ valCN n2
   val<:0 = coerce ⦅_⦆
   
+  _ : ∀{fs} → ⟦CN⟧ fs → ⟦CN⟧ []
+  _ = ⦅_⦆ {{[]-⊆ᶠ-f}}
+  
   M : Model NS
   M = record { valCN  = valCN
              ; valPN  = valPN
@@ -482,8 +485,7 @@ module Ex1 where
   open Syntax NS hiding (cnm; _<:_) -- hide redundant instances
   open Semantics NS M 
   
-  
-  
+ 
   -- Expression examples
   -- ===================
   
