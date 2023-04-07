@@ -46,7 +46,7 @@ instance
 -- The structure to hold names
 -- ===========================
 
-record NameStructure : Set₁ where
+record LexStructure : Set₁ where
   field
     nameCN namePN nameVI nameVT nameAdj : Set  -- names for syntactic categories
     argPN  : namePN  → nameCN                  -- argument types etc.
@@ -59,9 +59,9 @@ record NameStructure : Set₁ where
 -- Синтаксис
 -- =========
 
-module Syntax (nam : NameStructure) where
+module Syntax (nam : LexStructure) where
 
-  open NameStructure nam 
+  open LexStructure nam 
   
   mutual
   
@@ -98,8 +98,8 @@ module Syntax (nam : NameStructure) where
 -- Семантика
 -- =========
 
-record Model (nam : NameStructure) : Set₁ where
-  open NameStructure nam 
+record Model (nam : LexStructure) : Set₁ where
+  open LexStructure nam 
   field
     valCN  : nameCN → Set
     valPN  : (n : namePN)  → valCN (argPN n) 
@@ -110,9 +110,9 @@ record Model (nam : NameStructure) : Set₁ where
     val<:0 : ∀{n1 n2} → {{n1 <:0 n2}} → valCN n1 ⊆ valCN n2
 
 
-module Semantics (nam : NameStructure) (m : Model nam) where
+module Semantics (nam : LexStructure) (m : Model nam) where
 
-  open NameStructure nam 
+  open LexStructure nam 
   open Syntax nam 
   open Model m 
 
@@ -378,7 +378,7 @@ module Ex1 where
   _ = it --f-⊆ᶠ-f 
   
   
-  NS : NameStructure
+  NS : LexStructure
   NS = record { nameCN = nameCN; namePN = namePN; nameVI = nameVI
               ; nameVT = nameVT; nameAdj = nameAdj
               ; argPN = argPN; argVI = argVI; argVT = argVT; argAdj = argAdj
@@ -401,8 +401,7 @@ module Ex1 where
   
   -- cannot be proven in general!
   -- uniq' : ∀{fs1 fs2} → ⟦CN⟧ fs1 ≡ ⟦CN⟧ fs2 → fs1 ≡ fs2 
-  
-  
+
   -- Useful aliases
   
   *Human   = ⟦CN⟧ FH
@@ -797,7 +796,7 @@ module Ex2 where
   _ = f-⊆ᶠ-f 
   
   
-  NS : NameStructure
+  NS : LexStructure
   NS = record { nameCN = nameCN; namePN = namePN; nameVI = nameVI
               ; nameVT = nameVT; nameAdj = nameAdj
               ; argPN = argPN; argVI = argVI; argVT = argVT; argAdj = argAdj
