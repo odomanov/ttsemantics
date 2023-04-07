@@ -277,30 +277,51 @@ module Ex1 where
   []-⊆ᶠ-f {[]} = sub∅
   []-⊆ᶠ-f {x ∷ fs} = sub1 {_} {fs} {{[]-⊆ᶠ-f {fs}}}
   
-  f-⊆ᶠ-f : ∀{fs} → fs ⊆ᶠ fs
-  f-⊆ᶠ-f {[]} = sub∅
-  f-⊆ᶠ-f {x ∷ fs} = sub2 {{f-⊆ᶠ-f}} 
-  
   sub1ʳ : ∀{fs1 fs2 f1} → (f1 ∷ fs1) ⊆ᶠ fs2 → fs1 ⊆ᶠ fs2
   sub1ʳ {[]} {_ ∷ _} _ = []-⊆ᶠ-f
   sub1ʳ (sub1 {{p}}) = sub1 {{sub1ʳ p}}
   sub1ʳ sub2 = sub1
+
+  lem1 : ∀{f fs1 fs2 fs3} → fs1 ⊆ᶠ fs3 → (f ∷ fs3) ⊆ᶠ fs2 → (f ∷ fs1) ⊆ᶠ fs2
+  lem1 sub∅ sub1 = sub1 
+  lem1 sub∅ sub2 = sub2
+  lem1 (sub1 {{q1}}) (sub1 {{sub1 {{q2}} }}) = sub1 ⦃ sub1 {{lem1 q1 (tmp q2)}} ⦄
+    where
+    tmp : ∀{f f2 fs2 fs3} → (f ∷ f2 ∷ fs2) ⊆ᶠ fs3 → (f ∷ fs2) ⊆ᶠ fs3
+    tmp (sub1 {{r}}) = sub1 {{tmp r}}
+    tmp (sub2 {{r}}) = sub2 {{sub1ʳ r}}
+  lem1 (sub1 {{q1}}) (sub1 {{sub2 {{q2}} }}) = sub1 ⦃ sub2 {{sub1ʳ (lem1 q1 q2)}} ⦄
+  lem1 (sub1 {{q1}}) (sub2 {{q2}}) = sub2 {{sub1ʳ (lem1 q1 q2)}}
+  lem1 (sub2 {{q1}}) (sub1 {{q2}}) = sub1 {{lem1 (sub2 {{q1}}) q2}}
+  lem1 (sub2 {{q1}}) (sub2 {{q2}}) = sub2 {{lem1 q1 q2}}
+
+
+  -- check that ⊆ᶠ is partial order
   
-  -- Can I prove this?
-  -- This seems to hold only for ordered fs!
-  -- ⊆ᶠ-to-≡  : ∀{fs1 fs2} → fs1 ⊆ᶠ fs2 → fs2 ⊆ᶠ fs1 → fs1 ≡ fs2
-  -- ⊆ᶠ-to-≡ sub∅ sub∅ = refl
-  -- ⊆ᶠ-to-≡ {f1 ∷ fs1} {f2 ∷ fs2} (sub1 {{x}}) (sub1 {{y}})
-  --     = cong₂ _∷_ (ppp x y) (⊆ᶠ-to-≡ (sub1ʳ x) (sub1ʳ y))
-  --   where
-  --   ppp : ∀{fs1 fs2 f1 f2} → (f1 ∷ fs1) ⊆ᶠ fs2 → (f2 ∷ fs2) ⊆ᶠ fs1 → f1 ≡ f2
-  --   ppp {x ∷ fs1} {y ∷ fs2} {f1} {f2} (sub1 {{p}}) (sub1 {{q}}) = ppp {!sub1!} q
-  --   ppp {x ∷ fs1} {y ∷ fs2} {f1} {.x} (sub1 {{p}}) (sub2 {{q}}) = {!!}
-  --   ppp {x ∷ fs1} {y ∷ fs2} {.y} {f2} (sub2 {{p}}) (sub1 {{q}}) = {!!}
-  --   ppp {x ∷ fs1} {y ∷ fs2} {.y} {.x} (sub2 {{p}}) (sub2 {{q}}) = ppp q p
-  -- ⊆ᶠ-to-≡ (sub1 {{x}}) (sub2 {{y}}) = cong₂ _∷_ refl (⊆ᶠ-to-≡ (sub1ʳ x) y)
-  -- ⊆ᶠ-to-≡ (sub2 {{x}}) (sub1 {{y}}) = cong₂ _∷_ refl (⊆ᶠ-to-≡ x (sub1ʳ y))
-  -- ⊆ᶠ-to-≡ (sub2 {{x}}) (sub2 {{y}}) = cong₂ _∷_ refl (⊆ᶠ-to-≡ x y)
+  ⊆ᶠ-refl : ∀{fs} → fs ⊆ᶠ fs
+  ⊆ᶠ-refl {[]} = sub∅
+  ⊆ᶠ-refl {_ ∷ _} = sub2 {{⊆ᶠ-refl}} 
+  
+  ⊆ᶠ-trans : ∀{fs1 fs2 fs3} → fs1 ⊆ᶠ fs2 → fs2 ⊆ᶠ fs3 → fs1 ⊆ᶠ fs3
+  ⊆ᶠ-trans sub∅ sub∅ = sub∅
+  ⊆ᶠ-trans sub∅ sub1 = sub1
+  ⊆ᶠ-trans (sub1 {{p1}}) (sub1 {{p2}}) = sub1 {{⊆ᶠ-trans p1 (sub1ʳ p2)}}
+  ⊆ᶠ-trans (sub1 {{p1}}) (sub2 {{p2}}) = sub1 {{⊆ᶠ-trans p1 p2}}
+  ⊆ᶠ-trans (sub2 {{p1}}) (sub1 {{p2}}) = sub1 {{lem1 p1 p2}}
+  ⊆ᶠ-trans (sub2 {{p1}}) (sub2 {{p2}}) = sub2 {{⊆ᶠ-trans p1 p2}}
+
+  ⊆ᶠ-asym  : ∀{fs1 fs2} → fs1 ⊆ᶠ fs2 → fs2 ⊆ᶠ fs1 → fs1 ≡ fs2
+  ⊆ᶠ-asym sub∅ sub∅ = refl
+  ⊆ᶠ-asym (sub1 {{p1}}) (sub1 {{p2}}) = ⊥-elim (pp p1 p2)
+    where
+    pp : ∀{f1 f2 fs1 fs2} → (f1 ∷ fs1) ⊆ᶠ fs2 → (f2 ∷ fs2) ⊆ᶠ fs1 → ⊥
+    pp (sub1 {{q1}}) (sub1 {{q2}}) = pp q1 (sub1 {{sub1ʳ q2}})
+    pp (sub1 {{q1}}) (sub2 {{q2}}) = pp q1 (sub1 {{q2}})
+    pp (sub2 {{q1}}) (sub1 {{q2}}) = pp (sub1 {{q1}}) q2
+    pp (sub2 {{q1}}) (sub2 {{q2}}) = pp q1 q2
+  ⊆ᶠ-asym (sub1 {{x}}) (sub2 {{y}}) = cong₂ _∷_ refl (⊆ᶠ-asym (sub1ʳ x) y)
+  ⊆ᶠ-asym (sub2 {{x}}) (sub1 {{y}}) = cong₂ _∷_ refl (⊆ᶠ-asym x (sub1ʳ y))
+  ⊆ᶠ-asym (sub2 {{x}}) (sub2 {{y}}) = cong₂ _∷_ refl (⊆ᶠ-asym x y)
   
   
   -- feature sets for types
@@ -375,7 +396,7 @@ module Ex1 where
   _ = it --sub2 
   
   _ : Dog <:0 Dog
-  _ = it --f-⊆ᶠ-f 
+  _ = it --⊆ᶠ-refl 
   
   
   NS : LexStructure
@@ -698,31 +719,15 @@ module Ex2 where
   []-⊆ᶠ-f {[]} = sub∅
   []-⊆ᶠ-f {x ∷ fs} = sub1 {_} {fs} {{[]-⊆ᶠ-f {fs}}}
   
-  f-⊆ᶠ-f : ∀{fs} → fs ⊆ᶠ fs
-  f-⊆ᶠ-f {[]} = sub∅
-  f-⊆ᶠ-f {x ∷ fs} = sub2 {{f-⊆ᶠ-f}} 
+  ⊆ᶠ-refl : ∀{fs} → fs ⊆ᶠ fs
+  ⊆ᶠ-refl {[]} = sub∅
+  ⊆ᶠ-refl {x ∷ fs} = sub2 {{⊆ᶠ-refl}} 
   
   sub1ʳ : ∀{fs1 fs2 f1} → (f1 ∷ fs1) ⊆ᶠ fs2 → fs1 ⊆ᶠ fs2
   sub1ʳ {[]} {_ ∷ _} _ = []-⊆ᶠ-f
   sub1ʳ (sub1 {{p}}) = sub1 {{sub1ʳ p}}
   sub1ʳ sub2 = sub1
-  
-  -- Can I prove this?
-  -- This seems to hold only for ordered fs!
-  -- ⊆ᶠ-to-≡  : ∀{fs1 fs2} → fs1 ⊆ᶠ fs2 → fs2 ⊆ᶠ fs1 → fs1 ≡ fs2
-  -- ⊆ᶠ-to-≡ sub∅ sub∅ = refl
-  -- ⊆ᶠ-to-≡ {f1 ∷ fs1} {f2 ∷ fs2} (sub1 {{x}}) (sub1 {{y}})
-  --     = cong₂ _∷_ (ppp x y) (⊆ᶠ-to-≡ (sub1ʳ x) (sub1ʳ y))
-  --   where
-  --   ppp : ∀{fs1 fs2 f1 f2} → (f1 ∷ fs1) ⊆ᶠ fs2 → (f2 ∷ fs2) ⊆ᶠ fs1 → f1 ≡ f2
-  --   ppp {x ∷ fs1} {y ∷ fs2} {f1} {f2} (sub1 {{p}}) (sub1 {{q}}) = ppp {!sub1!} q
-  --   ppp {x ∷ fs1} {y ∷ fs2} {f1} {.x} (sub1 {{p}}) (sub2 {{q}}) = {!!}
-  --   ppp {x ∷ fs1} {y ∷ fs2} {.y} {f2} (sub2 {{p}}) (sub1 {{q}}) = {!!}
-  --   ppp {x ∷ fs1} {y ∷ fs2} {.y} {.x} (sub2 {{p}}) (sub2 {{q}}) = ppp q p
-  -- ⊆ᶠ-to-≡ (sub1 {{x}}) (sub2 {{y}}) = cong₂ _∷_ refl (⊆ᶠ-to-≡ (sub1ʳ x) y)
-  -- ⊆ᶠ-to-≡ (sub2 {{x}}) (sub1 {{y}}) = cong₂ _∷_ refl (⊆ᶠ-to-≡ x (sub1ʳ y))
-  -- ⊆ᶠ-to-≡ (sub2 {{x}}) (sub2 {{y}}) = cong₂ _∷_ refl (⊆ᶠ-to-≡ x y)
-  
+   
   
   -- feature sets for types
   
@@ -793,7 +798,7 @@ module Ex2 where
   _ = sub2
   
   _ : Info <:0 Info
-  _ = f-⊆ᶠ-f 
+  _ = ⊆ᶠ-refl 
   
   
   NS : LexStructure
