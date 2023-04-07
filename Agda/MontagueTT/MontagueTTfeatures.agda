@@ -218,13 +218,10 @@ module Ex1 where
     d<o : f-dog < f-object
     
   <-trans : ∀ {i j k} → i < j → j < k → i < k
-  <-trans a<o ()
   <-trans h<a a<o = h<o
-  <-trans h<o ()
   <-trans d<h h<a = d<a
   <-trans d<h h<o = d<o
   <-trans d<a a<o = d<o
-  <-trans d<o ()
   
   isSTO : IsStrictTotalOrder _≡_ _<_
   isSTO = record { isEquivalence = isEquivalence
