@@ -5,11 +5,13 @@
 -- переводятся в категории, зависящие от CN -- sCN, sNP и пр., а затем для
 -- них формулируется семантика прежним образом.
 
+module _ where
+
 open import Data.Bool using (Bool; true; false)
 open import Data.Empty using (⊥)
 open import Data.List using (List; _∷_; [])
 open import Data.Maybe using (Maybe; just; nothing)
-open import Data.Product using (Σ; _,_; proj₁; proj₂; Σ-syntax)
+open import Data.Product using (Σ; _,_; proj₁; proj₂; Σ-syntax; _×_)
 open import Data.Unit using (⊤; tt)
 open import Function using (_$_)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst; sym; cong₂)
@@ -18,35 +20,48 @@ open import Relation.Nullary.Decidable.Core using (map′)
 
 open import ReflectionEq
 
-module _ where
+
+-- The structure to hold names
+-- ===========================
+
+record LexStructure : Set₁ where
+  field
+    nameCN namePN nameVI nameVT nameAdj : Set  -- names for syntactic categories
+    eqCN   : (x y : nameCN)  → Dec (x ≡ y)    -- разрешимые равенства для имён
+    eqPN   : (x y : namePN)  → Dec (x ≡ y)
+    eqVI   : (x y : nameVI)  → Dec (x ≡ y)
+    eqVT   : (x y : nameVT)  → Dec (x ≡ y)
+    eqAdj  : (x y : nameAdj) → Dec (x ≡ y)
 
 
 -- Синтаксические категории.
 -- ========================
 
-module Syntax (nameCN namePN nameVI nameVT nameAdj : Set) where
+module Syntax (lex : LexStructure) where
+
+  open LexStructure lex
               
   mutual
   
     data CN : Set where
-      use-cn : nameCN → CN
+      cn-n  : nameCN → CN
       cn-ap : AP → CN
-      rcn : CN → VP → CN    -- CN that VP
+      rcn   : CN → VP → CN    -- CN that VP
       
     data VI : Set where
-      use-vi : nameVI → VI 
+      vi-n : nameVI → VI 
   
     data VT : Set where
-      use-vt : nameVT → VT
+      vt-n : nameVT → VT
       
     data PN : Set where
-      use-pn : namePN → PN   
+      pn-n : namePN → PN   
     
     data DET : Set where
       a/an every no the ∅ : DET
   
     data Adj : Set where
-      use-adj : nameAdj → Adj
+      adj-n : nameAdj → Adj
       
     data VP : Set where
       vp-vi : VI → VP 
@@ -91,7 +106,8 @@ module Syntax (nameCN namePN nameVI nameVT nameAdj : Set) where
 
 -- В модели валюации имён содержат их зависимость от CN
 
-record Model (nameCN namePN nameVI nameVT nameAdj : Set) : Set₁ where
+record Model (lex : LexStructure) : Set₁ where
+  open LexStructure lex
   field
     valCN  : nameCN  → Set
     valPN  : namePN  → Σ[ cn ∈ nameCN ] (valCN cn) 
@@ -99,45 +115,37 @@ record Model (nameCN namePN nameVI nameVT nameAdj : Set) : Set₁ where
     valVT  : nameVT  → Σ[ cn1 ∈ nameCN ] Σ[ cn2 ∈ nameCN ] (valCN cn1 → valCN cn2 → Set)
     valAdj : nameAdj → Σ[ cn ∈ nameCN ] (valCN cn → Set)
 
--- TODO все val.. можно определить как record
 
-module Semantics (nameCN namePN nameVI nameVT nameAdj : Set)
-                 (eqCN  : (x y : nameCN)  → Dec (x ≡ y))    -- разрешимые равенства для имён
-                 (eqPN  : (x y : namePN)  → Dec (x ≡ y))
-                 (eqVI  : (x y : nameVI)  → Dec (x ≡ y))
-                 (eqVT  : (x y : nameVT)  → Dec (x ≡ y))
-                 (eqAdj : (x y : nameAdj) → Dec (x ≡ y))
-                 (m : Model nameCN namePN nameVI nameVT nameAdj)
-                 where
+module Semantics (lex : LexStructure) (m : Model lex) where
 
+  open LexStructure lex
+  open Syntax lex public
   open Model m
-
-  open Syntax nameCN namePN nameVI nameVT nameAdj public
 
   -- Первый шаг интерпретации: определяем категории, зависящие от CN.
   
   mutual
   
     data sCN : Set where
-      use-cn : nameCN → sCN
-      cn-ap  : {cn : sCN} → sAP cn → sCN
-      rcn    : (cn : sCN) → sVP cn → sCN    -- CN that VP
+      cn-n  : nameCN → sCN
+      cn-ap : {cn : sCN} → sAP cn → sCN
+      rcn   : (cn : sCN) → sVP cn → sCN    -- CN that VP
       
     data sVI : sCN → Set where
-      use-vi : (n : nameVI) → sVI (use-cn (proj₁ (valVI n)))
+      vi-n : (n : nameVI) → sVI (cn-n (proj₁ (valVI n)))
   
     -- порядок аргументов в VT прямой!  VT A B => A → B → Set
     data sVT : sCN → sCN → Set where
-      use-vt : (n : nameVT) → sVT (use-cn (proj₁ (valVT n))) (use-cn (proj₁ (proj₂ (valVT n))))
+      vt-n : (n : nameVT) → sVT (cn-n (proj₁ (valVT n))) (cn-n (proj₁ (proj₂ (valVT n))))
       
     data sPN : sCN → Set where
-      use-pn : (n : namePN) → sPN (use-cn (proj₁ (valPN n)))
+      pn-n : (n : namePN) → sPN (cn-n (proj₁ (valPN n)))
     
     data sDET : Set where
       a/an every no the ∅ : sDET
   
     data sAdj : sCN → Set where
-      use-adj : (n : nameAdj) → sAdj (use-cn (proj₁ (valAdj n)))
+      adj-n : (n : nameAdj) → sAdj (cn-n (proj₁ (valAdj n)))
       
     data sVP (cn : sCN) : Set where
       vp-vi : sVI cn → sVP cn
@@ -164,9 +172,9 @@ module Semantics (nameCN namePN nameVI nameVT nameAdj : Set)
   mutual
 
     _≟CN_ : (x y : sCN) → Dec (x ≡ y)
-    use-cn x ≟CN use-cn y = map′ (cong use-cn) f (eqCN x y)
+    cn-n x ≟CN cn-n y = map′ (cong cn-n) f (eqCN x y)
       where
-      f : {x y : nameCN} → (sCN.use-cn x ≡ use-cn y) → x ≡ y
+      f : {x y : nameCN} → (sCN.cn-n x ≡ cn-n y) → x ≡ y
       f refl = refl
     cn-ap {cx} x ≟CN cn-ap {cy} y = map′ f g (x ≟AP y)
       where
@@ -180,19 +188,19 @@ module Semantics (nameCN namePN nameVI nameVT nameAdj : Set)
       f refl = refl
       g : rcn cx vx ≡ rcn cy vy → (cx , vx) ≡ (cy , vy)
       g refl = refl
-    use-cn _ ≟CN cn-ap _  = not (λ ())
-    use-cn _ ≟CN rcn _ _  = not (λ ())
-    cn-ap _  ≟CN use-cn _ = not (λ ())
+    cn-n _ ≟CN cn-ap _  = not (λ ())
+    cn-n _ ≟CN rcn _ _  = not (λ ())
+    cn-ap _  ≟CN cn-n _ = not (λ ())
     cn-ap _  ≟CN rcn _ _  = not (λ ())
-    rcn _ _  ≟CN use-cn _ = not (λ ())
+    rcn _ _  ≟CN cn-n _ = not (λ ())
     rcn _ _  ≟CN cn-ap _  = not (λ ())
 
     _≟PN_ : {cx cy : sCN} (x : sPN cx) (y : sPN cy) → Dec ((cx , x) ≡ (cy , y))
-    _≟PN_ {cx} {cy} (use-pn x) (use-pn y) = map′ f g (eqPN x y)
+    _≟PN_ {cx} {cy} (pn-n x) (pn-n y) = map′ f g (eqPN x y)
       where
-      f : x ≡ y → (cx , use-pn x) ≡ (cy , use-pn y)
+      f : x ≡ y → (cx , pn-n x) ≡ (cy , pn-n y)
       f refl = refl
-      g : (use-cn (proj₁ (valPN x)) , use-pn x) ≡ (use-cn (proj₁ (valPN y)) , use-pn y) → x ≡ y
+      g : (cn-n (proj₁ (valPN x)) , pn-n x) ≡ (cn-n (proj₁ (valPN y)) , pn-n y) → x ≡ y
       g refl = refl
 
     _≟DET_ : (x y : sDET) → Dec (x ≡ y)
@@ -219,11 +227,11 @@ module Semantics (nameCN namePN nameVI nameVT nameAdj : Set)
     _≟NP_ (np-det _ _) (np-pn _) = not (λ ())
 
     _≟Adj_ : {cx cy : sCN} (x : sAdj cx) (y : sAdj cy) → Dec ((cx , x) ≡ (cy , y))
-    _≟Adj_ {cx} {cy} (use-adj x) (use-adj y) = map′ f g (eqAdj x y)
+    _≟Adj_ {cx} {cy} (adj-n x) (adj-n y) = map′ f g (eqAdj x y)
       where
-      f : x ≡ y → (use-cn (proj₁ (valAdj x)) , use-adj x) ≡ (use-cn (proj₁ (valAdj y)) , use-adj y)
+      f : x ≡ y → (cn-n (proj₁ (valAdj x)) , adj-n x) ≡ (cn-n (proj₁ (valAdj y)) , adj-n y)
       f refl = refl
-      g : (use-cn (proj₁ (valAdj x)) , use-adj x) ≡ (use-cn (proj₁ (valAdj y)) , use-adj y) → x ≡ y
+      g : (cn-n (proj₁ (valAdj x)) , adj-n x) ≡ (cn-n (proj₁ (valAdj y)) , adj-n y) → x ≡ y
       g refl = refl
 
     _≟AP_ : {cx cy : sCN} (x : sAP cx) (y : sAP cy) → Dec ((cx , x) ≡ (cy , y))
@@ -235,21 +243,21 @@ module Semantics (nameCN namePN nameVI nameVT nameAdj : Set)
       g refl = refl
 
     _≟VI_ : {cx cy : sCN} (x : sVI cx) (y : sVI cy) → Dec ((cx , x) ≡ (cy , y))
-    _≟VI_ {cx} {cy} (use-vi x) (use-vi y) = map′ f g (eqVI x y)
+    _≟VI_ {cx} {cy} (vi-n x) (vi-n y) = map′ f g (eqVI x y)
       where
-      f : x ≡ y → (use-cn (proj₁ (valVI x)) , use-vi x) ≡ (use-cn (proj₁ (valVI y)) , use-vi y)
+      f : x ≡ y → (cn-n (proj₁ (valVI x)) , vi-n x) ≡ (cn-n (proj₁ (valVI y)) , vi-n y)
       f refl = refl
-      g : (use-cn (proj₁ (valVI x)) , use-vi x) ≡ (use-cn (proj₁ (valVI y)) , use-vi y) → x ≡ y
+      g : (cn-n (proj₁ (valVI x)) , vi-n x) ≡ (cn-n (proj₁ (valVI y)) , vi-n y) → x ≡ y
       g refl = refl
 
     _≟VT_ : {cx1 cx2 cy1 cy2 : sCN} (x : sVT cx1 cx2) (y : sVT cy1 cy2)
           → Dec ((cx1 , cx2 , x) ≡ (cy1 , cy2 , y))
-    _≟VT_ {cx1} {cx2} {cy1} {cy2} (use-vt x) (use-vt y) = map′ f g (eqVT x y)
+    _≟VT_ {cx1} {cx2} {cy1} {cy2} (vt-n x) (vt-n y) = map′ f g (eqVT x y)
       where
-      f : x ≡ y → (cx1 , cx2 , use-vt x) ≡ (cy1 , cy2 , use-vt y)
+      f : x ≡ y → (cx1 , cx2 , vt-n x) ≡ (cy1 , cy2 , vt-n y)
       f refl = refl
-      g : (use-cn (proj₁ (valVT x)) , use-cn (proj₁ (proj₂ (valVT x))) , use-vt x)
-        ≡ (use-cn (proj₁ (valVT y)) , use-cn (proj₁ (proj₂ (valVT y))) , use-vt y) → x ≡ y
+      g : (cn-n (proj₁ (valVT x)) , cn-n (proj₁ (proj₂ (valVT x))) , vt-n x)
+        ≡ (cn-n (proj₁ (valVT y)) , cn-n (proj₁ (proj₂ (valVT y))) , vt-n y) → x ≡ y
       g refl = refl
 
     _≟VP_ : {cx cy : sCN} (x : sVP cx) (y : sVP cy) → Dec ((cx , x) ≡ (cy , y))
@@ -260,7 +268,8 @@ module Semantics (nameCN namePN nameVI nameVT nameAdj : Set)
       g : (cx , vp-vi vx) ≡ (cy , vp-vi vy) → (cx , vx) ≡ (cy , vy)
       g refl = refl
       -- можно ли упростить?
-    _≟VP_ {cx} {cy} (vp-vt {cx1} vtx nx) (vp-vt {cy1} vty ny) with cx ≟CN cy | vtx ≟VT vty | nx ≟NP ny
+    _≟VP_ {cx} {cy} (vp-vt {cx1} vtx nx) (vp-vt {cy1} vty ny)
+      with cx ≟CN cy | vtx ≟VT vty | nx ≟NP ny
     ... | not ¬p | _      | _      = not \z → ¬p (f z)
       where
       f : (cx , vp-vt vtx nx) ≡ (cy , vp-vt vty ny) → cx ≡ cy
@@ -321,22 +330,22 @@ module Semantics (nameCN namePN nameVI nameVT nameAdj : Set)
   mutual
   
     ⟦scn_⟧ : sCN → Set                        -- CN ≠ e → t !  CN это тип.
-    ⟦scn use-cn n ⟧ = valCN n
-    ⟦scn cn-ap (ap-a (use-adj n)) ⟧ = Σ ⟦scn (use-cn (proj₁ (valAdj n))) ⟧ (proj₂ (valAdj n)) 
+    ⟦scn cn-n n ⟧ = valCN n
+    ⟦scn cn-ap (ap-a (adj-n n)) ⟧ = Σ ⟦scn (cn-n (proj₁ (valAdj n))) ⟧ (proj₂ (valAdj n)) 
     ⟦scn rcn cn vp ⟧ = Σ ⟦scn cn ⟧ ⟦svp vp ⟧
     
     ⟦spn_⟧ : {cn : sCN} → sPN cn → ⟦scn cn ⟧
-    ⟦spn (use-pn n) ⟧ = proj₂ (valPN n)
+    ⟦spn (pn-n n) ⟧ = proj₂ (valPN n)
   
     ⟦snp_⟧ : {cn : sCN} → sNP cn → (⟦scn cn ⟧ → Set) → Set   -- NP = (e → t) → t     
     ⟦snp np-pn pn ⟧ ⟦svp⟧ = ⟦svp⟧ ⟦spn pn ⟧
     ⟦snp np-det d cn ⟧ ⟦svp⟧ = ⟦sdet d ⟧ cn ⟦svp⟧
     
     ⟦svi_⟧ : {cn : sCN} → sVI cn → ⟦scn cn ⟧ → Set           -- VI = e → t
-    ⟦svi (use-vi n) ⟧ = proj₂ (valVI n)
+    ⟦svi (vi-n n) ⟧ = proj₂ (valVI n)
     
     ⟦svt_⟧ : ∀ {cn1 cn} → sVT cn1 cn → ⟦scn cn1 ⟧ → ⟦scn cn ⟧ → Set    -- VT = e → e → t
-    ⟦svt (use-vt n) ⟧ = proj₂ (proj₂ (valVT n)) 
+    ⟦svt (vt-n n) ⟧ = proj₂ (proj₂ (valVT n)) 
   
     {-# TERMINATING #-}
     ⟦svp_⟧ : {cn : sCN} → sVP cn → ⟦scn cn ⟧ → Set             -- VP = e → t
@@ -351,7 +360,7 @@ module Semantics (nameCN namePN nameVI nameVT nameAdj : Set)
     ⟦sdet ∅ ⟧     cn ⟦vp⟧ = Σ ⟦scn cn ⟧ ⟦vp⟧
     
     ⟦sap_⟧ : {cn : sCN} → sAP cn → (⟦scn cn ⟧ → Set)           -- AP = (e → t) 
-    ⟦sap ap-a (use-adj n) ⟧ = proj₂ (valAdj n)
+    ⟦sap ap-a (adj-n n) ⟧ = proj₂ (valAdj n)
 
     -- Допускаем множественную интерпретацию предложений
     ⟦ss_⟧ : sS → List Set
@@ -372,7 +381,7 @@ module Semantics (nameCN namePN nameVI nameVT nameAdj : Set)
   mutual
   
     fCN : CN → Maybe sCN
-    fCN (use-cn x) = just $ use-cn x
+    fCN (cn-n x) = just $ cn-n x
     fCN (cn-ap x)  = just $ cn-ap $ proj₂ $ fAP x 
     fCN (rcn cn vp) with fCN cn | fVP vp
     ...             | just cn' | just vp' with cn' ≟CN (proj₁ vp')
@@ -381,16 +390,16 @@ module Semantics (nameCN namePN nameVI nameVT nameAdj : Set)
     fCN (rcn cn vp) | _ | _ = nothing
 
     fPN : PN → Σ[ cn ∈ sCN ] (sPN cn)
-    fPN (use-pn x) = use-cn (proj₁ (valPN x)) , use-pn x
+    fPN (pn-n x) = cn-n (proj₁ (valPN x)) , pn-n x
 
     fVI : VI → Σ[ cn ∈ sCN ] (sVI cn)
-    fVI (use-vi x) = use-cn (proj₁ (valVI x)) , use-vi x 
+    fVI (vi-n x) = cn-n (proj₁ (valVI x)) , vi-n x 
 
     fVT : VT → Σ[ cn1 ∈ sCN ] Σ[ cn2 ∈ sCN ] (sVT cn1 cn2)
-    fVT (use-vt x) = (use-cn (proj₁ (valVT x))) , (use-cn (proj₁ (proj₂ (valVT x)))) , (use-vt x)
+    fVT (vt-n x) = (cn-n (proj₁ (valVT x))) , (cn-n (proj₁ (proj₂ (valVT x)))) , (vt-n x)
 
     fAdj : Adj → Σ[ cn ∈ sCN ] (sAdj cn)
-    fAdj (use-adj x) = (use-cn (proj₁ (valAdj x))) , (use-adj x)
+    fAdj (adj-n x) = (cn-n (proj₁ (valAdj x))) , (adj-n x)
 
     fDET : DET → sDET
     fDET a/an = a/an
@@ -400,13 +409,13 @@ module Semantics (nameCN namePN nameVI nameVT nameAdj : Set)
     fDET ∅ = ∅
 
     fNP : NP → Maybe (Σ[ cn ∈ sCN ] (sNP cn))
-    fNP (np-pn (use-pn x)) = just $ use-cn (proj₁ (valPN x)) , np-pn (use-pn x)
+    fNP (np-pn (pn-n x)) = just $ cn-n (proj₁ (valPN x)) , np-pn (pn-n x)
     fNP (np-det d c) with fCN c
     ... | just x = just $ x , (np-det (fDET d) x)
     ... | nothing = nothing
 
     fVP : VP → Maybe (Σ[ cn ∈ sCN ] (sVP cn))
-    fVP (vp-vi (use-vi x)) = just $ proj₁ (fVI (use-vi x)) , vp-vi (use-vi x)
+    fVP (vp-vi (vi-n x)) = just $ proj₁ (fVI (vi-n x)) , vp-vi (vi-n x)
     fVP (vp-vt vt np) with fNP np
     ... | nothing = nothing
     ... | just np' with (proj₁ (proj₂ (fVT vt))) ≟CN (proj₁ np')
@@ -421,7 +430,7 @@ module Semantics (nameCN namePN nameVI nameVT nameAdj : Set)
     -- ...                 | not _ = nothing
 
     fAP : AP → Σ[ cn ∈ sCN ] sAP cn
-    fAP (ap-a (use-adj x)) = use-cn (proj₁ (valAdj x)) , ap-a (use-adj x)
+    fAP (ap-a (adj-n x)) = cn-n (proj₁ (valAdj x)) , ap-a (adj-n x)
 
     fS : S → Maybe sS
     fS (s-nv np vp) with fNP np | fVP vp
@@ -485,7 +494,7 @@ data namePN  : Set where Mary Alex Polkan : namePN
 data nameCN  : Set where Human Dog : nameCN
 data nameVI  : Set where runs : nameVI
 data nameVT  : Set where love : nameVT
-data nameAdj : Set where big : nameAdj
+data nameAdj : Set where black : nameAdj
 
 postulate
   *Human *Dog : Set
@@ -493,7 +502,7 @@ postulate
   *Polkan : *Dog
   _*runs : *Human → Set
   _*love_ : *Human → *Human → Set
-  *big : *Dog → Set 
+  *black : *Dog → Set 
 
 -- разрешимое равенство для имён
 
@@ -510,8 +519,21 @@ eqVT : (x y : nameVT) → Dec (x ≡ y)
 eqVT love love = yes refl
 
 eqAdj : (x y : nameAdj) → Dec (x ≡ y)
-eqAdj big big = yes refl
+eqAdj black black = yes refl
 
+NS : LexStructure
+NS = record
+       { nameCN = nameCN 
+       ; namePN = namePN 
+       ; nameVI = nameVI 
+       ; nameVT = nameVT 
+       ; nameAdj = nameAdj
+       ; eqCN =  eqCN  
+       ; eqPN =  eqPN  
+       ; eqVI =  eqVI  
+       ; eqVT =  eqVT  
+       ; eqAdj = eqAdj 
+       }
 
 -- валюация для имён
 
@@ -531,9 +553,9 @@ valVT : nameVT → Σ[ cn1 ∈ nameCN ] Σ[ cn2 ∈ nameCN ] (valCN cn1 → valC
 valVT love = Human , Human , _*love_
 
 valAdj : nameAdj → Σ[ cn ∈ nameCN ] (valCN cn → Set)
-valAdj big = Dog , *big
+valAdj black = Dog , *black
 
-M : Model nameCN namePN nameVI nameVT nameAdj
+M : Model NS
 M = record { valCN  = valCN
            ; valPN  = valPN
            ; valVI  = valVI
@@ -541,38 +563,36 @@ M = record { valCN  = valCN
            ; valAdj = valAdj
            }
   
-open Semantics nameCN namePN nameVI nameVT nameAdj
-               eqCN eqPN eqVI eqVT eqAdj
-               M 
+open Semantics NS M 
 
 
-_ : fPN (use-pn Mary) ≡ (use-cn Human , use-pn Mary)
+_ : fPN (pn-n Mary) ≡ (cn-n Human , pn-n Mary)
 _ = refl
 
 _ : NP
-_ = np-pn (use-pn Mary)
+_ = np-pn (pn-n Mary)
 
-_ : ⟦vi (use-vi runs) ⟧ ≡ (use-cn Human , _*runs)
+_ : ⟦vi (vi-n runs) ⟧ ≡ (cn-n Human , _*runs)
 _ = refl
 
-_ : ⟦vt (use-vt love) ⟧ ≡ (use-cn Human , use-cn Human , _*love_)
+_ : ⟦vt (vt-n love) ⟧ ≡ (cn-n Human , cn-n Human , _*love_)
 _ = refl
 
-_ : ⟦vp (vp-vi (use-vi runs)) ⟧ ≡ just (use-cn Human , _*runs)
+_ : ⟦vp (vp-vi (vi-n runs)) ⟧ ≡ just (cn-n Human , _*runs)
 _ = refl
 
-_ : ⟦pn (use-pn Mary) ⟧ ≡ (use-cn Human , *Mary)
+_ : ⟦pn (pn-n Mary) ⟧ ≡ (cn-n Human , *Mary)
 _ = refl
 
-_ : ⟦np (np-pn (use-pn Mary)) ⟧ ≡ just (use-cn Human , λ vp → vp *Mary)
+_ : ⟦np (np-pn (pn-n Mary)) ⟧ ≡ just (cn-n Human , λ vp → vp *Mary)
 _ = refl
 
 
 -- Mary runs
 s1 : S
-s1 = s-nv (np-pn (use-pn Mary)) (vp-vi (use-vi runs))
+s1 = s-nv (np-pn (pn-n Mary)) (vp-vi (vi-n runs))
 
-_ : fS s1 ≡ (just (s-nv (np-pn (use-pn Mary)) (vp-vi (use-vi runs))))
+_ : fS s1 ≡ (just (s-nv (np-pn (pn-n Mary)) (vp-vi (vi-n runs))))
 _ = refl 
 
 _ : ⟦s s1 ⟧ ≡ (*Mary *runs) ∷ []
@@ -581,7 +601,7 @@ _ = refl
 
 -- Polkan runs
 s2 : S
-s2 = s-nv (np-pn (use-pn Polkan)) (vp-vi (use-vi runs))
+s2 = s-nv (np-pn (pn-n Polkan)) (vp-vi (vi-n runs))
 
 _ : ⟦s s2 ⟧ ≡ []   -- s2 семантически некорректно, хотя синтаксически правильно
 _ = refl
@@ -589,7 +609,7 @@ _ = refl
 
 -- a human runs
 s4 : S
-s4 = s-nv (np-det a/an (use-cn Human)) (vp-vi (use-vi runs))
+s4 = s-nv (np-det a/an (cn-n Human)) (vp-vi (vi-n runs))
 
 _ : ⟦s s4 ⟧ ≡ (Σ[ x ∈ *Human ] x *runs) ∷ []
 _ = refl
@@ -597,7 +617,7 @@ _ = refl
 
 -- every human runs
 s5 : S
-s5 = s-nv (np-det every (use-cn Human)) (vp-vi (use-vi runs))
+s5 = s-nv (np-det every (cn-n Human)) (vp-vi (vi-n runs))
 
 _ : ⟦s s5 ⟧ ≡ ((x : *Human) → x *runs) ∷ []
 _ = refl
@@ -605,7 +625,7 @@ _ = refl
 
 -- the human runs
 s6 : S
-s6 = s-nv (np-det the (use-cn Human)) (vp-vi (use-vi runs))
+s6 = s-nv (np-det the (cn-n Human)) (vp-vi (vi-n runs))
 
 -- вспомогательные функции
 inhabited : ∀ {a} {A : Set a} → List A → Set
@@ -630,17 +650,17 @@ pp = Hₚ , *Mary-runs
 -- Прилагательные / свойства
 
 
-big-dog : ⟦cn cn-ap (ap-a (use-adj big)) ⟧      -- здесь ⊥ в ⟦cn_⟧ удобнее, чем nothing
-big-dog = *Polkan , *polkan-is-big
+black-dog : ⟦cn cn-ap (ap-a (adj-n black)) ⟧      -- здесь ⊥ в ⟦cn_⟧ удобнее, чем nothing
+black-dog = *Polkan , *polkan-is-black
   where
-  postulate *polkan-is-big : *big *Polkan
+  postulate *polkan-is-black : *black *Polkan
 
 
 
 -- Относительные конструкции (CN that VP и пр.)
 
 human-that-runs : CN
-human-that-runs = rcn (use-cn Human) (vp-vi (use-vi runs))
+human-that-runs = rcn (cn-n Human) (vp-vi (vi-n runs))
 
 _ : ⟦cn human-that-runs ⟧
 _ = *Mary , *Mary-runs
@@ -658,7 +678,7 @@ a-human-that-runs = np-det a/an human-that-runs
 -- Mary loves Alex
 
 s11 : S
-s11 = s-nv (np-pn (use-pn Mary)) (vp-vt (use-vt love) (np-pn (use-pn Alex)))
+s11 = s-nv (np-pn (pn-n Mary)) (vp-vt (vt-n love) (np-pn (pn-n Alex)))
 
 _ : ⟦s s11 ⟧ ≡ *Mary *love *Alex ∷ []
 _ = refl
@@ -667,7 +687,7 @@ _ = refl
 -- Mary loves a/an human
 
 s12 : S
-s12 = s-nv (np-pn (use-pn Mary)) (vp-vt (use-vt love) (np-det a/an (use-cn Human)))
+s12 = s-nv (np-pn (pn-n Mary)) (vp-vt (vt-n love) (np-det a/an (cn-n Human)))
 
 _ : ⟦s s12 ⟧ ≡ (Σ[ x ∈ *Human ] (*Mary *love x)) ∷ []
 _ = refl
@@ -681,7 +701,7 @@ _ = *Alex , *Mary-loves-Alex
 -- Every human loves a human (different)
 
 s13 : S
-s13 = s-nv (np-det every (use-cn Human)) (vp-vt (use-vt love) (np-det a/an (use-cn Human)))
+s13 = s-nv (np-det every (cn-n Human)) (vp-vt (vt-n love) (np-det a/an (cn-n Human)))
 
 _ : ⟦s s13 ⟧ ≡ (∀(x : *Human) → Σ[ y ∈ *Human ] x *love y) ∷ []
 _ = refl
@@ -692,7 +712,7 @@ _ = refl
 -- Every human loves a human
 
 s17 : S
-s17 = s-nvn (np-det every (use-cn Human)) (use-vt love) (np-det a/an (use-cn Human))
+s17 = s-nvn (np-det every (cn-n Human)) (vt-n love) (np-det a/an (cn-n Human))
 
 _ : ⟦s s17 ⟧ ≡ (∀(x : *Human) → Σ[ y ∈ *Human ] x *love y)          -- ср. s13
              ∷ (Σ[ y ∈ *Human ] ∀ (x : *Human) → x *love y)         -- all x love the same y
@@ -704,7 +724,7 @@ _ = refl
 -- Два смысла предложения могут и совпадать:
 
 s18 : S
-s18 = s-nvn (np-pn (use-pn Mary)) (use-vt love) (np-pn (use-pn Alex))
+s18 = s-nvn (np-pn (pn-n Mary)) (vt-n love) (np-pn (pn-n Alex))
 
 _ : ⟦s s18 ⟧ ≡ (*Mary *love *Alex)
              ∷ (*Mary *love *Alex)
