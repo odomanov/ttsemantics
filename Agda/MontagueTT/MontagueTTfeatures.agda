@@ -67,22 +67,22 @@ module Syntax (nam : LexStructure) where
   
     data CN : Set where
       cn-n  : nameCN → CN
-      cn-ap : {cn1 : CN} → AP cn1 → (cn2 : CN) → {{cn2 <: cn1}} → CN
-      rcn   : (cn1 : CN) {cn2 : CN} → VP cn2 → {{cn1 <: cn2}} → CN    -- CN that VP
+      cn-ap : {cn₁ : CN} → AP cn₁ → (cn₂ : CN) → {{cn₂ <: cn₁}} → CN
+      rcn   : (cn₁ : CN) {cn₂ : CN} → VP cn₂ → {{cn₁ <: cn₂}} → CN    -- CN that VP
       
     data _<:_ : CN → CN → Set where
-      instance cnm  : ∀ {n1 n2} → {{n1 <:0 n2}} → cn-n n1 <: cn-n n2
-      instance cap  : ∀ {cn1 cn2 ap coe} → cn-ap {cn1} ap cn2 {{coe}} <: cn2
-      instance crcn : ∀ {cn1 cn2 vp coe} → rcn cn1 {cn2} vp {{coe}} <: cn1
-      c∘ : ∀ {cn1 cn2 cn3} → cn1 <: cn2 → cn2 <: cn3 → cn1 <: cn3
+      instance cnm  : ∀ {n₁ n₂} → {{n₁ <:0 n₂}} → cn-n n₁ <: cn-n n₂
+      instance cap  : ∀ {cn₁ cn₂ ap coe} → cn-ap {cn₁} ap cn₂ {{coe}} <: cn₂
+      instance crcn : ∀ {cn₁ cn₂ vp coe} → rcn cn₁ {cn₂} vp {{coe}} <: cn₁
+      c∘ : ∀ {cn₁ cn₂ cn₃} → cn₁ <: cn₂ → cn₂ <: cn₃ → cn₁ <: cn₃
 
     data Det : Set where
       a/an every no the ∅ : Det
   
     data VP : (cn : CN) → Set where
       vp-vi : (n : nameVI) → VP $ cn-n $ argVI n
-      vp-vt : (n : nameVT) → {cn2 : CN} → NP cn2
-            → {{coe : cn2 <: (cn-n (proj₂ (argVT n)))}} → VP (cn-n (proj₁ (argVT n)))
+      vp-vt : (n : nameVT) → {cn₂ : CN} → NP cn₂
+            → {{coe : cn₂ <: (cn-n (proj₂ (argVT n)))}} → VP (cn-n (proj₁ (argVT n)))
     
     data NP : (cn : CN) → Set where
       np-pn  : (n : namePN) → NP $ cn-n $ argPN n
@@ -92,7 +92,7 @@ module Syntax (nam : LexStructure) where
       ap-a : (n : nameAdj) → AP $ cn-n $ argAdj n
       
     data S : Set where
-      s-nv  : ∀{cn1} → NP cn1 → ∀{cn2} → VP cn2 → {{coe : cn1 <: cn2}} → S
+      s-nv  : ∀{cn₁} → NP cn₁ → ∀{cn₂} → VP cn₂ → {{coe : cn₁ <: cn₂}} → S
 
 
 -- Семантика
@@ -107,7 +107,7 @@ record Model (nam : LexStructure) : Set₁ where
     valVT  : (n : nameVT)  → valCN (proj₁ (argVT n))
                            → valCN (proj₂ (argVT n)) → Set
     valAdj : (n : nameAdj) → valCN (argAdj n) → Set
-    val<:0 : ∀{n1 n2} → {{n1 <:0 n2}} → valCN n1 ⊆ valCN n2
+    val<:0 : ∀{n₁ n₂} → {{n₁ <:0 n₂}} → valCN n₁ ⊆ valCN n₂
 
 
 module Semantics (nam : LexStructure) (m : Model nam) where
@@ -128,40 +128,40 @@ module Semantics (nam : LexStructure) (m : Model nam) where
     ⟦cn_⟧ : CN → Set
     ⟦cn cn-n n ⟧ = valCN n
     ⟦cn cn-ap ap cn {{coe}} ⟧ = ⟪Σ⟫ ⟦cn cn ⟧ ⟦ap ap ⟧ {{⟦coe coe ⟧}}  
-    ⟦cn rcn cn1 {cn2} vp {{coe}} ⟧ = ⟪Σ⟫ ⟦cn cn1 ⟧ (⟦vp vp ⟧ {cn2}) {{⟦coe coe ⟧}} 
+    ⟦cn rcn cn₁ {cn₂} vp {{coe}} ⟧ = ⟪Σ⟫ ⟦cn cn₁ ⟧ (⟦vp vp ⟧ {cn₂}) {{⟦coe coe ⟧}} 
   
-    ⟦coe_⟧ : {cn1 cn2 : CN} → (cn1 <: cn2) → (⟦cn cn1 ⟧ ⊆ ⟦cn cn2 ⟧)
+    ⟦coe_⟧ : {cn₁ cn₂ : CN} → (cn₁ <: cn₂) → (⟦cn cn₁ ⟧ ⊆ ⟦cn cn₂ ⟧)
     ⟦coe cnm ⟧  = val<:0 
     ⟦coe cap ⟧  = coerce proj₁  
     ⟦coe crcn ⟧ = coerce proj₁  
-    ⟦coe c∘ c12 c23 ⟧ = coerce (ggetfunc c23 ∘ ggetfunc c12)   
+    ⟦coe c∘ c₁₂ c₂₃ ⟧ = coerce (ggetfunc c₂₃ ∘ ggetfunc c₁₂)   
   
-    ggetfunc : ∀{cn1 cn2} → cn1 <: cn2 → ⟦cn cn1 ⟧ → ⟦cn cn2 ⟧
+    ggetfunc : ∀{cn₁ cn₂} → cn₁ <: cn₂ → ⟦cn cn₁ ⟧ → ⟦cn cn₂ ⟧
     ggetfunc cnm = getfunc val<:0
     ggetfunc cap = proj₁
     ggetfunc crcn = proj₁
-    ggetfunc (c∘ c12 c23) = ggetfunc c23 ∘ ggetfunc c12
+    ggetfunc (c∘ c₁₂ c₂₃) = ggetfunc c₂₃ ∘ ggetfunc c₁₂
   
     -- AP = (e → t) 
     ⟦ap_⟧ : {cn : CN} → AP cn → (⟦cn cn ⟧ → Set)
     ⟦ap ap-a n ⟧ = valAdj n
   
     -- NP = (e → t) → t
-    ⟦np_⟧ : {cn1 : CN} → NP cn1 → {cn2 : CN} → {{⟦cn cn1 ⟧ ⊆ ⟦cn cn2 ⟧}}
-          → (⟦cn cn2 ⟧ → Set) → Set  
+    ⟦np_⟧ : {cn₁ : CN} → NP cn₁ → {cn₂ : CN} → {{⟦cn cn₁ ⟧ ⊆ ⟦cn cn₂ ⟧}}
+          → (⟦cn cn₂ ⟧ → Set) → Set  
     ⟦np np-pn n ⟧           ⟦vp⟧ = ⟦vp⟧ ⟪ valPN n ⟫
-    ⟦np np-det d cn ⟧ {cn2} ⟦vp⟧ = ⟦det d ⟧ cn {cn2} ⟦vp⟧
+    ⟦np np-det d cn ⟧ {cn₂} ⟦vp⟧ = ⟦det d ⟧ cn {cn₂} ⟦vp⟧
     
     -- VP = e → t
-    ⟦vp_⟧ : {cn1 : CN} → VP cn1 → {cn2 : CN} → {{⟦cn cn2 ⟧ ⊆ ⟦cn cn1 ⟧}}
-          → ⟦cn cn2 ⟧ → Set
+    ⟦vp_⟧ : {cn₁ : CN} → VP cn₁ → {cn₂ : CN} → {{⟦cn cn₂ ⟧ ⊆ ⟦cn cn₁ ⟧}}
+          → ⟦cn cn₂ ⟧ → Set
     ⟦vp vp-vi n ⟧ x = valVI n ⟪ x ⟫
-    ⟦vp vp-vt vt {cn2} np {{coe}} ⟧ x =
-      ⟦np np ⟧ {cn2} λ y → valVT vt ⟪ x ⟫ $ ⟪ y ⟫ {{⟦coe coe ⟧}} -- λx.(NP (λy.(VT y x)))
+    ⟦vp vp-vt vt {cn₂} np {{coe}} ⟧ x =
+      ⟦np np ⟧ {cn₂} λ y → valVT vt ⟪ x ⟫ $ ⟪ y ⟫ {{⟦coe coe ⟧}} -- λx.(NP (λy.(VT y x)))
   
     -- Det = (e → t) → ((e → t) → t) 
-    ⟦det_⟧ : Det → (cn : CN) → {cn1 : CN} → {{⟦cn cn ⟧ ⊆ ⟦cn cn1 ⟧}}
-           → (⟦cn cn1 ⟧ → Set) → Set 
+    ⟦det_⟧ : Det → (cn : CN) → {cn₁ : CN} → {{⟦cn cn ⟧ ⊆ ⟦cn cn₁ ⟧}}
+           → (⟦cn cn₁ ⟧ → Set) → Set 
     ⟦det a/an ⟧  cn ⟦vp⟧ = Σ ⟦cn cn ⟧ ⟪→ ⟦vp⟧ ⟫ 
     ⟦det every ⟧ cn ⟦vp⟧ = (x : ⟦cn cn ⟧) → ⟦vp⟧ ⟪ x ⟫
     ⟦det no ⟧    cn ⟦vp⟧ = (x : ⟦cn cn ⟧) → ¬ ⟦vp⟧ ⟪ x ⟫ 
@@ -169,8 +169,8 @@ module Semantics (nam : LexStructure) (m : Model nam) where
     ⟦det ∅ ⟧     cn ⟦vp⟧ = Σ ⟦cn cn ⟧ ⟪→ ⟦vp⟧ ⟫ 
     
     ⟦s_⟧ : S → Set
-    ⟦s s-nv {cn1} np {cn2} vp {{coe}} ⟧ =
-      ⟦np np ⟧ {cn1} (⟪→ ⟦vp vp ⟧ {cn2} ⟫ {{⟦coe coe ⟧}})
+    ⟦s s-nv {cn₁} np {cn₂} vp {{coe}} ⟧ =
+      ⟦np np ⟧ {cn₁} (⟪→ ⟦vp vp ⟧ {cn₂} ⟫ {{⟦coe coe ⟧}})
 
 
 -- ==================================================================
@@ -185,7 +185,7 @@ module Ex1 where
   data namePN  : Set where Alex Mary Polkan : namePN
   data nameVI  : Set where run : nameVI
   data nameVT  : Set where love : nameVT
-  data nameAdj : Set where big small : nameAdj
+  data nameAdj : Set where black : nameAdj
   
   argPN : namePN → nameCN
   argPN Alex = Human
@@ -199,8 +199,7 @@ module Ex1 where
   argVT love = Animate , Object 
   
   argAdj : nameAdj → nameCN
-  argAdj big   = Object
-  argAdj small = Object
+  argAdj black   = Object
   
   
   -- Признаки  -- вообще говоря, относятся к синтаксису
@@ -265,8 +264,8 @@ module Ex1 where
   -- subset for FS, works properly only for ordered FS
   data _⊆ᶠ_ : FS → FS → Set where
     instance sub∅  : [] ⊆ᶠ []
-    instance sub1  : ∀{fs1 fs2 f} → {{fs1 ⊆ᶠ fs2}} → fs1 ⊆ᶠ (f ∷ fs2)  
-    instance sub2  : ∀{fs1 fs2 f} → {{fs1 ⊆ᶠ fs2}} → (f ∷ fs1) ⊆ᶠ (f ∷ fs2)  
+    instance sub1  : ∀{fs₁ fs₂ f} → {{fs₁ ⊆ᶠ fs₂}} → fs₁ ⊆ᶠ (f ∷ fs₂)  
+    instance sub2  : ∀{fs₁ fs₂ f} → {{fs₁ ⊆ᶠ fs₂}} → (f ∷ fs₁) ⊆ᶠ (f ∷ fs₂)  
   
   -- some properties
   
@@ -274,23 +273,23 @@ module Ex1 where
   []-⊆ᶠ-f {[]} = sub∅
   []-⊆ᶠ-f {x ∷ fs} = sub1 {_} {fs} {{[]-⊆ᶠ-f {fs}}}
   
-  sub1ʳ : ∀{fs1 fs2 f1} → (f1 ∷ fs1) ⊆ᶠ fs2 → fs1 ⊆ᶠ fs2
+  sub1ʳ : ∀{fs₁ fs₂ f₁} → (f₁ ∷ fs₁) ⊆ᶠ fs₂ → fs₁ ⊆ᶠ fs₂
   sub1ʳ {[]} {_ ∷ _} _ = []-⊆ᶠ-f
   sub1ʳ (sub1 {{p}}) = sub1 {{sub1ʳ p}}
   sub1ʳ sub2 = sub1
 
-  lem1 : ∀{f fs1 fs2 fs3} → fs1 ⊆ᶠ fs3 → (f ∷ fs3) ⊆ᶠ fs2 → (f ∷ fs1) ⊆ᶠ fs2
+  lem1 : ∀{f fs₁ fs₂ fs₃} → fs₁ ⊆ᶠ fs₃ → (f ∷ fs₃) ⊆ᶠ fs₂ → (f ∷ fs₁) ⊆ᶠ fs₂
   lem1 sub∅ sub1 = sub1 
   lem1 sub∅ sub2 = sub2
-  lem1 (sub1 {{q1}}) (sub1 {{sub1 {{q2}} }}) = sub1 ⦃ sub1 {{lem1 q1 (tmp q2)}} ⦄
+  lem1 (sub1 {{q₁}}) (sub1 {{sub1 {{q₂}} }}) = sub1 ⦃ sub1 {{lem1 q₁ (tmp q₂)}} ⦄
     where
-    tmp : ∀{f f2 fs2 fs3} → (f ∷ f2 ∷ fs2) ⊆ᶠ fs3 → (f ∷ fs2) ⊆ᶠ fs3
+    tmp : ∀{f f₂ fs₂ fs₃} → (f ∷ f₂ ∷ fs₂) ⊆ᶠ fs₃ → (f ∷ fs₂) ⊆ᶠ fs₃
     tmp (sub1 {{r}}) = sub1 {{tmp r}}
     tmp (sub2 {{r}}) = sub2 {{sub1ʳ r}}
-  lem1 (sub1 {{q1}}) (sub1 {{sub2 {{q2}} }}) = sub1 ⦃ sub2 {{sub1ʳ (lem1 q1 q2)}} ⦄
-  lem1 (sub1 {{q1}}) (sub2 {{q2}}) = sub2 {{sub1ʳ (lem1 q1 q2)}}
-  lem1 (sub2 {{q1}}) (sub1 {{q2}}) = sub1 {{lem1 (sub2 {{q1}}) q2}}
-  lem1 (sub2 {{q1}}) (sub2 {{q2}}) = sub2 {{lem1 q1 q2}}
+  lem1 (sub1 {{q₁}}) (sub1 {{sub2 {{q₂}} }}) = sub1 ⦃ sub2 {{sub1ʳ (lem1 q₁ q₂)}} ⦄
+  lem1 (sub1 {{q₁}}) (sub2 {{q₂}}) = sub2 {{sub1ʳ (lem1 q₁ q₂)}}
+  lem1 (sub2 {{q₁}}) (sub1 {{q₂}}) = sub1 {{lem1 (sub2 {{q₁}}) q₂}}
+  lem1 (sub2 {{q₁}}) (sub2 {{q₂}}) = sub2 {{lem1 q₁ q₂}}
 
 
   -- check that ⊆ᶠ is partial order
@@ -299,23 +298,23 @@ module Ex1 where
   ⊆ᶠ-refl {[]} = sub∅
   ⊆ᶠ-refl {_ ∷ _} = sub2 {{⊆ᶠ-refl}} 
   
-  ⊆ᶠ-trans : ∀{fs1 fs2 fs3} → fs1 ⊆ᶠ fs2 → fs2 ⊆ᶠ fs3 → fs1 ⊆ᶠ fs3
+  ⊆ᶠ-trans : ∀{fs₁ fs₂ fs₃} → fs₁ ⊆ᶠ fs₂ → fs₂ ⊆ᶠ fs₃ → fs₁ ⊆ᶠ fs₃
   ⊆ᶠ-trans sub∅ sub∅ = sub∅
   ⊆ᶠ-trans sub∅ sub1 = sub1
-  ⊆ᶠ-trans (sub1 {{p1}}) (sub1 {{p2}}) = sub1 {{⊆ᶠ-trans p1 (sub1ʳ p2)}}
-  ⊆ᶠ-trans (sub1 {{p1}}) (sub2 {{p2}}) = sub1 {{⊆ᶠ-trans p1 p2}}
-  ⊆ᶠ-trans (sub2 {{p1}}) (sub1 {{p2}}) = sub1 {{lem1 p1 p2}}
-  ⊆ᶠ-trans (sub2 {{p1}}) (sub2 {{p2}}) = sub2 {{⊆ᶠ-trans p1 p2}}
+  ⊆ᶠ-trans (sub1 {{p₁}}) (sub1 {{p₂}}) = sub1 {{⊆ᶠ-trans p₁ (sub1ʳ p₂)}}
+  ⊆ᶠ-trans (sub1 {{p₁}}) (sub2 {{p₂}}) = sub1 {{⊆ᶠ-trans p₁ p₂}}
+  ⊆ᶠ-trans (sub2 {{p₁}}) (sub1 {{p₂}}) = sub1 {{lem1 p₁ p₂}}
+  ⊆ᶠ-trans (sub2 {{p₁}}) (sub2 {{p₂}}) = sub2 {{⊆ᶠ-trans p₁ p₂}}
 
-  ⊆ᶠ-asym  : ∀{fs1 fs2} → fs1 ⊆ᶠ fs2 → fs2 ⊆ᶠ fs1 → fs1 ≡ fs2
+  ⊆ᶠ-asym  : ∀{fs₁ fs₂} → fs₁ ⊆ᶠ fs₂ → fs₂ ⊆ᶠ fs₁ → fs₁ ≡ fs₂
   ⊆ᶠ-asym sub∅ sub∅ = refl
-  ⊆ᶠ-asym (sub1 {{p1}}) (sub1 {{p2}}) = ⊥-elim (pp p1 p2)
+  ⊆ᶠ-asym (sub1 {{p₁}}) (sub1 {{p₂}}) = ⊥-elim (pp p₁ p₂)
     where
-    pp : ∀{f1 f2 fs1 fs2} → (f1 ∷ fs1) ⊆ᶠ fs2 → (f2 ∷ fs2) ⊆ᶠ fs1 → ⊥
-    pp (sub1 {{q1}}) (sub1 {{q2}}) = pp q1 (sub1 {{sub1ʳ q2}})
-    pp (sub1 {{q1}}) (sub2 {{q2}}) = pp q1 (sub1 {{q2}})
-    pp (sub2 {{q1}}) (sub1 {{q2}}) = pp (sub1 {{q1}}) q2
-    pp (sub2 {{q1}}) (sub2 {{q2}}) = pp q1 q2
+    pp : ∀{f₁ f₂ fs₁ fs₂} → (f₁ ∷ fs₁) ⊆ᶠ fs₂ → (f₂ ∷ fs₂) ⊆ᶠ fs₁ → ⊥
+    pp (sub1 {{q₁}}) (sub1 {{q₂}}) = pp q₁ (sub1 {{sub1ʳ q₂}})
+    pp (sub1 {{q₁}}) (sub2 {{q₂}}) = pp q₁ (sub1 {{q₂}})
+    pp (sub2 {{q₁}}) (sub1 {{q₂}}) = pp (sub1 {{q₁}}) q₂
+    pp (sub2 {{q₁}}) (sub2 {{q₂}}) = pp q₁ q₂
   ⊆ᶠ-asym (sub1 {{x}}) (sub2 {{y}}) = cong₂ _∷_ refl (⊆ᶠ-asym (sub1ʳ x) y)
   ⊆ᶠ-asym (sub2 {{x}}) (sub1 {{y}}) = cong₂ _∷_ refl (⊆ᶠ-asym x (sub1ʳ y))
   ⊆ᶠ-asym (sub2 {{x}}) (sub2 {{y}}) = cong₂ _∷_ refl (⊆ᶠ-asym x y)
@@ -382,18 +381,18 @@ module Ex1 where
   
   -- Syntax level coercion for basic types/names
   _<:0_ : nameCN → nameCN → Set
-  n1 <:0 n2 = FSet n2 ⊆ᶠ FSet n1
+  n₁ <:0 n₂ = FSet n₂ ⊆ᶠ FSet n₁
   
   -- Tests
   
   _ : Human <:0 Animate
-  _ = it --sub2 
+  _ = it 
   
   _ : Dog <:0 Object
-  _ = it --sub2 
+  _ = it 
   
   _ : Dog <:0 Dog
-  _ = it --⊆ᶠ-refl 
+  _ = it 
   
   
   NS : LexStructure
@@ -411,14 +410,14 @@ module Ex1 where
   -- The type of objects having features FS
   data ⟦CN⟧ : FS → Set where
     base : (n : namePN) → ⟦CN⟧ $ FSet $ argPN n
-    ⦅_⦆  : ∀ {f1 f2} → {{f2 ⊆ᶠ f1}} → ⟦CN⟧ f1 → ⟦CN⟧ f2 -- with features f2 and more
+    ⦅_⦆  : ∀ {f₁ f₂} → {{f₂ ⊆ᶠ f₁}} → ⟦CN⟧ f₁ → ⟦CN⟧ f₂ -- with features f₂ and more
   
   -- the same ⟦CN⟧ fs for the same fs
-  uniq-⟦CN⟧ : ∀{fs1 fs2} → fs1 ≡ fs2 → ⟦CN⟧ fs1 ≡ ⟦CN⟧ fs2
+  uniq-⟦CN⟧ : ∀{fs₁ fs₂} → fs₁ ≡ fs₂ → ⟦CN⟧ fs₁ ≡ ⟦CN⟧ fs₂
   uniq-⟦CN⟧ refl = refl
   
   -- cannot be proven in general!
-  -- uniq' : ∀{fs1 fs2} → ⟦CN⟧ fs1 ≡ ⟦CN⟧ fs2 → fs1 ≡ fs2 
+  -- uniq' : ∀{fs₁ fs₂} → ⟦CN⟧ fs₁ ≡ ⟦CN⟧ fs₂ → fs₁ ≡ fs₂ 
 
   -- Useful aliases
   
@@ -453,10 +452,9 @@ module Ex1 where
   postulate
     _*run   : *Animate → Set
     _*love_ : *Animate → *Object → Set
-    *big    : *Object → Set
-    *small  : *Object → Set 
+    *black  : *Object → Set
   
-  ⦅→_⦆ : ∀{fs1 fs2} → (⟦CN⟧ fs1 → Set) → {{fs1 ⊆ᶠ fs2}} → (⟦CN⟧ fs2 → Set)
+  ⦅→_⦆ : ∀{fs₁ fs₂} → (⟦CN⟧ fs₁ → Set) → {{fs₁ ⊆ᶠ fs₂}} → (⟦CN⟧ fs₂ → Set)
   ⦅→ f ⦆ x = f ⦅ x ⦆
   
   _ : *Human → Set
@@ -481,10 +479,9 @@ module Ex1 where
   valVT love = _*love_
   
   valAdj : (n : nameAdj) → valCN (argAdj n) → Set
-  valAdj big   = *big
-  valAdj small = *small
+  valAdj black = *black
   
-  val<:0 : ∀{n1 n2} → {{n1 <:0 n2}} → valCN n1 ⊆ valCN n2
+  val<:0 : ∀{n₁ n₂} → {{n₁ <:0 n₂}} → valCN n₁ ⊆ valCN n₂
   val<:0 = coerce ⦅_⦆
   
   _ : ∀{fs} → ⟦CN⟧ fs → ⟦CN⟧ []
@@ -496,7 +493,7 @@ module Ex1 where
              ; valVI  = valVI
              ; valVT  = valVT
              ; valAdj = valAdj
-             ; val<:0 = λ {n1} {n2} → val<:0 {n1} {n2}
+             ; val<:0 = λ {n₁} {n₂} → val<:0 {n₁} {n₂}
              }
   
   open Syntax NS hiding (cnm; _<:_) -- hide redundant instances
@@ -576,22 +573,22 @@ module Ex1 where
   -- Прилагательные / свойства
   
   postulate
-    *polkan-is-big : *big ⦅ *Polkan ⦆
+    *polkan-is-black : *black ⦅ *Polkan ⦆
     *polkan-runs : ⦅ *Polkan ⦆ *run
   
-  big-dog = cn-ap (ap-a big) (cn-n Dog)
+  black-dog = cn-ap (ap-a black) (cn-n Dog)
   
-  *big-dog : ⟦cn big-dog ⟧
-  *big-dog = *Polkan , *polkan-is-big 
+  *black-dog : ⟦cn black-dog ⟧
+  *black-dog = *Polkan , *polkan-is-black 
 
-  -- a big dog runs
-  s8 = s-nv (np-det a/an big-dog) (vp-vi run) {{c∘ cap it}}
+  -- a black dog runs
+  s8 = s-nv (np-det a/an black-dog) (vp-vi run) {{c∘ cap it}}
 
-  _ : ⟦s s8 ⟧ ≡ (Σ[ bd ∈ (Σ[ b ∈ *Dog ] *big ⦅ b ⦆) ] ⦅ proj₁ bd ⦆ *run)
+  _ : ⟦s s8 ⟧ ≡ (Σ[ bd ∈ (Σ[ b ∈ *Dog ] *black ⦅ b ⦆) ] ⦅ proj₁ bd ⦆ *run)
   _ = refl
 
   _ : ⟦s s8 ⟧
-  _ = (*Polkan , *polkan-is-big) , *polkan-runs
+  _ = (*Polkan , *polkan-is-black) , *polkan-runs
 
   
   -- Относительные конструкции (CN that VP и пр.)
@@ -617,8 +614,8 @@ module Ex1 where
   -- Mary loves a human that runs
   
   s10 = s-nv (np-pn Mary) (vp-vt love a-human-that-runs 
-                                 {{c∘ ((c∘ {cn3 = (cn-n Animate)} crcn it)) it}}
-                                 -- {{c∘ ((c∘ crcn (Syntax.cnm {n2 = Animate}))) Syntax.cnm}}
+                                 {{c∘ ((c∘ {cn₃ = (cn-n Animate)} crcn it)) it}}
+                                 -- {{c∘ ((c∘ crcn (Syntax.cnm {n₂ = Animate}))) Syntax.cnm}}
                           )
   
   -- beware! with --overlapping-instances the search is very slow without hints
@@ -707,8 +704,8 @@ module Ex2 where
   -- subset for FS, works properly only for ordered FS
   data _⊆ᶠ_ : FS → FS → Set where
     instance sub∅ : [] ⊆ᶠ []
-    instance sub1 : ∀{fs1 fs2 f} → {{fs1 ⊆ᶠ fs2}} → fs1 ⊆ᶠ (f ∷ fs2)  
-    instance sub2 : ∀{fs1 fs2 f} → {{fs1 ⊆ᶠ fs2}} → (f ∷ fs1) ⊆ᶠ (f ∷ fs2)  
+    instance sub1 : ∀{fs₁ fs₂ f} → {{fs₁ ⊆ᶠ fs₂}} → fs₁ ⊆ᶠ (f ∷ fs₂)  
+    instance sub2 : ∀{fs₁ fs₂ f} → {{fs₁ ⊆ᶠ fs₂}} → (f ∷ fs₁) ⊆ᶠ (f ∷ fs₂)  
   
   -- some properties
   
@@ -720,7 +717,7 @@ module Ex2 where
   ⊆ᶠ-refl {[]} = sub∅
   ⊆ᶠ-refl {x ∷ fs} = sub2 {{⊆ᶠ-refl}} 
   
-  sub1ʳ : ∀{fs1 fs2 f1} → (f1 ∷ fs1) ⊆ᶠ fs2 → fs1 ⊆ᶠ fs2
+  sub1ʳ : ∀{fs₁ fs₂ f₁} → (f₁ ∷ fs₁) ⊆ᶠ fs₂ → fs₁ ⊆ᶠ fs₂
   sub1ʳ {[]} {_ ∷ _} _ = []-⊆ᶠ-f
   sub1ʳ (sub1 {{p}}) = sub1 {{sub1ʳ p}}
   sub1ʳ sub2 = sub1
@@ -784,7 +781,7 @@ module Ex2 where
   
   -- Syntax level coercion for basic types/names
   _<:0_ : nameCN → nameCN → Set
-  n1 <:0 n2 = FSet n2 ⊆ᶠ FSet n1
+  n₁ <:0 n₂ = FSet n₂ ⊆ᶠ FSet n₁
   
   -- Tests
   
@@ -813,14 +810,14 @@ module Ex2 where
   -- The type of objects having features FS
   data ⟦CN⟧ : FS → Set where
     base : (n : namePN) → ⟦CN⟧ (FSet (argPN n))
-    ⦅_⦆  : ∀ {f1 f2} → {{f2 ⊆ᶠ f1}} → ⟦CN⟧ f1 → ⟦CN⟧ f2 
+    ⦅_⦆  : ∀ {f₁ f₂} → {{f₂ ⊆ᶠ f₁}} → ⟦CN⟧ f₁ → ⟦CN⟧ f₂ 
   
   -- the same ⟦CN⟧ fs for the same fs
-  uniq-⟦CN⟧ : ∀{fs1 fs2} → fs1 ≡ fs2 → ⟦CN⟧ fs1 ≡ ⟦CN⟧ fs2
+  uniq-⟦CN⟧ : ∀{fs₁ fs₂} → fs₁ ≡ fs₂ → ⟦CN⟧ fs₁ ≡ ⟦CN⟧ fs₂
   uniq-⟦CN⟧ refl = refl
   
   -- cannot be proven in general!
-  -- uniq' : ∀{fs1 fs2} → ⟦CN⟧ fs1 ≡ ⟦CN⟧ fs2 → fs1 ≡ fs2 
+  -- uniq' : ∀{fs₁ fs₂} → ⟦CN⟧ fs₁ ≡ ⟦CN⟧ fs₂ → fs₁ ≡ fs₂ 
   
   
   -- Useful aliases
@@ -870,7 +867,7 @@ module Ex2 where
   valAdj : (n : nameAdj) → valCN (argAdj n) → Set
   valAdj ()
   
-  val<:0 : ∀{n1 n2} → {{n1 <:0 n2}} → valCN n1 ⊆ valCN n2
+  val<:0 : ∀{n₁ n₂} → {{n₁ <:0 n₂}} → valCN n₁ ⊆ valCN n₂
   val<:0 = coerce ⦅_⦆
   
   M : Model NS
@@ -879,7 +876,7 @@ module Ex2 where
              ; valVI  = valVI
              ; valVT  = valVT
              ; valAdj = valAdj
-             ; val<:0 = λ {n1} {n2} → val<:0 {n1} {n2}
+             ; val<:0 = λ {n₁} {n₂} → val<:0 {n₁} {n₂}
              }
   
   open Syntax NS hiding (cnm; _<:_) -- hide redundant instances
