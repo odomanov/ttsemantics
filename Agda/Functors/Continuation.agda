@@ -45,36 +45,87 @@ open RawMonad (MonadCont Set)
 
 postulate
   Human   : Set
+  John    : Human
   _runs   : Human → Set
   _loves_ : Human → Human → Set
-  
-some : Cont Set Human
-some = λ k → Σ[ x ∈ Human ] k x
 
-every : Cont Set Human
-every = λ k → ∀(x : Human) → k x
+some : (A : Set) → Cont Set A
+some A k = Σ[ x ∈ A ] k x
 
-some-human-runs₁ : Cont Set Set
-some-human-runs₁ = some >>= (λ x →
-                   return (x runs))
+every : (A : Set) → Cont Set A
+every A k = ∀(x : A) → k x
 
-_ : some-human-runs₁ id ≡ (Σ[ x ∈ Human ] x runs)
+someone  = some  Human
+everyone = every Human
+
+app1 : (Human → Set) → Human → Cont Set Set 
+app1 v x = return (v x)
+
+_*runs : Human → Cont Set Set
+x *runs = return (x runs)     
+
+John-runs : Cont Set Set
+John-runs = John *runs
+
+_ : John-runs id ≡ (John runs)
 _ = refl
 
-some-human-runs₂ : Cont Set Set
-some-human-runs₂ = do
-  x ← some
-  return (x runs)
+someone-runs : Cont Set Set
+someone-runs = someone >>= _*runs    
 
-_ : some-human-runs₂ id ≡ (Σ[ x ∈ Human ] x runs)
+_ : someone-runs id ≡ (Σ[ x ∈ Human ] x runs)
 _ = refl
 
-every-human-runs : Cont Set Set
-every-human-runs = do
-  x ← every
-  return (x runs)
+someone-runs₁ : Cont Set Set
+someone-runs₁ = someone >>= (λ x → x *runs)
 
-_ : every-human-runs id ≡ ((x : Human) → x runs)
+_ : someone-runs₁ id ≡ (Σ[ x ∈ Human ] x runs)
+_ = refl
+
+someone-runs₂ : Cont Set Set
+someone-runs₂ = do
+  x ← someone
+  x *runs 
+
+_ : someone-runs₂ id ≡ (Σ[ x ∈ Human ] x runs)
+_ = refl
+
+everyone-runs : Cont Set Set
+everyone-runs = do
+  x ← everyone
+  x *runs
+
+_ : everyone-runs id ≡ (∀(x : Human) → x runs)
+_ = refl
+
+
+-- транзитивные глаголы
+
+vp : (Human → Human → Set) → Human → Cont Set (Human → Set)
+vp v2 x = return (v2 x)
+
+_*loves_ : Human → Cont Set (Human → Set)
+_*loves_ = vp _loves_
+
+np-vp : Cont Set Human → (Human → Set) → Cont Set Set
+np-vp a v = a >>= app1 v    
+
+*someone : (Human → Set) → Cont Set Set
+*someone = np-vp someone
+
+*everyone : (Human → Set) → Cont Set Set
+*everyone = np-vp everyone
+
+John-loves-someone₁ : Cont Set Set
+John-loves-someone₁ = return John >>= _*loves_ >>= *someone
+
+John-loves-someone₂ : Cont Set Set
+John-loves-someone₂ = do
+  j ← return John
+  vp ←  j *loves_
+  *someone vp
+
+_ : John-loves-someone₁ ≡ John-loves-someone₂
 _ = refl
 
 
@@ -83,34 +134,54 @@ _ = refl
 
 -- de dicto
 
-every-human-loves-some-human₁ : Cont Set Set
-every-human-loves-some-human₁ = do
-  x  ← every
-  y  ← some 
+everyone-loves-someone : Cont Set Set
+everyone-loves-someone = everyone >>= (λ x →
+                                      someone >>= (λ y →
+                                                  return (x loves y)))
+
+everyone-loves-someone' : Cont Set Set
+everyone-loves-someone' = do
+  x  ← everyone
+  y  ← someone 
   return (x loves y)
 
-_ : every-human-loves-some-human₁ id ≡ ((x : Human) → Σ[ y ∈ Human ] x loves y)
+everyone-loves-someone₁ : Cont Set Set
+everyone-loves-someone₁ = do
+  x  ← everyone
+  y  ← someone 
+  return (x loves y)
+
+_ : everyone-loves-someone₁ id ≡ ((x : Human) → Σ[ y ∈ Human ] x loves y)
+_ = refl
+
+everyone-loves-someone₁' : Cont Set Set
+everyone-loves-someone₁' = do
+  x  ← everyone
+  vp  ← x *loves_ 
+  *someone vp
+
+_ : everyone-loves-someone₁' id ≡ (∀(x : Human) → Σ[ y ∈ Human ] x loves y)
 _ = refl
 
 -- de re
 
-every-human-loves-some-human₂ : Cont Set Set
-every-human-loves-some-human₂ = do
-  x ← some 
-  y ← every
+everyone-loves-someone₂ : Cont Set Set
+everyone-loves-someone₂ = do
+  x ← someone 
+  y ← everyone
   return (y loves x)
 
-_ : every-human-loves-some-human₂ id ≡ (Σ[ x ∈ Human ] ((y : Human) → y loves x))
+_ : everyone-loves-someone₂ id ≡ (Σ[ x ∈ Human ] (∀(y : Human) → y loves x))
 _ = refl
 
+everyone-loves-someone₂' : Cont Set Set
+everyone-loves-someone₂' = do
+  x ← someone 
+  y ← everyone
+  vp ← y *loves_ 
+  return (vp x)
 
-every-human-loves-some-human₃ : Cont Set Set
-every-human-loves-some-human₃ = do
-  x ← every
-  y ← some 
-  return (y loves x)
-
-_ : every-human-loves-some-human₃ id ≡ ((x : Human) → Σ[ y ∈ Human ] y loves x)
+_ : everyone-loves-someone₂' id ≡ (Σ[ x ∈ Human ] ((y : Human) → y loves x))
 _ = refl
 
 
@@ -125,54 +196,80 @@ postulate
 -- Ralph believes someone is a spy
 Ralph-believes-some-spy₁ : Cont Set Set
 Ralph-believes-some-spy₁ = do
-  x ← some
+  x ← someone
   return (Ralph believes (x is-spy))
 
 _ : Ralph-believes-some-spy₁ id ≡ (Σ[ x ∈ Human ] Ralph believes (x is-spy))
 _ = refl
 
--- ситуация?
-record Bel {a} (h : Human) (A : Set a) (B : A → Set) : Set a where
+_*is-spy : Human → Cont Set Set
+x *is-spy = return (x is-spy)
+
+some-spy : Cont Set Set
+some-spy = someone >>= _*is-spy  
+_ : some-spy id ≡ Σ Human _is-spy
+_ = refl
+
+
+-- Ральф верит об s1, что P s1
+record RB {a} (A : Set a) (P : A → Set) : Set a where
   field
-    s1 : A 
-    s2 : h believes (B s1)
+    s1 : A
+    s2 : P s1
 
 infix 2 RB
+syntax RB A (λ x → P) = RB[ x ∈ A ] P 
 
-RB = Bel Ralph
+RBel : Cont Set Human
+RBel = λ k → RB[ x ∈ Human ] k x
 
-syntax RB A (λ x → B) = RB[ x ∈ A ] B
+RBel-some-spy₁ : Cont Set Set
+RBel-some-spy₁ = do
+  x ← RBel
+  x *is-spy
+  
+_ : RBel-some-spy₁ id ≡ (RB Human (λ x → x is-spy))
+_ = refl
+  
+_ : RBel-some-spy₁ id ≡ (RB[ x ∈ Human ] x is-spy)
+_ = refl
+  
+RBel-some-spy₂ : Cont Set Set
+RBel-some-spy₂ = do
+  x ← someone
+  RBel
+  x *is-spy
 
--- об x : Human, Ральф верит что (k x)
-RBelx : Cont Set Human
-RBelx k = RB[ x ∈ Human ] k x
-
-Ralph-believes-some-spy₂ : Cont Set Set
-Ralph-believes-some-spy₂ = do
-  RBelx
-  x ← some
-  return (x is-spy)
-
-_ : Ralph-believes-some-spy₂ id ≡ (RB[ _ ∈ _ ] Σ[ y ∈ Human ] y is-spy)
+_ : RBel-some-spy₂ id ≡ (Σ[ x ∈ Human ] RB Human (λ _ → x is-spy))
+_ = refl
+  
+_ : RBel-some-spy₂ id ≡ (Σ[ x ∈ Human ] RB[ _ ∈ Human ] x is-spy)
 _ = refl
 
--- Определим сокращение: Ральф верит в B
-RBel : ∀{a}{A : Set a}(B : Set) → Set a 
-RBel {A = A} B = Bel Ralph A (λ _ → B) 
+-- Ральф верит, что все шпионы
+RBel-all-spies : Cont Set Set
+RBel-all-spies = do
+  RBel 
+  x ← everyone
+  x *is-spy
 
--- тогда:
-_ : Ralph-believes-some-spy₂ id ≡ (RBel (Σ[ y ∈ Human ] y is-spy))
+_ : RBel-all-spies id ≡ (RB[ _ ∈ Human ] (∀(x : Human) → x is-spy))
 _ = refl
 
-Ralph-believes-some-spy₃ : Cont Set Set
-Ralph-believes-some-spy₃ = do
-  x ← some
-  RBelx
-  return (x is-spy)
+-- Ральф верит, что P
+RBelp : ∀{a}{A : Set a}(P : Set) → Set a
+RBelp {a}{A} P = RB A (λ _ → P)
 
-_ : Ralph-believes-some-spy₃ id ≡ (Σ[ x ∈ Human ] RB[ _ ∈ _ ] x is-spy)
+_ : RBel-some-spy₂ id ≡ (Σ[ x ∈ Human ] RBelp (x is-spy))
 _ = refl
 
-_ : Ralph-believes-some-spy₃ id ≡ (Σ[ x ∈ Human ] RBel (x is-spy))
+_ : RBel-all-spies id ≡ (RBelp (∀(x : Human) → x is-spy))
 _ = refl
 
+-- -- runsC : Cont Set Human
+-- -- runsC k = {!!}
+
+-- -- Kleisli
+
+-- -- someone' : ∀{A} → A → Cont Set Human
+-- -- someone' a k = {!!}
