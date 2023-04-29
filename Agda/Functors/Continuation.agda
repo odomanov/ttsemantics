@@ -70,6 +70,15 @@ John-runs = John *runs
 _ : John-runs id ≡ (John runs)
 _ = refl
 
+*John : Cont Set Human
+*John = return John
+
+John-runs' : Cont Set Set
+John-runs' = *John >>= _*runs
+
+_ : John-runs' id ≡ (John runs)
+_ = refl
+
 someone-runs : Cont Set Set
 someone-runs = someone >>= _*runs    
 
@@ -101,31 +110,19 @@ _ = refl
 
 -- транзитивные глаголы
 
-vp : (Human → Human → Set) → Human → Cont Set (Human → Set)
-vp v2 x = return (v2 x)
-
-_*loves_ : Human → Cont Set (Human → Set)
-_*loves_ = vp _loves_
-
-np-vp : Cont Set Human → (Human → Set) → Cont Set Set
-np-vp a v = a >>= app1 v    
-
-*someone : (Human → Set) → Cont Set Set
-*someone = np-vp someone
-
-*everyone : (Human → Set) → Cont Set Set
-*everyone = np-vp everyone
+_*loves_ : Human → Human → Cont Set Set
+_*loves_ x y = return (x loves y)
 
 John-loves-someone₁ : Cont Set Set
-John-loves-someone₁ = return John >>= _*loves_ >>= *someone
+John-loves-someone₁ = *John >>= λ y → someone >>= _*loves y 
 
-John-loves-someone₂ : Cont Set Set
-John-loves-someone₂ = do
-  j ← return John
-  vp ←  j *loves_
-  *someone vp
+John-loves-someone₃ : Cont Set Set
+John-loves-someone₃ = do
+  x ← *John
+  y ← someone
+  x *loves y
 
-_ : John-loves-someone₁ ≡ John-loves-someone₂
+_ : John-loves-someone₃ id ≡ (Σ[ x ∈ Human ] John loves x)
 _ = refl
 
 
@@ -154,14 +151,6 @@ everyone-loves-someone₁ = do
 _ : everyone-loves-someone₁ id ≡ ((x : Human) → Σ[ y ∈ Human ] x loves y)
 _ = refl
 
-everyone-loves-someone₁' : Cont Set Set
-everyone-loves-someone₁' = do
-  x  ← everyone
-  vp  ← x *loves_ 
-  *someone vp
-
-_ : everyone-loves-someone₁' id ≡ (∀(x : Human) → Σ[ y ∈ Human ] x loves y)
-_ = refl
 
 -- de re
 
@@ -172,16 +161,6 @@ everyone-loves-someone₂ = do
   return (y loves x)
 
 _ : everyone-loves-someone₂ id ≡ (Σ[ x ∈ Human ] (∀(y : Human) → y loves x))
-_ = refl
-
-everyone-loves-someone₂' : Cont Set Set
-everyone-loves-someone₂' = do
-  x ← someone 
-  y ← everyone
-  vp ← y *loves_ 
-  return (vp x)
-
-_ : everyone-loves-someone₂' id ≡ (Σ[ x ∈ Human ] ((y : Human) → y loves x))
 _ = refl
 
 
