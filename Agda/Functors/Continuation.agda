@@ -3,32 +3,32 @@
 module _ where
 
 open import Data.Product
-open import Function using (_$_; id)
+open import Data.Unit
+open import Function using (_$_; id; flip)
 open import Relation.Binary.PropositionalEquality
 open import Level 
 1ℓ = suc 0ℓ
 2ℓ = suc 1ℓ
 
--- прямое определение, без runCont
-
 open import Category.Monad
+open import Category.Monad.Indexed
+open import Category.Monad.Continuation
+
+K : ∀{a}{b}(R : Set a) → ⊤ → Set (a ⊔ b)
+K {a} {b} R tt = R
 
 Cont : ∀{a b}(R : Set a) → Set (a ⊔ b) → Set (a ⊔ b)
-Cont R A = (A → R) → R
+Cont {a} {b} R = DCont {f = a ⊔ b} (K R) tt tt  
 
-MonadCont : ∀{a b} (R : Set a) → RawMonad (Cont {a} {b} R)
--- MonadCont R = record { return = λ a k → k a
---                      ; _>>=_ = λ ma f k → ma (λ x → f x k)
---                      }
-RawMonad.return (MonadCont {a} {b} R) x = λ k → k x
-RawMonad._>>=_  (MonadCont {a} {b} R) ma f = λ k → ma (λ x → f x k)
+MonadICont : ∀{a}{b}(R : Set a) → RawIMonad (DCont {f = a ⊔ b} (K R)) 
+MonadICont {a} {b} R = DContIMonad {f = a ⊔ b} (K R)
 
 -- проверим монадные законы
 module Laws {a} {b} {R : Set a} where
 
-  open RawMonad (MonadCont {a} {b} R)
+  open RawIMonad (MonadICont {a} {b} R)
   
-  unitl : ∀{A : Set b}{B : Set b}{x : A}{f : A → Cont {a} {b} R B}
+  unitl : ∀{A B : Set b}{x : A}{f : A → Cont {a} {b} R B}
     → (return x >>= f) ≡ f x
   unitl = refl
 
@@ -36,12 +36,12 @@ module Laws {a} {b} {R : Set a} where
     → (ma >>= return) ≡ ma
   unitr = refl
 
-  assoc : ∀ {A : Set b} {B : Set b} {C : Set b} 
+  assoc : ∀{A B C : Set b} 
     → {ma : Cont {a} {b} R A} {f : A → Cont {a} {b} R B} {g : B → Cont {a} {b} R C}  
     → ((ma >>= f) >>= g) ≡ (ma >>= (λ a → f a >>= g))
   assoc = refl
     
-open RawMonad (MonadCont Set) 
+open RawIMonad (MonadICont Set) 
 
 postulate
   Human   : Set
@@ -266,10 +266,3 @@ _ = refl
 _ : RBel-all-spies id ≡ (RBelp (∀(x : Human) → x is-spy))
 _ = refl
 
--- -- runsC : Cont Set Human
--- -- runsC k = {!!}
-
--- -- Kleisli
-
--- -- someone' : ∀{A} → A → Cont Set Human
--- -- someone' a k = {!!}
