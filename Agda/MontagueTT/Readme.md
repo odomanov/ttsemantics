@@ -7,3 +7,5 @@
   This presentation allows to define coercion.
 * `MontagueTT2` — Two levels of syntax.  This makes syntactically correct
   but semantically wrong sentences possible.
+* `MontagueTTcontinuation` — Simple grammar with continuations; using
+  Agda's Continuation monad.
