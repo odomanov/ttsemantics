@@ -64,12 +64,11 @@ open RawIMonad (MonadICont Set)
 
 record LexStructure : Set₁ where
   field
-    nameCN namePN nameVA nameVI nameVT nameAdj : Set  -- names for syntactic categories
+    nameCN namePN nameVA nameVI nameVT : Set   -- names for syntactic categories
     argPN  : namePN  → nameCN                  -- argument types etc.
     argVI  : nameVI  → nameCN
-    argVA  : nameVA  → nameCN                  -- attitude verbs
     argVT  : nameVT  → nameCN × nameCN
-    argAdj : nameAdj → nameCN
+    argVA  : nameVA  → nameCN                  -- attitude verbs
 
 
 -- Синтаксические категории.
@@ -89,8 +88,6 @@ module Syntax (nam : LexStructure) where
     -- CN ни от чего не зависит
     data CN : Set where
       cn-n : nameCN → CN
-      -- cn-ap : ∀ {cn} → AP cn → CN        -- пример: black Dog
-      -- rcn : (cn : CN) → VP cn → CN       -- CN that VP
   
     -- -- VI зависит от CN
     data VI : CN → Set where
@@ -107,9 +104,6 @@ module Syntax (nam : LexStructure) where
     data PN : CN → Set where
       pn-n : (n : namePN) → PN $ cn-n $ argPN n
     
-    -- data Adj : CN → Set where
-    --   black : Adj Dog
-  
     data DET : Set where
       a/an every no the : DET
   
@@ -123,10 +117,6 @@ module Syntax (nam : LexStructure) where
       np-pn  : (n : namePN) → NP $ cn-n $ argPN n
       np-det : DET → (cn : CN) → NP cn
     
-    -- data AP : (cn : CN) → Set where
-    --   ap-a  : (n : nameAdj) → AP $ cn-n $ argAdj n
-    --   -- ap-ap : Adj cn → AP cn → AP cn
-  
     
     -- в предложении NP и VP должны зависеть от одного и того же CN
     data S : Set where
@@ -145,11 +135,10 @@ record Model (nam : LexStructure) : Setω where
     valCN  : nameCN → Set
     valPN  : (n : namePN)  → valCN (argPN n) 
     valVI  : (n : nameVI)  → valCN (argVI n) → Set
-    valVA  : (n : nameVA)  → (h : valCN (argVA n))
-                           → ∀{a}(A : Set a)(P : A → Set) → Set a 
     valVT  : (n : nameVT)  → valCN (proj₁ (argVT n))
                            → valCN (proj₂ (argVT n)) → Set
-    valAdj : (n : nameAdj) → valCN (argAdj n) → Set
+    valVA  : (n : nameVA)  → (h : valCN (argVA n))
+                           → ∀{a}(A : Set a)(P : A → Set) → Set a 
 
 
 module Semantics (nam : LexStructure) (m : Model nam) where
@@ -171,9 +160,6 @@ module Semantics (nam : LexStructure) (m : Model nam) where
   
     ⟦cn_⟧ : CN → Set                        -- CN ≠ e → t !  CN это тип.
     ⟦cn cn-n n ⟧ = valCN n
-    -- ⟦cn cn-ap (ap-a n) ⟧ = Σ ⟦cn cn-n (argAdj n) ⟧ ⟦ap ap-a n ⟧
-    -- -- ⟦cn cn-ap {cn} ap ⟧ = Σ ⟦cn cn ⟧ ⟦ap ap ⟧   
-    -- ⟦cn rcn cn vp ⟧ = Σ ⟦cn cn ⟧ ⟦vp vp ⟧
     
     ⟦pn_⟧ : {cn : CN} → PN cn → ⟦cn cn ⟧
     ⟦pn pn-n n ⟧   = valPN n
@@ -196,7 +182,7 @@ module Semantics (nam : LexStructure) (m : Model nam) where
   
     -- VP = e → t
     ⟦vp_⟧ : {cn : CN} → VP cn → ⟦cn cn ⟧ → Cont Set Set
-    ⟦vp vp-vi (vi-n v) ⟧ x = return $ valVI v x
+    ⟦vp vp-vi (vi-n n) ⟧ x = return $ valVI n x
     ⟦vp vp-vt vt np ⟧ x = do y ← ⟦np np ⟧
                              ⟦vt vt ⟧ x y
 
@@ -207,11 +193,6 @@ module Semantics (nam : LexStructure) (m : Model nam) where
     ⟦det no ⟧    cn = λ k → ∀(x : ⟦cn cn ⟧) → ¬ k x 
     ⟦det the ⟧   cn = λ k → Σ[ Aₚ ∈ Pointed ⟦cn cn ⟧ ] k (theₚ Aₚ)
     
-    -- {-# TERMINATING #-}
-    -- ⟦ap_⟧ : {cn : CN} → AP cn → (⟦cn cn ⟧ → Set)           -- AP = (e → t) 
-    -- ⟦ap ap-a n ⟧ = valAdj n
-    -- -- ⟦ap_⟧ {cn} (ap-ap adj ap) x = Σ[ y ∈ Σ ⟦cn cn ⟧ ⟦ap ap-a adj ⟧ ] ⟦ap ap ⟧ (proj₁ y)
-  
     -- Возможны множественные интерпретации.
     ⟦s_⟧ : S → List (Cont Set Set)
     ⟦s s-nvp np vp ⟧ = (do x ← ⟦np np ⟧
@@ -238,14 +219,6 @@ module Semantics (nam : LexStructure) (m : Model nam) where
               ⟦vp vp2 ⟧ x
       ) ∷ []
     ⟦s s-va np1 va (s-vt np2 vt np3) ⟧ = []           -- TODO
-    -- ⟦s s-va np1 va (s-vt {cn2} {cn3} np2 vt np3) ⟧ =
-    --     (do x ← ⟦np np2 ⟧
-    --         y ← ⟦np np1 ⟧
-    --         (y ⟦va va ⟧) ⟦cn cn3 ⟧
-    --         ⟦vp (vp-vt vt np3) ⟧ x)
-    --   ∷ (do y ← ⟦np np1 ⟧
-    --         x ← (y ⟦va va ⟧) ⟦cn cn2 ⟧
-    --         ⟦vp (vp-vt vt np3) ⟧ x   ) ∷ []
     ⟦s s-va np1 va (s-vtp vt np2 np3) ⟧ = []                       -- TODO
     ⟦s s-va np1 va (s-va np2 va2 s2) ⟧ = []                        -- TODO
   
@@ -255,21 +228,19 @@ module Semantics (nam : LexStructure) (m : Model nam) where
 
 -- Name structure
 
-data nameCN  : Set where Human Dog Unicorn : nameCN
-data namePN  : Set where Alex Mary John Polkan Ralph : namePN
+data nameCN  : Set where Human Unicorn : nameCN  
+data namePN  : Set where Alex Mary John Ralph : namePN  
 data nameVI  : Set where run exists is-spy : nameVI
 data nameVA  : Set where
   believe : nameVA
   seek : nameVA
 data nameVT  : Set where love : nameVT
-data nameAdj : Set where black : nameAdj
 
 argPN : namePN → nameCN
 argPN Alex = Human
 argPN Mary = Human
 argPN John = Human
 argPN Ralph = Human
-argPN Polkan = Dog
 
 argVI : nameVI → nameCN
 argVI run = Human
@@ -283,21 +254,16 @@ argVA seek = Human
 argVT : nameVT → nameCN × nameCN
 argVT love = Human , Human
 
-argAdj : nameAdj → nameCN
-argAdj black   = Dog
-  
 -- Звёздочкой в начале обозначаем то, что относится к онтологии -- объекты,
 -- функции на них и пр.
 
 postulate
-  *Human *Dog *Unicorn : Set
+  *Human *Unicorn : Set
   *Alex *Mary *John *Ralph : *Human
-  *Polkan  : *Dog
   _*run    : *Human → Set
   _*is-spy : *Human → Set
   _*exists : *Unicorn → Set
   _*love_  : *Human → *Human → Set
-  *black   : *Dog → Set
 
 L : LexStructure
 L = record
@@ -306,19 +272,16 @@ L = record
       ; nameVI = nameVI
       ; nameVA = nameVA
       ; nameVT = nameVT
-      ; nameAdj = nameAdj
       ; argPN = argPN
       ; argVI = argVI
       ; argVA = argVA
       ; argVT = argVT
-      ; argAdj = argAdj
       }
 
 open Syntax L
 
 valCN : nameCN → Set
 valCN Human = *Human
-valCN Dog = *Dog
 valCN Unicorn = *Unicorn
 
 valPN : (n : namePN) → valCN (argPN n) 
@@ -326,7 +289,6 @@ valPN Alex = *Alex
 valPN Mary = *Mary
 valPN John = *John
 valPN Ralph = *Ralph
-valPN Polkan = *Polkan
 
 valVI : (n : nameVI) → valCN (argVI n) → Set
 valVI run = _*run
@@ -357,16 +319,13 @@ valVA seek = seekR
 valVT : (n : nameVT) → valCN (proj₁ (argVT n)) → valCN (proj₂ (argVT n)) → Set
 valVT love = _*love_
 
-valAdj : (n : nameAdj) → valCN (argAdj n) → Set
-valAdj black = *black
-
 M : Model L
 M = record { valCN = valCN
            ; valPN = valPN
            ; valVI = valVI
            ; valVA = valVA
            ; valVT = valVT
-           ; valAdj = valAdj }
+           }
 
 open Semantics L M
 
@@ -383,9 +342,6 @@ s1 = s-nvp (np-pn Mary) (vp-vi (vi-n run))
 
 _ : head ⟦s s1 ⟧ id ≡ (*Mary *run)
 _ = refl
-
-
--- -- s3 = s-nvp (np-pn Polkan) (vp-vi runs)     -- это не работает! нужна коэрсия
 
 
 -- a human runs
@@ -416,33 +372,6 @@ _ = Hₚ , *Mary-runs
   Hₚ = record { theₚ = *Mary }
 
   postulate *Mary-runs : *Mary *run
-
-
-
--- -- Прилагательные / свойства
-
--- black-dog : ⟦cn cn-ap (ap-a black) ⟧ 
--- black-dog = *Polkan , *polkan-is-black 
---   where postulate *polkan-is-black : *black *Polkan
-
-
-
--- -- Относительные конструкции (CN that VP и пр.)
-
--- human-that-runs : CN
--- human-that-runs = rcn (cn-n Human) (vp-vi run)
-
--- _ : ⟦cn human-that-runs ⟧
--- _ = *Mary , *Mary-runs
---   where postulate *Mary-runs : *Mary *run 
-
-
--- a-human-that-runs : NP _ 
--- a-human-that-runs = np-det a/an human-that-runs
-
-
--- --s9 = s-nvp a-human-that-runs (vp-vi runs)   -- не работает!  нужна коэрсия
-
 
 
 -- Mary loves Alex
