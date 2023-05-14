@@ -1,5 +1,10 @@
 # TT Semantics
 
+Various experiments in computer-oriented natural language semantics.
+They comprise attempts to formalize various language phenomena in computer
+languages such as Agda, Coq, Racket — in any case along the lines of
+type-theoretical semantics (A.Ranta, Z.Luo, and others).
+
 ## Agda
 
 * [`MontagueTT`](Agda/MontagueTT/) — Montague-like
