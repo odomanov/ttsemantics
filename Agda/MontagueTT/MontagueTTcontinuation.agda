@@ -10,13 +10,13 @@ module _ where
 
 open import Data.Empty
 open import Data.Fin using (Fin; #_)
-open import Data.List renaming (lookup to lookupL)
+open import Data.List renaming (lookup to lookupL) using (List; []; _∷_; length)
 open import Data.Nat using (ℕ)
 open import Data.Product
 open import Data.Unit
 open import Function
 open import Relation.Nullary renaming (no to not)
-open import Relation.Binary.PropositionalEquality
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import Level 
 
 -- Continuation monad
@@ -76,7 +76,7 @@ open RawMonad (MonadCont Set)
 
 record LexStructure : Set₁ where
   field
-    nameCN namePN nameVA nameVI nameVT : Set -- nameAdj : Set  -- names for syntactic categories
+    nameCN namePN nameVA nameVI nameVT : Set   -- names for syntactic categories
     argPN  : namePN  → nameCN                  -- argument types etc.
     argVI  : nameVI  → nameCN
     argVT  : nameVT  → nameCN × nameCN
@@ -101,7 +101,7 @@ module Syntax (nam : LexStructure) where
     data CN : Set where
       cn-n : nameCN → CN
   
-    -- VI зависит от CN
+    -- -- VI зависит от CN
     data VI : CN → Set where
       vi-n : (n : nameVI) → VI $ cn-n $ argVI n
 
@@ -193,7 +193,7 @@ module Semantics (nam : LexStructure) (m : Model nam) where
   
     -- VP = e → t
     ⟦vp_⟧ : {cn : CN} → VP cn → ⟦cn cn ⟧ → Cont Set Set
-    ⟦vp vp-vi (vi-n n) ⟧ x = return $ valVI n x
+    ⟦vp vp-vi vi ⟧ = ⟦vi vi ⟧
     ⟦vp vp-vt vt np ⟧ x = do y ← ⟦np np ⟧
                              ⟦vt vt ⟧ x y
 
@@ -230,15 +230,15 @@ module Semantics (nam : LexStructure) (m : Model nam) where
               ⟦vp vp2 ⟧ x
       ) ∷ []
     ⟦s s-va np1 va (s-vt {cn2} {cn3} np2 vt np3) ⟧ =
-          (do x ← ⟦np np1 ⟧
-              y ← ⟦np np2 ⟧
-              (x ⟦va va ⟧) ⟦cn cn3 ⟧
-              z ← ⟦np np3 ⟧
-              ⟦vt vt ⟧ y z
-      ) ∷ (do z ← ⟦np np3 ⟧
+          (do z ← ⟦np np3 ⟧
               x ← ⟦np np1 ⟧
               y ← ⟦np np2 ⟧
               (x ⟦va va ⟧) ⟦cn cn3 ⟧
+              ⟦vt vt ⟧ y z
+      ) ∷ (do x ← ⟦np np1 ⟧
+              y ← ⟦np np2 ⟧
+              (x ⟦va va ⟧) ⟦cn cn3 ⟧
+              z ← ⟦np np3 ⟧
               ⟦vt vt ⟧ y z
       ) ∷ []
     ⟦s s-va np1 va s ⟧ = []                        -- TODO
@@ -253,7 +253,7 @@ data nameCN  : Set where Human Unicorn : nameCN
 data namePN  : Set where Alex Mary John Ralph Ortcutt : namePN  
 data nameVI  : Set where run is-spy : nameVI
 data nameVA  : Set where believe strive : nameVA
-data nameVT  : Set where love finds : nameVT
+data nameVT  : Set where love find : nameVT
 
 argPN : namePN → nameCN
 argPN Alex = Human
@@ -272,7 +272,7 @@ argVA strive = Human
 
 argVT : nameVT → nameCN × nameCN
 argVT love = Human , Human
-argVT finds = Human , Unicorn
+argVT find = Human , Unicorn
 
 -- Звёздочкой в начале обозначаем то, что относится к онтологии -- объекты,
 -- функции на них и пр.
@@ -282,7 +282,7 @@ postulate
   *Alex *Mary *John *Ralph *Ortcutt : *Human
   _*run    : *Human → Set
   _*is-spy : *Human → Set
-  _*finds_ : *Human → *Unicorn → Set
+  _*find_  : *Human → *Unicorn → Set
   _*love_  : *Human → *Human → Set
 
 L : LexStructure
@@ -317,7 +317,7 @@ valVI is-spy = _*is-spy
 
 valVT : (n : nameVT) → valCN (proj₁ (argVT n)) → valCN (proj₂ (argVT n)) → Set
 valVT love = _*love_
-valVT finds = _*finds_
+valVT find = _*find_
 
 record striveR {H : Set}(h : H){a}(A : Set a)(P : A → Set) : Set a where
   field
@@ -326,7 +326,6 @@ record striveR {H : Set}(h : H){a}(A : Set a)(P : A → Set) : Set a where
 
 infix 2 striveR
 syntax striveR h A (λ x → P) = h strive[ x ∈ A ] P 
-
 
 record believeR {H : Set}(h : H){a}(A : Set a)(P : A → Set) : Set a where
   field
@@ -351,13 +350,13 @@ M = record { valCN = valCN
 open Semantics L M
 
 -- извлечение значения из предложения
-lookup : (s : S) → Fin (length ⟦s s ⟧) → Set
-lookup s n = (lookupL ⟦s s ⟧ n) id
+_[_] : (s : S) → Fin (length ⟦s s ⟧) → Set
+s [ n ] = (lookupL ⟦s s ⟧ n) id
 
 
 s1 = s-nvp (np-pn Mary) (vp-vi (vi-n run))
 
-_ : lookup s1 (# 0) ≡ (*Mary *run)
+_ : s1 [ # 0 ] ≡ (*Mary *run)
 _ = refl
 
 
@@ -367,14 +366,14 @@ _ = refl
 -- a human runs
 s4 = s-nvp (np-det a/an (cn-n Human)) (vp-vi (vi-n run))
 
-_ : lookup s4 (# 0) ≡ Σ *Human _*run
+_ : s4 [ # 0 ] ≡ Σ *Human _*run
 _ = refl
 
 
 -- every human runs
 s5 = s-nvp (np-det every (cn-n Human)) (vp-vi (vi-n run))
 
-_ : lookup s5 (# 0) ≡ (∀(x : *Human) → x *run)
+_ : s5 [ # 0 ] ≡ (∀(x : *Human) → x *run)
 _ = refl
 
 
@@ -382,10 +381,10 @@ _ = refl
 -- the human runs
 s6 = s-nvp (np-det the (cn-n Human)) (vp-vi (vi-n run))
 
-_ : lookup s6 (# 0) ≡ (Σ[ Aₚ ∈ Pointed *Human ] (theₚ Aₚ) *run) 
+_ : s6 [ # 0 ] ≡ (Σ[ Aₚ ∈ Pointed *Human ] (theₚ Aₚ) *run) 
 _ = refl
 
-_ : lookup s6 (# 0)
+_ : s6 [ # 0 ]
 _ = Hₚ , *Mary-runs
   where
   Hₚ : Pointed *Human 
@@ -393,9 +392,6 @@ _ = Hₚ , *Mary-runs
 
   postulate *Mary-runs : *Mary *run
 
-
--- Mary loves Alex
--- Оба смысла совпадают
 
 s11 = s-vt (np-pn Mary) (vt-n love) (np-pn Alex)
 
@@ -408,10 +404,10 @@ _ = refl
 
 s12 = s-vt (np-pn Mary) (vt-n love) (np-det a/an (cn-n Human))
 
-_ : lookup s12 (# 0) ≡ (Σ[ x ∈ *Human ] *Mary *love x)  
+_ : s12 [ # 0 ] ≡ (Σ[ x ∈ *Human ] *Mary *love x)  
 _ = refl
 
-_ : lookup s12 (# 1) ≡ (Σ[ x ∈ *Human ] *Mary *love x)  
+_ : s12 [ # 1 ] ≡ (Σ[ x ∈ *Human ] *Mary *love x)  
 _ = refl
 
 
@@ -420,21 +416,22 @@ _ = refl
 
 s13 = s-vt (np-det every (cn-n Human)) (vt-n love) (np-det a/an (cn-n Human))
 
-_ : lookup s13 (# 0) ≡ (∀ (x : *Human) → Σ[ y ∈ *Human ] (x *love y)) 
+_ : s13 [ # 0 ] ≡ (∀ (x : *Human) → Σ[ y ∈ *Human ] (x *love y)) 
 _ = refl
 
-_ : lookup s13 (# 1) ≡ (Σ[ x ∈ *Human ] ∀(y : *Human) → (y *love x))
+_ : s13 [ # 1 ] ≡ (Σ[ x ∈ *Human ] ∀(y : *Human) → (y *love x))
 _ = refl
+
 
 
 -- то же в пассиве
 -- Every human is loved by a human
 s18 = s-vtp (np-det every (cn-n Human)) (vt-n love) (np-det a/an (cn-n Human)) 
 
-_ : lookup s18 (# 0) ≡ (∀(x : *Human) → Σ[ y ∈ *Human ] (y *love x))
+_ : s18 [ # 0 ] ≡ (∀(x : *Human) → Σ[ y ∈ *Human ] (y *love x))
 _ = refl
 
-_ : lookup s18 (# 1) ≡ (Σ[ y ∈ *Human ] ∀(x : *Human) → (y *love x))
+_ : s18 [ # 1 ] ≡ (Σ[ y ∈ *Human ] ∀(x : *Human) → (y *love x))
 _ = refl
 
 
@@ -443,32 +440,32 @@ _ = refl
 s19 = s-va (np-pn Ralph) (va-n believe)
            (s-nvp (np-det a/an (cn-n Human)) (vp-vi (vi-n is-spy)))
 
-_ : lookup s19 (# 0) ≡ (Σ[ x ∈ *Human ] (*Ralph believe[ _ ∈ _ ] x *is-spy)) 
+_ : s19 [ # 0 ] ≡ (Σ[ x ∈ *Human ] (*Ralph believe[ _ ∈ _ ] x *is-spy)) 
 _ = refl
 
-_ : lookup s19 (# 1) ≡ (*Ralph believe[ x ∈ *Human ] x *is-spy)
+_ : s19 [ # 1 ] ≡ (*Ralph believe[ x ∈ *Human ] x *is-spy)
 _ = refl
 
 
 s20 = s-va (np-det a/an (cn-n Human)) (va-n believe)
            (s-nvp (np-det a/an (cn-n Human)) (vp-vi (vi-n is-spy)))
 
-_ : lookup s20 (# 0) ≡ (Σ[ x ∈ *Human ] Σ[ h ∈ *Human ]
+_ : s20 [ # 0 ] ≡ (Σ[ x ∈ *Human ] Σ[ h ∈ *Human ]
                      (h believe[ _ ∈ *Human ] x *is-spy))
 _ = refl
 
-_ : lookup s20 (# 1) ≡ (Σ[ h ∈ *Human ] (h believe[ x ∈ _ ] x *is-spy))
+_ : s20 [ # 1 ] ≡ (Σ[ h ∈ *Human ] (h believe[ x ∈ _ ] x *is-spy))
 _ = refl
 
 
 s21 = s-va (np-pn Ralph) (va-n believe)
            (s-nvp (np-pn Ortcutt) (vp-vi (vi-n is-spy)))
 
-_ : lookup s21 (# 0) ≡ (*Ralph believe[ _ ∈ _ ] *Ortcutt *is-spy)
+_ : s21 [ # 0 ] ≡ (*Ralph believe[ _ ∈ _ ] *Ortcutt *is-spy)
 _ = refl
 
 -- ???
-_ : lookup s21 (# 1) ≡ (*Ralph believe[ x ∈ *Human ] x *is-spy)
+_ : s21 [ # 1 ] ≡ (*Ralph believe[ x ∈ *Human ] x *is-spy)
 _ = refl
 
 
@@ -476,22 +473,22 @@ _ = refl
 -- John seeks a unicorn.
 
 s30 = s-va (np-pn John) (va-n strive)
-           (s-vt (np-pn John) (vt-n finds) (np-det a/an (cn-n Unicorn)))
+           (s-vt (np-pn John) (vt-n find) (np-det a/an (cn-n Unicorn)))
 
-_ : lookup s30 (# 0) ≡ (*John strive[ _ ∈ _ ] (Σ[ x ∈ *Unicorn ] *John *finds x))
+_ : s30 [ # 0 ] ≡ (Σ[ x ∈ *Unicorn ] (*John strive[ _ ∈ _ ] *John *find x))
 _ = refl
 
-_ : lookup s30 (# 1) ≡ (Σ[ x ∈ *Unicorn ] (*John strive[ _ ∈ _ ] *John *finds x))
+_ : s30 [ # 1 ] ≡ (*John strive[ _ ∈ _ ] (Σ[ x ∈ *Unicorn ] *John *find x))
 _ = refl
 
 
--- someone strives that (John finds a unicorn)
+-- someone strives that(John find a unicorn)
 s31 = s-va (np-det a/an (cn-n Human)) (va-n strive)
-           (s-vt (np-pn John) (vt-n finds) (np-det a/an (cn-n Unicorn)))
+           (s-vt (np-pn John) (vt-n find) (np-det a/an (cn-n Unicorn)))
 
-_ : lookup s31 (# 0) ≡ (Σ[ h ∈ *Human ] (h strive[ _ ∈ _ ] (Σ[ x ∈ *Unicorn ] *John *finds x)))
+_ : s31 [ # 0 ] ≡ (Σ[ x ∈ *Unicorn ] Σ[ h ∈ *Human ] (h strive[ _ ∈ _ ] *John *find x))
 _ = refl
 
-_ : lookup s31 (# 1) ≡ (Σ[ x ∈ *Unicorn ] Σ[ h ∈ *Human ] (h strive[ _ ∈ _ ] *John *finds x))
+_ : s31 [ # 1 ] ≡ (Σ[ h ∈ *Human ] (h strive[ _ ∈ _ ] (Σ[ x ∈ *Unicorn ] *John *find x)))
 _ = refl
 
