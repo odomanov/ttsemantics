@@ -9,39 +9,50 @@
 module _ where
 
 open import Data.Empty
-open import Data.Fin using (#_)
-open import Data.List hiding (head)
+open import Data.Fin using (Fin; #_)
+open import Data.List renaming (lookup to lookupL)
+open import Data.Nat using (ℕ)
 open import Data.Product
 open import Data.Unit
 open import Function
 open import Relation.Nullary renaming (no to not)
 open import Relation.Binary.PropositionalEquality
 open import Level 
-1ℓ = suc 0ℓ
-2ℓ = suc 1ℓ
 
 -- Continuation monad
 
 open import Category.Monad
-open import Category.Monad.Indexed
-open import Category.Monad.Continuation
+
+-- чтобы использовать стандартную монаду:
+-- open import Category.Monad.Indexed
+-- open import Category.Monad.Continuation
+
+-- Cont : ∀{a b}(R : Set a) → Set (a ⊔ b) → Set (a ⊔ b)
+-- Cont R = DCont id R R  
+
+-- MonadICont : ∀{a}{b}(R : Set a) → RawIMonad (DCont {f = a ⊔ b} id)  
+-- MonadICont R = DContIMonad id 
 
 Cont : ∀{a b}(R : Set a) → Set (a ⊔ b) → Set (a ⊔ b)
-Cont R = DCont id R R  
+Cont R A = (A → R) → R
 
-MonadICont : ∀{a}{b}(R : Set a) → RawIMonad (DCont {f = a ⊔ b} id)  
-MonadICont R = DContIMonad id 
+MonadCont : ∀{a b} (R : Set a) → RawMonad (Cont {a} {b} R)
+MonadCont R = record { return = λ a k → k a
+                     ; _>>=_  = λ ma f k → ma (λ x → f x k)
+                     }
+
 
 -- проверим монадные законы
 module Laws {a} {b} {R : Set a} where
 
-  open RawIMonad (MonadICont {a} {b} R)
+  open RawMonad (MonadCont {a} {b} R)
+  -- open RawIMonad (MonadICont {a} {b} R)
   
   unitl : ∀{A B : Set b}{x : A}{f : A → Cont {a} {b} R B}
     → (return x >>= f) ≡ f x
   unitl = refl
 
-  unitr : ∀{A R}{ma : Cont R A}
+  unitr : ∀{A}{ma : Cont R A}
     → (ma >>= return) ≡ ma
   unitr = refl
 
@@ -56,7 +67,8 @@ module Laws {a} {b} {R : Set a} where
   assoc' = refl
 
   
-open RawIMonad (MonadICont Set) 
+open RawMonad (MonadCont Set) 
+-- open RawIMonad (MonadICont Set) 
 
 
 -- The structure to hold names
@@ -64,7 +76,7 @@ open RawIMonad (MonadICont Set)
 
 record LexStructure : Set₁ where
   field
-    nameCN namePN nameVA nameVI nameVT : Set   -- names for syntactic categories
+    nameCN namePN nameVA nameVI nameVT : Set -- nameAdj : Set  -- names for syntactic categories
     argPN  : namePN  → nameCN                  -- argument types etc.
     argVI  : nameVI  → nameCN
     argVT  : nameVT  → nameCN × nameCN
@@ -89,7 +101,7 @@ module Syntax (nam : LexStructure) where
     data CN : Set where
       cn-n : nameCN → CN
   
-    -- -- VI зависит от CN
+    -- VI зависит от CN
     data VI : CN → Set where
       vi-n : (n : nameVI) → VI $ cn-n $ argVI n
 
@@ -116,7 +128,6 @@ module Syntax (nam : LexStructure) where
     data NP : (cn : CN) → Set where
       np-pn  : (n : namePN) → NP $ cn-n $ argPN n
       np-det : DET → (cn : CN) → NP cn
-    
     
     -- в предложении NP и VP должны зависеть от одного и того же CN
     data S : Set where
@@ -218,9 +229,19 @@ module Semantics (nam : LexStructure) (m : Model nam) where
               x ← (y ⟦va va ⟧) ⟦cn cn2 ⟧
               ⟦vp vp2 ⟧ x
       ) ∷ []
-    ⟦s s-va np1 va (s-vt np2 vt np3) ⟧ = []           -- TODO
-    ⟦s s-va np1 va (s-vtp vt np2 np3) ⟧ = []                       -- TODO
-    ⟦s s-va np1 va (s-va np2 va2 s2) ⟧ = []                        -- TODO
+    ⟦s s-va np1 va (s-vt {cn2} {cn3} np2 vt np3) ⟧ =
+          (do x ← ⟦np np1 ⟧
+              y ← ⟦np np2 ⟧
+              (x ⟦va va ⟧) ⟦cn cn3 ⟧
+              z ← ⟦np np3 ⟧
+              ⟦vt vt ⟧ y z
+      ) ∷ (do z ← ⟦np np3 ⟧
+              x ← ⟦np np1 ⟧
+              y ← ⟦np np2 ⟧
+              (x ⟦va va ⟧) ⟦cn cn3 ⟧
+              ⟦vt vt ⟧ y z
+      ) ∷ []
+    ⟦s s-va np1 va s ⟧ = []                        -- TODO
   
 
 -- Примеры
@@ -229,40 +250,39 @@ module Semantics (nam : LexStructure) (m : Model nam) where
 -- Name structure
 
 data nameCN  : Set where Human Unicorn : nameCN  
-data namePN  : Set where Alex Mary John Ralph : namePN  
-data nameVI  : Set where run exists is-spy : nameVI
-data nameVA  : Set where
-  believe : nameVA
-  seek : nameVA
-data nameVT  : Set where love : nameVT
+data namePN  : Set where Alex Mary John Ralph Ortcutt : namePN  
+data nameVI  : Set where run is-spy : nameVI
+data nameVA  : Set where believe strive : nameVA
+data nameVT  : Set where love finds : nameVT
 
 argPN : namePN → nameCN
 argPN Alex = Human
 argPN Mary = Human
 argPN John = Human
 argPN Ralph = Human
+argPN Ortcutt = Human
 
 argVI : nameVI → nameCN
 argVI run = Human
 argVI is-spy = Human
-argVI exists = Unicorn
 
 argVA : nameVA → nameCN 
 argVA believe = Human 
-argVA seek = Human 
+argVA strive = Human 
 
 argVT : nameVT → nameCN × nameCN
 argVT love = Human , Human
+argVT finds = Human , Unicorn
 
 -- Звёздочкой в начале обозначаем то, что относится к онтологии -- объекты,
 -- функции на них и пр.
 
 postulate
-  *Human *Unicorn : Set
-  *Alex *Mary *John *Ralph : *Human
+  *Human *Unicorn : Set  
+  *Alex *Mary *John *Ralph *Ortcutt : *Human
   _*run    : *Human → Set
   _*is-spy : *Human → Set
-  _*exists : *Unicorn → Set
+  _*finds_ : *Human → *Unicorn → Set
   _*love_  : *Human → *Human → Set
 
 L : LexStructure
@@ -289,20 +309,24 @@ valPN Alex = *Alex
 valPN Mary = *Mary
 valPN John = *John
 valPN Ralph = *Ralph
+valPN Ortcutt = *Ortcutt
 
 valVI : (n : nameVI) → valCN (argVI n) → Set
 valVI run = _*run
 valVI is-spy = _*is-spy
-valVI exists = _*exists
 
---  seeks 
-record seekR {H : Set}(h : H){a}(A : Set a)(P : A → Set) : Set a where
+valVT : (n : nameVT) → valCN (proj₁ (argVT n)) → valCN (proj₂ (argVT n)) → Set
+valVT love = _*love_
+valVT finds = _*finds_
+
+record striveR {H : Set}(h : H){a}(A : Set a)(P : A → Set) : Set a where
   field
     s1 : A
     s2 : P s1     
 
-infix 2 seekR
-syntax seekR h A (λ x → P) = h seek[ x ∈ A ] P
+infix 2 striveR
+syntax striveR h A (λ x → P) = h strive[ x ∈ A ] P 
+
 
 record believeR {H : Set}(h : H){a}(A : Set a)(P : A → Set) : Set a where
   field
@@ -311,13 +335,10 @@ record believeR {H : Set}(h : H){a}(A : Set a)(P : A → Set) : Set a where
 
 infix 2 believeR
 syntax believeR h A (λ x → P) = h believe[ x ∈ A ] P
-  
-valVA : (n : nameVA) → (h : valCN (argVA n)) → ∀{a}(A : Set a)(P : A → Set) → Set a  
-valVA believe = believeR 
-valVA seek = seekR
 
-valVT : (n : nameVT) → valCN (proj₁ (argVT n)) → valCN (proj₂ (argVT n)) → Set
-valVT love = _*love_
+valVA : (n : nameVA)(h : valCN (argVA n)) → ∀{a}(A : Set a)(P : A → Set) → Set a  
+valVA believe = believeR 
+valVA strive = striveR 
 
 M : Model L
 M = record { valCN = valCN
@@ -329,32 +350,31 @@ M = record { valCN = valCN
 
 open Semantics L M
 
--- вспомогательные функции
-inhabited : ∀ {a} {A : Set a} → List A → Set
-inhabited [] = ⊥
-inhabited _  = ⊤
-
-head : ∀ {a}{A : Set a} → (l : List A) → {_ : inhabited l} → A
-head (x ∷ _) = x   
+-- извлечение значения из предложения
+lookup : (s : S) → Fin (length ⟦s s ⟧) → Set
+lookup s n = (lookupL ⟦s s ⟧ n) id
 
 
 s1 = s-nvp (np-pn Mary) (vp-vi (vi-n run))
 
-_ : head ⟦s s1 ⟧ id ≡ (*Mary *run)
+_ : lookup s1 (# 0) ≡ (*Mary *run)
 _ = refl
+
+
+-- -- s3 = s-nvp (np-pn Polkan) (vp-vi runs)     -- это не работает! нужна коэрсия
 
 
 -- a human runs
 s4 = s-nvp (np-det a/an (cn-n Human)) (vp-vi (vi-n run))
 
-_ : head ⟦s s4 ⟧ id ≡ Σ *Human _*run
+_ : lookup s4 (# 0) ≡ Σ *Human _*run
 _ = refl
 
 
 -- every human runs
 s5 = s-nvp (np-det every (cn-n Human)) (vp-vi (vi-n run))
 
-_ : head ⟦s s5 ⟧ id ≡ (∀(x : *Human) → x *run)
+_ : lookup s5 (# 0) ≡ (∀(x : *Human) → x *run)
 _ = refl
 
 
@@ -362,10 +382,10 @@ _ = refl
 -- the human runs
 s6 = s-nvp (np-det the (cn-n Human)) (vp-vi (vi-n run))
 
-_ : head ⟦s s6 ⟧ id ≡ (Σ[ Aₚ ∈ Pointed *Human ] (theₚ Aₚ) *run) 
+_ : lookup s6 (# 0) ≡ (Σ[ Aₚ ∈ Pointed *Human ] (theₚ Aₚ) *run) 
 _ = refl
 
-_ : head ⟦s s6 ⟧ id
+_ : lookup s6 (# 0)
 _ = Hₚ , *Mary-runs
   where
   Hₚ : Pointed *Human 
@@ -388,10 +408,10 @@ _ = refl
 
 s12 = s-vt (np-pn Mary) (vt-n love) (np-det a/an (cn-n Human))
 
-_ : (lookup ⟦s s12 ⟧ (# 0)) id ≡ (Σ[ x ∈ *Human ] *Mary *love x)  
+_ : lookup s12 (# 0) ≡ (Σ[ x ∈ *Human ] *Mary *love x)  
 _ = refl
 
-_ : (lookup ⟦s s12 ⟧ (# 1)) id ≡ (Σ[ x ∈ *Human ] *Mary *love x)  
+_ : lookup s12 (# 1) ≡ (Σ[ x ∈ *Human ] *Mary *love x)  
 _ = refl
 
 
@@ -400,53 +420,78 @@ _ = refl
 
 s13 = s-vt (np-det every (cn-n Human)) (vt-n love) (np-det a/an (cn-n Human))
 
-_ : (lookup ⟦s s13 ⟧ (# 0)) id ≡ (∀ (x : *Human) → Σ[ y ∈ *Human ] (x *love y)) 
+_ : lookup s13 (# 0) ≡ (∀ (x : *Human) → Σ[ y ∈ *Human ] (x *love y)) 
 _ = refl
 
-_ : (lookup ⟦s s13 ⟧ (# 1)) id ≡ (Σ[ x ∈ *Human ] ∀(y : *Human) → (y *love x))
+_ : lookup s13 (# 1) ≡ (Σ[ x ∈ *Human ] ∀(y : *Human) → (y *love x))
 _ = refl
-
 
 
 -- то же в пассиве
 -- Every human is loved by a human
 s18 = s-vtp (np-det every (cn-n Human)) (vt-n love) (np-det a/an (cn-n Human)) 
 
-_ : (lookup ⟦s s18 ⟧ (# 0)) id ≡ (∀(x : *Human) → Σ[ y ∈ *Human ] (y *love x))
+_ : lookup s18 (# 0) ≡ (∀(x : *Human) → Σ[ y ∈ *Human ] (y *love x))
 _ = refl
 
-_ : (lookup ⟦s s18 ⟧ (# 1)) id ≡ (Σ[ y ∈ *Human ] ∀(x : *Human) → (y *love x))
+_ : lookup s18 (# 1) ≡ (Σ[ y ∈ *Human ] ∀(x : *Human) → (y *love x))
 _ = refl
 
 
 -- Ralph believes ...
 
-s19 = s-va (np-pn Ralph) (va-n believe) (s-nvp (np-det a/an (cn-n Human)) (vp-vi (vi-n is-spy)))
+s19 = s-va (np-pn Ralph) (va-n believe)
+           (s-nvp (np-det a/an (cn-n Human)) (vp-vi (vi-n is-spy)))
 
-_ : (lookup ⟦s s19 ⟧ (# 0)) id ≡ (Σ[ x ∈ *Human ] (*Ralph believe[ _ ∈ *Human ] x *is-spy)) 
+_ : lookup s19 (# 0) ≡ (Σ[ x ∈ *Human ] (*Ralph believe[ _ ∈ _ ] x *is-spy)) 
 _ = refl
 
-_ : (lookup ⟦s s19 ⟧ (# 1)) id ≡ (*Ralph believe[ x ∈ *Human ] x *is-spy)
+_ : lookup s19 (# 1) ≡ (*Ralph believe[ x ∈ *Human ] x *is-spy)
 _ = refl
 
 
 s20 = s-va (np-det a/an (cn-n Human)) (va-n believe)
            (s-nvp (np-det a/an (cn-n Human)) (vp-vi (vi-n is-spy)))
 
-_ : (lookup ⟦s s20 ⟧ (# 0)) id ≡ (Σ[ x ∈ *Human ] Σ[ h ∈ *Human ] (h believe[ _ ∈ *Human ] x *is-spy))
+_ : lookup s20 (# 0) ≡ (Σ[ x ∈ *Human ] Σ[ h ∈ *Human ]
+                     (h believe[ _ ∈ *Human ] x *is-spy))
 _ = refl
 
-_ : (lookup ⟦s s20 ⟧ (# 1)) id ≡ (Σ[ h ∈ *Human ] (h believe[ x ∈ *Human ] x *is-spy))
+_ : lookup s20 (# 1) ≡ (Σ[ h ∈ *Human ] (h believe[ x ∈ _ ] x *is-spy))
 _ = refl
+
+
+s21 = s-va (np-pn Ralph) (va-n believe)
+           (s-nvp (np-pn Ortcutt) (vp-vi (vi-n is-spy)))
+
+_ : lookup s21 (# 0) ≡ (*Ralph believe[ _ ∈ _ ] *Ortcutt *is-spy)
+_ = refl
+
+-- ???
+_ : lookup s21 (# 1) ≡ (*Ralph believe[ x ∈ *Human ] x *is-spy)
+_ = refl
+
 
 
 -- John seeks a unicorn.
 
-s21 = s-va (np-pn John) (va-n seek) (s-nvp (np-det a/an (cn-n Unicorn)) (vp-vi (vi-n exists)))
+s30 = s-va (np-pn John) (va-n strive)
+           (s-vt (np-pn John) (vt-n finds) (np-det a/an (cn-n Unicorn)))
 
-_ : (lookup ⟦s s21 ⟧ (# 0)) id ≡ (Σ[ x ∈ *Unicorn ] (*John seek[ _ ∈ *Unicorn ] x *exists))
+_ : lookup s30 (# 0) ≡ (*John strive[ _ ∈ _ ] (Σ[ x ∈ *Unicorn ] *John *finds x))
 _ = refl
 
-_ : (lookup ⟦s s21 ⟧ (# 1)) id ≡ (*John seek[ x ∈ *Unicorn ] x *exists)
+_ : lookup s30 (# 1) ≡ (Σ[ x ∈ *Unicorn ] (*John strive[ _ ∈ _ ] *John *finds x))
+_ = refl
+
+
+-- someone strives that (John finds a unicorn)
+s31 = s-va (np-det a/an (cn-n Human)) (va-n strive)
+           (s-vt (np-pn John) (vt-n finds) (np-det a/an (cn-n Unicorn)))
+
+_ : lookup s31 (# 0) ≡ (Σ[ h ∈ *Human ] (h strive[ _ ∈ _ ] (Σ[ x ∈ *Unicorn ] *John *finds x)))
+_ = refl
+
+_ : lookup s31 (# 1) ≡ (Σ[ x ∈ *Unicorn ] Σ[ h ∈ *Human ] (h strive[ _ ∈ _ ] *John *finds x))
 _ = refl
 
