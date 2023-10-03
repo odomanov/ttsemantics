@@ -19,6 +19,8 @@ open import Relation.Nullary renaming (no to not)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import Level 
 
+Sentence = Set
+
 -- Continuation monad
 
 open import Category.Monad
@@ -67,8 +69,8 @@ module Laws {a} {b} {R : Set a} where
   assoc' = refl
 
   
-open RawMonad (MonadCont Set) 
--- open RawIMonad (MonadICont Set) 
+open RawMonad (MonadCont Sentence) 
+-- open RawIMonad (MonadICont Sentence) 
 
 
 -- The structure to hold names
@@ -102,14 +104,14 @@ module Syntax (nam : LexStructure) where
       cn-n : nameCN → CN
   
     -- -- VI зависит от CN
-    data VI : CN → Set where
+    data VI : CN → Sentence where
       vi-n : (n : nameVI) → VI $ cn-n $ argVI n
 
     -- attitude verbs -- a la 'believe'
-    data VA : CN → Set where
+    data VA : CN → Sentence where
       va-n : (n : nameVA) → VA $ cn-n $ argVA n 
   
-    data VT : CN → CN → Set where
+    data VT : CN → CN → Sentence where
       vt-n : (n : nameVT) → VT (cn-n (proj₁ (argVT n))) (cn-n (proj₂ (argVT n))) 
   
     -- PN зависит от CN
@@ -119,23 +121,27 @@ module Syntax (nam : LexStructure) where
     data DET : Set where
       a/an every no the : DET
   
-    -- VP зависит от CN (к чему применима глагольная группа VP)
-    data VP : (cn : CN) → Set where
-      vp-vi : ∀{cn} → VI cn → VP cn 
-      vp-vt : ∀{cn1 cn2} → VT cn1 cn2 → NP cn2 → VP cn1
-  
     -- NP зависит от CN (к какому CN относится NP)
-    data NP : (cn : CN) → Set where
-      np-pn  : (n : namePN) → NP $ cn-n $ argPN n
+    data NP : (cn : CN) → Sentence where
+      np-pn  : ∀{cn} → PN cn → NP cn
       np-det : DET → (cn : CN) → NP cn
     
     -- в предложении NP и VP должны зависеть от одного и того же CN
-    data S : Set where
-      s-nvp  : ∀ {cn} → NP cn → VP cn → S
-      s-vt   : ∀ {cn1 cn2} → NP cn1 → VT cn1 cn2 → NP cn2 → S
-      s-vtp  : ∀ {cn1 cn2} → NP cn2 → VT cn1 cn2 → NP cn1 → S   -- для пассива
-      s-va   : ∀ {cn1} → NP cn1 → VA cn1 → S → S
+    data S : Sentence where
+      s-vi  : ∀ {cn} → NP cn → VI cn → S
+      s-vt  : ∀ {cn1 cn2} → NP cn1 → VT cn1 cn2 → NP cn2 → S
+      s-vtp : ∀ {cn1 cn2} → NP cn2 → VT cn1 cn2 → NP cn1 → S   -- для пассива
+      s-va  : ∀ {cn1} → NP cn1 → VA cn1 → S → S
 
+    -- соберём все выражения в один тип
+    data Expr : Set where
+      ecn  : CN → Expr
+      epn  : ∀{cn} → PN cn → Expr
+      edet : DET → Expr
+      evi  : ∀{cn} → VI cn → Expr
+      evt  : ∀{cn1 cn2} → VT cn1 cn2 → Expr
+      enp  : ∀{cn} → NP cn → Expr
+      es   : S → Expr
 
 -- Семантика
 -- =========
@@ -176,38 +182,32 @@ module Semantics (nam : LexStructure) (m : Model nam) where
     ⟦pn pn-n n ⟧   = valPN n
   
     -- NP = (e → t) → t     
-    ⟦np_⟧ : {cn : CN} → NP cn → Cont Set ⟦cn cn ⟧
-    ⟦np np-pn pn ⟧ = return ⟦pn pn-n pn ⟧
+    ⟦np_⟧ : {cn : CN} → NP cn → Cont Sentence ⟦cn cn ⟧
+    ⟦np np-pn pn ⟧ = return ⟦pn pn ⟧
     ⟦np np-det d cn ⟧ = ⟦det d ⟧ cn    
     
-    _⟦va_⟧ : ∀{cn1} → ⟦cn cn1 ⟧ → VA cn1 → (A : Set) → Cont Set A
+    _⟦va_⟧ : ∀{cn1} → ⟦cn cn1 ⟧ → VA cn1 → (A : Set) → Cont Sentence A
     (h ⟦va (va-n n) ⟧) A = λ k → valVA n h A λ x → k x 
     
     -- VI = e → t
-    ⟦vi_⟧ : {cn : CN} → VI cn → ⟦cn cn ⟧ → Cont Set Set
+    ⟦vi_⟧ : {cn : CN} → VI cn → ⟦cn cn ⟧ → Cont Sentence Set
     ⟦vi vi-n n ⟧ x = return $ valVI n x
 
     -- VT = e → e → t
-    ⟦vt_⟧ : ∀ {cn cn1} → VT cn cn1 → ⟦cn cn ⟧ → ⟦cn cn1 ⟧ → Cont Set Set
+    ⟦vt_⟧ : ∀ {cn cn1} → VT cn cn1 → ⟦cn cn ⟧ → ⟦cn cn1 ⟧ → Cont Sentence Set
     ⟦vt vt-n n ⟧ x y = return $ valVT n x y
   
-    -- VP = e → t
-    ⟦vp_⟧ : {cn : CN} → VP cn → ⟦cn cn ⟧ → Cont Set Set
-    ⟦vp vp-vi vi ⟧ = ⟦vi vi ⟧
-    ⟦vp vp-vt vt np ⟧ x = do y ← ⟦np np ⟧
-                             ⟦vt vt ⟧ x y
-
     -- DET = (e → t) → ((e → t) → t) 
-    ⟦det_⟧ : DET → (cn : CN)→ Cont Set ⟦cn cn ⟧
+    ⟦det_⟧ : DET → (cn : CN)→ Cont Sentence ⟦cn cn ⟧
     ⟦det a/an ⟧  cn = λ k → Σ[ x ∈ ⟦cn cn ⟧ ] k x 
     ⟦det every ⟧ cn = λ k → ∀(x : ⟦cn cn ⟧) → k x
     ⟦det no ⟧    cn = λ k → ∀(x : ⟦cn cn ⟧) → ¬ k x 
     ⟦det the ⟧   cn = λ k → Σ[ Aₚ ∈ Pointed ⟦cn cn ⟧ ] k (theₚ Aₚ)
     
     -- Возможны множественные интерпретации.
-    ⟦s_⟧ : S → List (Cont Set Set)
-    ⟦s s-nvp np vp ⟧ = (do x ← ⟦np np ⟧
-                           ⟦vp vp ⟧ x) ∷ []
+    ⟦s_⟧ : S → List (Cont Sentence Set)
+    ⟦s s-vi np vi ⟧ = (do x ← ⟦np np ⟧
+                          ⟦vi vi ⟧ x) ∷ []
     ⟦s s-vt np1 vt np2 ⟧ = (do x ← ⟦np np1 ⟧
                                y ← ⟦np np2 ⟧
                                ⟦vt vt ⟧ x y   )
@@ -220,14 +220,14 @@ module Semantics (nam : LexStructure) (m : Model nam) where
                           ∷ (do y ← ⟦np np2 ⟧
                                 x ← ⟦np np1 ⟧
                                 ⟦vt vt ⟧ y x   ) ∷ []
-    ⟦s s-va np1 va (s-nvp {cn2} np2 vp2) ⟧ =
+    ⟦s s-va np1 va (s-vi {cn2} np2 vi) ⟧ =
           (do x ← ⟦np np2 ⟧
               y ← ⟦np np1 ⟧
               (y ⟦va va ⟧) ⟦cn cn2 ⟧
-              ⟦vp vp2 ⟧ x
+              ⟦vi vi ⟧ x
       ) ∷ (do y ← ⟦np np1 ⟧
               x ← (y ⟦va va ⟧) ⟦cn cn2 ⟧
-              ⟦vp vp2 ⟧ x
+              ⟦vi vi ⟧ x
       ) ∷ []
     ⟦s s-va np1 va (s-vt {cn2} {cn3} np2 vt np3) ⟧ =
           (do z ← ⟦np np3 ⟧
@@ -242,7 +242,20 @@ module Semantics (nam : LexStructure) (m : Model nam) where
               ⟦vt vt ⟧ y z
       ) ∷ []
     ⟦s s-va np1 va s ⟧ = []                        -- TODO
-  
+
+    -- возможные значения 
+    data Val : Setω where
+      val     : ∀{ℓ} → {A : Set ℓ} → A → Val
+
+    -- обобщённая функция интерпретации
+    ⟦_⟧ : Expr → Val
+    ⟦ ecn x ⟧ = val ⟦cn x ⟧
+    ⟦ epn x ⟧ = val ⟦pn x ⟧
+    ⟦ edet x ⟧ = val ⟦det x ⟧ 
+    ⟦ evi {cn} x ⟧ = val ⟦vi x ⟧
+    ⟦ evt {cn1} {cn2} x ⟧ = val ⟦vt x ⟧ 
+    ⟦ enp {cn} x ⟧ = val ⟦np x ⟧
+    ⟦ es x ⟧ = val ⟦s x ⟧  
 
 -- Примеры
 -- -------
@@ -354,24 +367,24 @@ _[_] : (s : S) → Fin (length ⟦s s ⟧) → Set
 s [ n ] = (lookupL ⟦s s ⟧ n) id
 
 
-s1 = s-nvp (np-pn Mary) (vp-vi (vi-n run))
+s1 = s-vi (np-pn (pn-n Mary)) (vi-n run)
 
 _ : s1 [ # 0 ] ≡ (*Mary *run)
 _ = refl
 
 
--- -- s3 = s-nvp (np-pn Polkan) (vp-vi runs)     -- это не работает! нужна коэрсия
+-- -- s3 = s-vi (np-pn Polkan) (vp-vi runs)     -- это не работает! нужна коэрсия
 
 
 -- a human runs
-s4 = s-nvp (np-det a/an (cn-n Human)) (vp-vi (vi-n run))
+s4 = s-vi (np-det a/an (cn-n Human)) (vi-n run)
 
 _ : s4 [ # 0 ] ≡ Σ *Human _*run
 _ = refl
 
 
 -- every human runs
-s5 = s-nvp (np-det every (cn-n Human)) (vp-vi (vi-n run))
+s5 = s-vi (np-det every (cn-n Human)) (vi-n run)
 
 _ : s5 [ # 0 ] ≡ (∀(x : *Human) → x *run)
 _ = refl
@@ -379,7 +392,7 @@ _ = refl
 
 
 -- the human runs
-s6 = s-nvp (np-det the (cn-n Human)) (vp-vi (vi-n run))
+s6 = s-vi (np-det the (cn-n Human)) (vi-n run)
 
 _ : s6 [ # 0 ] ≡ (Σ[ Aₚ ∈ Pointed *Human ] (theₚ Aₚ) *run) 
 _ = refl
@@ -393,16 +406,26 @@ _ = Hₚ , *Mary-runs
   postulate *Mary-runs : *Mary *run
 
 
-s11 = s-vt (np-pn Mary) (vt-n love) (np-pn Alex)
+
+-- Mary loves Alex
+-- Оба смысла совпадают
+
+s11 = s-vt (np-pn (pn-n Mary)) (vt-n love) (np-pn (pn-n Alex))
 
 _ : ⟦s s11 ⟧ ≡ return (*Mary *love *Alex) ∷ return (*Mary *love *Alex) ∷ []           
+_ = refl
+
+_ : s11 [ # 0 ] ≡ *Mary *love *Alex
+_ = refl
+
+_ : s11 [ # 1 ] ≡ *Mary *love *Alex
 _ = refl
 
 
 -- Mary loves a human
 -- Оба смысла совпадают
 
-s12 = s-vt (np-pn Mary) (vt-n love) (np-det a/an (cn-n Human))
+s12 = s-vt (np-pn (pn-n Mary)) (vt-n love) (np-det a/an (cn-n Human))
 
 _ : s12 [ # 0 ] ≡ (Σ[ x ∈ *Human ] *Mary *love x)  
 _ = refl
@@ -437,8 +460,8 @@ _ = refl
 
 -- Ralph believes ...
 
-s19 = s-va (np-pn Ralph) (va-n believe)
-           (s-nvp (np-det a/an (cn-n Human)) (vp-vi (vi-n is-spy)))
+s19 = s-va (np-pn (pn-n Ralph)) (va-n believe)
+           (s-vi (np-det a/an (cn-n Human)) (vi-n is-spy))
 
 _ : s19 [ # 0 ] ≡ (Σ[ x ∈ *Human ] (*Ralph believe[ _ ∈ _ ] x *is-spy)) 
 _ = refl
@@ -448,7 +471,7 @@ _ = refl
 
 
 s20 = s-va (np-det a/an (cn-n Human)) (va-n believe)
-           (s-nvp (np-det a/an (cn-n Human)) (vp-vi (vi-n is-spy)))
+           (s-vi (np-det a/an (cn-n Human)) (vi-n is-spy))
 
 _ : s20 [ # 0 ] ≡ (Σ[ x ∈ *Human ] Σ[ h ∈ *Human ]
                      (h believe[ _ ∈ *Human ] x *is-spy))
@@ -458,8 +481,8 @@ _ : s20 [ # 1 ] ≡ (Σ[ h ∈ *Human ] (h believe[ x ∈ _ ] x *is-spy))
 _ = refl
 
 
-s21 = s-va (np-pn Ralph) (va-n believe)
-           (s-nvp (np-pn Ortcutt) (vp-vi (vi-n is-spy)))
+s21 = s-va (np-pn (pn-n Ralph)) (va-n believe)
+           (s-vi (np-pn (pn-n Ortcutt)) (vi-n is-spy))
 
 _ : s21 [ # 0 ] ≡ (*Ralph believe[ _ ∈ _ ] *Ortcutt *is-spy)
 _ = refl
@@ -472,8 +495,8 @@ _ = refl
 
 -- John seeks a unicorn.
 
-s30 = s-va (np-pn John) (va-n strive)
-           (s-vt (np-pn John) (vt-n find) (np-det a/an (cn-n Unicorn)))
+s30 = s-va (np-pn (pn-n John)) (va-n strive)
+           (s-vt (np-pn (pn-n John)) (vt-n find) (np-det a/an (cn-n Unicorn)))
 
 _ : s30 [ # 0 ] ≡ (Σ[ x ∈ *Unicorn ] (*John strive[ _ ∈ _ ] *John *find x))
 _ = refl
@@ -484,7 +507,7 @@ _ = refl
 
 -- someone strives that(John find a unicorn)
 s31 = s-va (np-det a/an (cn-n Human)) (va-n strive)
-           (s-vt (np-pn John) (vt-n find) (np-det a/an (cn-n Unicorn)))
+           (s-vt (np-pn (pn-n John)) (vt-n find) (np-det a/an (cn-n Unicorn)))
 
 _ : s31 [ # 0 ] ≡ (Σ[ x ∈ *Unicorn ] Σ[ h ∈ *Human ] (h strive[ _ ∈ _ ] *John *find x))
 _ = refl
