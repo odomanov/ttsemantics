@@ -19,9 +19,79 @@ open import Relation.Nullary renaming (no to not)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import Level 
 
-Sentence = Set
+
+-- The structure to hold names
+-- ===========================
+
+record LexStructure : Set₁ where
+  field
+    nameCN namePN nameVA nameVI nameVT : Set   -- names for syntactic categories
+    argPN  : namePN  → nameCN                  -- argument types etc.
+    argVI  : nameVI  → nameCN
+    argVT  : nameVT  → nameCN × nameCN
+    argVA  : nameVA  → nameCN                  -- attitude verbs
+
+
+-- Синтаксические категории.
+-- ========================
+
+-- Проверка согласования типов производится на уровне синтаксиса.
+-- Это не обязательно должно быть так.  Например, при этой формализации исключаются
+-- фразы типа "Зелёные идеи яростно спят", т.е. правильные синтаксически, но
+-- неправильные семантически.
+
+module Syntax (nam : LexStructure) where
+
+  open LexStructure nam 
+  
+  mutual
+  
+    -- CN ни от чего не зависит
+    data CN : Set where
+      cn-n : nameCN → CN
+  
+    -- PN зависит от CN
+    data PN : CN → Set where
+      pn-n : (n : namePN) → PN $ cn-n $ argPN n
+    
+    data DET : Set where
+      a/an every no the : DET
+  
+    -- -- VI зависит от CN
+    data VI : CN → Set where
+      vi-n : (n : nameVI) → VI $ cn-n $ argVI n
+
+    data VT : CN → CN → Set where
+      vt-n : (n : nameVT) → VT (cn-n (proj₁ (argVT n))) (cn-n (proj₂ (argVT n))) 
+  
+    -- attitude verbs -- a la 'believe'
+    data VA : CN → Set where
+      va-n : (n : nameVA) → VA $ cn-n $ argVA n 
+  
+    -- NP зависит от CN (к какому CN относится NP)
+    data NP : (cn : CN) → Set where
+      np-pn  : ∀{cn} → PN cn → NP cn
+      np-det : DET → (cn : CN) → NP cn
+    
+    -- в предложении NP и VP должны зависеть от одного и того же CN
+    data S : Set where
+      s-vi  : ∀ {cn} → NP cn → VI cn → S
+      s-vt  : ∀ {cn1 cn2} → NP cn1 → VT cn1 cn2 → NP cn2 → S
+      s-vtp : ∀ {cn1 cn2} → NP cn2 → VT cn1 cn2 → NP cn1 → S   -- для пассива
+      s-va  : ∀ {cn1} → NP cn1 → VA cn1 → S → S
+
+    -- соберём все выражения в один тип
+    data Expr : Set where
+      ecn  : CN → Expr
+      epn  : ∀{cn} → PN cn → Expr
+      edet : DET → Expr
+      evi  : ∀{cn} → VI cn → Expr
+      evt  : ∀{cn1 cn2} → VT cn1 cn2 → Expr
+      enp  : ∀{cn} → NP cn → Expr
+      es   : S → Expr
 
 -- Continuation monad
+-- ==================
 
 open import Category.Monad
 
@@ -69,79 +139,9 @@ module Laws {a} {b} {R : Set a} where
   assoc' = refl
 
   
-open RawMonad (MonadCont Sentence) 
--- open RawIMonad (MonadICont Sentence) 
+open RawMonad (MonadCont Set) 
+-- open RawIMonad (MonadICont Set) 
 
-
--- The structure to hold names
--- ===========================
-
-record LexStructure : Set₁ where
-  field
-    nameCN namePN nameVA nameVI nameVT : Set   -- names for syntactic categories
-    argPN  : namePN  → nameCN                  -- argument types etc.
-    argVI  : nameVI  → nameCN
-    argVT  : nameVT  → nameCN × nameCN
-    argVA  : nameVA  → nameCN                  -- attitude verbs
-
-
--- Синтаксические категории.
--- ========================
-
--- Проверка согласования типов производится на уровне синтаксиса.
--- Это не обязательно должно быть так.  Например, при этой формализации исключаются
--- фразы типа "Зелёные идеи яростно спят", т.е. правильные синтаксически, но
--- неправильные семантически.
-
-module Syntax (nam : LexStructure) where
-
-  open LexStructure nam 
-  
-  mutual
-  
-    -- CN ни от чего не зависит
-    data CN : Set where
-      cn-n : nameCN → CN
-  
-    -- -- VI зависит от CN
-    data VI : CN → Sentence where
-      vi-n : (n : nameVI) → VI $ cn-n $ argVI n
-
-    -- attitude verbs -- a la 'believe'
-    data VA : CN → Sentence where
-      va-n : (n : nameVA) → VA $ cn-n $ argVA n 
-  
-    data VT : CN → CN → Sentence where
-      vt-n : (n : nameVT) → VT (cn-n (proj₁ (argVT n))) (cn-n (proj₂ (argVT n))) 
-  
-    -- PN зависит от CN
-    data PN : CN → Set where
-      pn-n : (n : namePN) → PN $ cn-n $ argPN n
-    
-    data DET : Set where
-      a/an every no the : DET
-  
-    -- NP зависит от CN (к какому CN относится NP)
-    data NP : (cn : CN) → Sentence where
-      np-pn  : ∀{cn} → PN cn → NP cn
-      np-det : DET → (cn : CN) → NP cn
-    
-    -- в предложении NP и VP должны зависеть от одного и того же CN
-    data S : Sentence where
-      s-vi  : ∀ {cn} → NP cn → VI cn → S
-      s-vt  : ∀ {cn1 cn2} → NP cn1 → VT cn1 cn2 → NP cn2 → S
-      s-vtp : ∀ {cn1 cn2} → NP cn2 → VT cn1 cn2 → NP cn1 → S   -- для пассива
-      s-va  : ∀ {cn1} → NP cn1 → VA cn1 → S → S
-
-    -- соберём все выражения в один тип
-    data Expr : Set where
-      ecn  : CN → Expr
-      epn  : ∀{cn} → PN cn → Expr
-      edet : DET → Expr
-      evi  : ∀{cn} → VI cn → Expr
-      evt  : ∀{cn1 cn2} → VT cn1 cn2 → Expr
-      enp  : ∀{cn} → NP cn → Expr
-      es   : S → Expr
 
 -- Семантика
 -- =========
@@ -181,33 +181,32 @@ module Semantics (nam : LexStructure) (m : Model nam) where
     ⟦pn_⟧ : {cn : CN} → PN cn → ⟦cn cn ⟧
     ⟦pn pn-n n ⟧   = valPN n
   
-    -- NP = (e → t) → t     
-    ⟦np_⟧ : {cn : CN} → NP cn → Cont Sentence ⟦cn cn ⟧
-    ⟦np np-pn pn ⟧ = return ⟦pn pn ⟧
-    ⟦np np-det d cn ⟧ = ⟦det d ⟧ cn    
-    
-    _⟦va_⟧ : ∀{cn1} → ⟦cn cn1 ⟧ → VA cn1 → (A : Set) → Cont Sentence A
-    (h ⟦va (va-n n) ⟧) A = λ k → valVA n h A λ x → k x 
-    
     -- VI = e → t
-    ⟦vi_⟧ : {cn : CN} → VI cn → ⟦cn cn ⟧ → Cont Sentence Set
+    ⟦vi_⟧ : {cn : CN} → VI cn → ⟦cn cn ⟧ → Cont Set Set
     ⟦vi vi-n n ⟧ x = return $ valVI n x
 
     -- VT = e → e → t
-    ⟦vt_⟧ : ∀ {cn cn1} → VT cn cn1 → ⟦cn cn ⟧ → ⟦cn cn1 ⟧ → Cont Sentence Set
+    ⟦vt_⟧ : ∀ {cn cn1} → VT cn cn1 → ⟦cn cn ⟧ → ⟦cn cn1 ⟧ → Cont Set Set
     ⟦vt vt-n n ⟧ x y = return $ valVT n x y
   
+    _⟦va_⟧ : ∀{cn1} → ⟦cn cn1 ⟧ → VA cn1 → (A : Set) → Cont Set A
+    (h ⟦va (va-n n) ⟧) A = λ k → valVA n h A λ x → k x 
+    
+    -- NP = (e → t) → t     
+    ⟦np_⟧ : {cn : CN} → NP cn → Cont Set ⟦cn cn ⟧
+    ⟦np np-pn pn ⟧ = return ⟦pn pn ⟧
+    ⟦np np-det d cn ⟧ = ⟦det d ⟧ cn    
+    
     -- DET = (e → t) → ((e → t) → t) 
-    ⟦det_⟧ : DET → (cn : CN)→ Cont Sentence ⟦cn cn ⟧
+    ⟦det_⟧ : DET → (cn : CN)→ Cont Set ⟦cn cn ⟧
     ⟦det a/an ⟧  cn = λ k → Σ[ x ∈ ⟦cn cn ⟧ ] k x 
     ⟦det every ⟧ cn = λ k → ∀(x : ⟦cn cn ⟧) → k x
     ⟦det no ⟧    cn = λ k → ∀(x : ⟦cn cn ⟧) → ¬ k x 
     ⟦det the ⟧   cn = λ k → Σ[ Aₚ ∈ Pointed ⟦cn cn ⟧ ] k (theₚ Aₚ)
     
     -- Возможны множественные интерпретации.
-    ⟦s_⟧ : S → List (Cont Sentence Set)
-    ⟦s s-vi np vi ⟧ = (do x ← ⟦np np ⟧
-                          ⟦vi vi ⟧ x) ∷ []
+    ⟦s_⟧ : S → List (Cont Set Set)
+    ⟦s s-vi np vi ⟧ = (⟦np np ⟧ >>= ⟦vi vi ⟧) ∷ [] 
     ⟦s s-vt np1 vt np2 ⟧ = (do x ← ⟦np np1 ⟧
                                y ← ⟦np np2 ⟧
                                ⟦vt vt ⟧ x y   )
@@ -222,28 +221,28 @@ module Semantics (nam : LexStructure) (m : Model nam) where
                                 ⟦vt vt ⟧ y x   ) ∷ []
     ⟦s s-va np1 va (s-vi {cn2} np2 vi) ⟧ =
           (do x ← ⟦np np2 ⟧
-              y ← ⟦np np1 ⟧
-              (y ⟦va va ⟧) ⟦cn cn2 ⟧
+              h ← ⟦np np1 ⟧
+              (h ⟦va va ⟧) ⟦cn cn2 ⟧
               ⟦vi vi ⟧ x
-      ) ∷ (do y ← ⟦np np1 ⟧
-              x ← (y ⟦va va ⟧) ⟦cn cn2 ⟧
+      ) ∷ (do h ← ⟦np np1 ⟧
+              x ← (h ⟦va va ⟧) ⟦cn cn2 ⟧
               ⟦vi vi ⟧ x
       ) ∷ []
-    ⟦s s-va np1 va (s-vt {cn2} {cn3} np2 vt np3) ⟧ =
-          (do z ← ⟦np np3 ⟧
-              x ← ⟦np np1 ⟧
-              y ← ⟦np np2 ⟧
-              (x ⟦va va ⟧) ⟦cn cn3 ⟧
-              ⟦vt vt ⟧ y z
-      ) ∷ (do x ← ⟦np np1 ⟧
-              y ← ⟦np np2 ⟧
-              (x ⟦va va ⟧) ⟦cn cn3 ⟧
-              z ← ⟦np np3 ⟧
-              ⟦vt vt ⟧ y z
+    ⟦s s-va np1 va (s-vt {_} {cn3} np2 vt np3) ⟧ =
+          (do y ← ⟦np np3 ⟧
+              h ← ⟦np np1 ⟧
+              x ← ⟦np np2 ⟧
+              (h ⟦va va ⟧) ⟦cn cn3 ⟧
+              ⟦vt vt ⟧ x y
+      ) ∷ (do h ← ⟦np np1 ⟧
+              x ← ⟦np np2 ⟧
+              (h ⟦va va ⟧) ⟦cn cn3 ⟧
+              y ← ⟦np np3 ⟧
+              ⟦vt vt ⟧ x y
       ) ∷ []
     ⟦s s-va np1 va s ⟧ = []                        -- TODO
 
-    -- возможные значения 
+    -- возможные значения для обообщённой функции интерпретации
     data Val : Setω where
       val     : ∀{ℓ} → {A : Set ℓ} → A → Val
 
