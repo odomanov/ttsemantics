@@ -19,6 +19,8 @@ open import Relation.Nullary renaming (no to not)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 open import Level 
 
+-- СИНТАКСИС
+-- =========
 
 -- The structure to hold names
 -- ===========================
@@ -32,7 +34,7 @@ record LexStructure : Set₁ where
     argVA  : nameVA  → nameCN                  -- attitude verbs
 
 
--- Синтаксические категории.
+-- Синтаксические категории
 -- ========================
 
 -- Проверка согласования типов производится на уровне синтаксиса.
@@ -143,7 +145,7 @@ open RawMonad (MonadCont Set)
 -- open RawIMonad (MonadICont Set) 
 
 
--- Семантика
+-- СЕМАНТИКА
 -- =========
 
 record Model (nam : LexStructure) : Setω where
